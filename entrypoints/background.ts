@@ -5,7 +5,9 @@ import {
   type TabService,
   type TabBinding,
   getHostname,
+  hostnameMatches,
   isFirefox,
+  normalizeHostname,
 } from '@/services/tabs';
 import {
   FirefoxContainerApi,
@@ -40,7 +42,7 @@ function registerNewTab(tab: Browser.tabs.Tab, url: string, cookieStoreId: strin
   if (!tab.id) return;
   const hostname = getHostname(url);
   if (!hostname) return;
-  tabBindings.set(tab.id, { hostname, cookieStoreId });
+  tabBindings.set(tab.id, { hostname: normalizeHostname(hostname), cookieStoreId });
   pendingSwitches.add(tab.id);
 }
 
@@ -69,6 +71,12 @@ const tabServiceImpl: TabService = {
     }
   },
 
+  async saveCookiesForHostname(hostname) {
+    if (cookieStore) {
+      await cookieStore.saveForHostname(StorageService.DEFAULT_CONTAINER_ID, hostname);
+    }
+  },
+
   cleanupBindingsForContainer(cookieStoreId) {
     for (const [tabId, binding] of tabBindings) {
       if (binding.cookieStoreId === cookieStoreId) {
@@ -82,27 +90,31 @@ const tabServiceImpl: TabService = {
   },
 };
 
+function badge() {
+  return isFirefox() ? browser.browserAction : browser.action;
+}
+
 async function updateBadge(tabId: number): Promise<void> {
   try {
     const tab = await browser.tabs.get(tabId);
     if (!tab.url) {
-      browser.browserAction.setBadgeText({ tabId, text: '' });
+      badge().setBadgeText({ tabId, text: '' });
       return;
     }
     const hostname = getHostname(tab.url);
     if (!hostname) {
-      browser.browserAction.setBadgeText({ tabId, text: '' });
+      badge().setBadgeText({ tabId, text: '' });
       return;
     }
     const accounts = await StorageService.getAccountsForHostname(hostname);
     if (accounts.length > 1) {
-      browser.browserAction.setBadgeText({ tabId, text: String(accounts.length) });
-      browser.browserAction.setBadgeBackgroundColor({ tabId, color: '#0060df' });
+      badge().setBadgeText({ tabId, text: String(accounts.length) });
+      badge().setBadgeBackgroundColor({ tabId, color: '#0060df' });
     } else {
-      browser.browserAction.setBadgeText({ tabId, text: '' });
+      badge().setBadgeText({ tabId, text: '' });
     }
   } catch {
-    browser.browserAction.setBadgeText({ tabId, text: '' });
+    badge().setBadgeText({ tabId, text: '' });
   }
 }
 
@@ -176,11 +188,12 @@ export default defineBackground(() => {
       // For Chrome MV3: swap cookies for the pending tab navigation
       if (!isFirefox() && !hasBlockingWebRequest() && cookieStore) {
         const binding = tabBindings.get(details.tabId);
-        const hostname = getHostname(details.url);
+        const rawHostname = getHostname(details.url);
+        const hostname = rawHostname ? normalizeHostname(rawHostname) : null;
         if (
           binding &&
           hostname &&
-          binding.hostname === hostname &&
+          hostnameMatches(binding.hostname, hostname) &&
           binding.cookieStoreId !== StorageService.DEFAULT_CONTAINER_ID
         ) {
           await cookieStore.restoreForHostname(binding.cookieStoreId, hostname);
@@ -193,13 +206,20 @@ export default defineBackground(() => {
       if (protocolCheck(details.url)) return;
 
       const url = new URL(details.url);
-      const hostname = url.hostname;
+      const hostname = normalizeHostname(url.hostname);
       if (!hostname) return;
 
       const binding = tabBindings.get(details.tabId);
 
-      // Sticky tab — same hostname navigation, skip
-      if (binding && binding.hostname === hostname) return;
+      // Sticky tab — same hostname AND same account, skip
+      if (binding && hostnameMatches(binding.hostname, hostname)) {
+        const map = await StorageService.lastSelected.getValue();
+        const currentAccountId = map[hostname] ?? map['www.' + hostname];
+        if (!currentAccountId || binding.cookieStoreId === currentAccountId) {
+          return;
+        }
+        // Account changed — fall through to re-apply
+      }
 
       // Navigating away from previous hostname — cleanup
       if (binding && binding.hostname !== hostname) {
@@ -209,8 +229,7 @@ export default defineBackground(() => {
 
       const tab = await browser.tabs.get(details.tabId);
       const map = await StorageService.lastSelected.getValue();
-      const accountId = map[hostname];
-
+      const accountId = map[hostname] ?? map['www.' + hostname];
       if (!accountId) {
         await containerApi.applyDefault(tab, details.url, hostname);
         return;
@@ -236,10 +255,10 @@ export default defineBackground(() => {
         .then((tabs) => {
           if (!tabs[0]?.id) return;
           const binding = tabBindings.get(tabs[0].id);
-          if (binding && binding.hostname === hostname) {
+          if (binding && hostnameMatches(binding.hostname, hostname)) {
             cookieStore!.onCookieChanged(changeInfo, {
               accountId: binding.cookieStoreId,
-              hostname,
+              hostname: binding.hostname,
             });
           }
         })

@@ -1,5 +1,5 @@
 import { StorageService, type Account } from '@/services/storage';
-import { tabService, getCurrentTab, getHostname } from '@/services/tabs';
+import { tabService, getCurrentTab, getHostname, hostnameMatches } from '@/services/tabs';
 import { containerService, type ContainerInfo } from '@/services/container-api';
 import { t } from '@/services/i18n';
 import type { AppData } from './types';
@@ -25,11 +25,12 @@ export async function loadAppData(): Promise<AppData> {
 
     const binding = currentTab.id ? await tabService.getTabBinding(currentTab.id) : null;
 
-    if (binding && binding.hostname === hostname) {
+    if (binding && hostnameMatches(binding.hostname, hostname)) {
       lastSelectedId = binding.cookieStoreId;
     } else {
       const lastMap = await StorageService.lastSelected.getValue();
-      lastSelectedId = lastMap[hostname] ?? null;
+      lastSelectedId =
+        lastMap[hostname] ?? (hostname.startsWith('www.') ? lastMap[hostname.slice(4)] : null);
     }
   }
 

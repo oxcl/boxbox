@@ -1,5 +1,6 @@
 import type { CookieJars } from './cookie-store';
 import type { ContainerMetaMap } from './container-api';
+import { normalizeHostname } from './tabs';
 
 export interface Account {
   id: string;
@@ -67,10 +68,10 @@ export class StorageService {
     return `${name} (${hostname})`;
   }
 
-  static async getAccountsForHostname(hostname: string): Promise<Account[]> {
+  static async getAccountsForHostname(rawHostname: string): Promise<Account[]> {
     const [allAccounts, hostnameMap] = await StorageService.getAccountAndHostnameMaps();
-
-    const accountIds = hostnameMap[hostname] ?? [];
+    const hostname = normalizeHostname(rawHostname);
+    let accountIds = hostnameMap[hostname] ?? [];
 
     if (accountIds.length === 0) {
       return [StorageService.synthesizeDefaultAccount(hostname)];

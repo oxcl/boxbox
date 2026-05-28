@@ -20,6 +20,7 @@ export interface TabService {
     index: number,
     replaceCurrentTabId?: number
   ): Promise<void>;
+  saveCookiesForHostname(hostname: string): Promise<void>;
   cleanupBindingsForContainer(cookieStoreId: string): void;
   getTabBinding(tabId: number): Promise<TabBinding | null>;
 }
@@ -43,6 +44,16 @@ export function getHostname(url: string): string | null {
   } catch {
     return null;
   }
+}
+
+export function normalizeHostname(hostname: string): string {
+  return hostname.startsWith('www.') ? hostname.slice(4) : hostname;
+}
+
+export function hostnameMatches(a: string, b: string): boolean {
+  const na = normalizeHostname(a);
+  const nb = normalizeHostname(b);
+  return na === nb || na.endsWith('.' + nb) || nb.endsWith('.' + na);
 }
 
 export function toHttpsUrl(hostname: string): string {

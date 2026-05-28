@@ -40,6 +40,8 @@ export async function handleCreate(data: AppData): Promise<void> {
       [hostname]: newAccount.id,
     });
 
+    await tabService.saveCookiesForHostname(hostname);
+
     const currentTab = await getCurrentTab();
     await tabService.openInAccount(
       toHttpsUrl(hostname),
