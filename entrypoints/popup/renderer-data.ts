@@ -1,12 +1,12 @@
 import { StorageService, type Account } from '@/services/storage';
-import { tabService, getCurrentTab, getHostname, hostnameMatches } from '@/services/tabs';
-import { containerService, type ContainerInfo } from '@/services/container-api';
+import { tabService, getHostname, hostnameMatches } from '@/services/tab-service';
+import { containerService, type ContainerInfo } from '@/services/container-service';
 import { t } from '@/services/i18n';
 import type { AppData } from './types';
 import { showError } from './error';
 
 export async function loadAppData(): Promise<AppData> {
-  const currentTab = await getCurrentTab();
+  const currentTab = await tabService.getCurrentTab();
   const hostname = currentTab.url ? getHostname(currentTab.url) : null;
 
   let containers: ContainerInfo[] = [];

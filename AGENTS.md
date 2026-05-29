@@ -45,14 +45,21 @@ bun run lint
 
 ## Key Abstractions
 
-### Container API (`services/container-api.ts`)
+### Container Service (`services/container-service/`)
 
-All platform-specific logic is behind the `ContainerApi` interface:
+All platform-specific logic is behind the `ContainerService` interface:
 
 - `create/query/update/remove` — CRUD for containers
 - `applyAccount` — activate an account for a tab's navigation (Firefox: opens new tab in container; Chrome MV2: just binds; Chrome MV3: swaps cookies)
 - `applyDefault` — deactivate (Firefox: opens default tab; Chrome: clears cookies)
 - `onNavigateAway` — tab leaves a bound hostname (Chrome MV3: saves cookies back to jar)
+
+**File structure:**
+- `types.ts` — shared interfaces (`ContainerService`, `ContainerInfo`, `ContainerMetaMap`, `CookieStoreOps`)
+- `firefox.ts` — `FirefoxContainerService` (uses `browser.contextualIdentities`)
+- `chrome.ts` — `ChromeContainerService` (uses storage-backed UUIDs + CookieStoreOps)
+- `utils.ts` — `hasBlockingWebRequest()` utility
+- `index.ts` — re-exports + `ContainerProxyService` proxy for popup
 
 ### Cookie Store (`services/cookie-store.ts`) — Chrome only
 
@@ -70,7 +77,7 @@ Per-account cookie jars stored in `local:cookieJars`:
 - Use `browser` global (WebExtensions API) for cross-browser code.
 - Use `chrome.*` only in Chrome-specific code paths, guarded by `!isFirefox()`.
 - Use `isFirefox()` from `services/tabs.ts` for runtime browser detection.
-- Use `hasBlockingWebRequest()` from `services/container-api.ts` to detect MV2 blocking capability.
+- Use `hasBlockingWebRequest()` from `services/container-service/utils.ts` to detect MV2 blocking capability.
 - For container operations in popup: use `containerService` proxy (auto-routes to background).
 - For storage: WXT's `storage.defineItem` API (see `services/storage.ts`).
 

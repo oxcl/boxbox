@@ -1,6 +1,6 @@
-import type { CookieJars } from './cookie-store';
-import type { ContainerMetaMap } from './container-api';
-import { normalizeHostname } from './tabs';
+import type { CookieJars } from './cookie-service';
+import type { ContainerMetaMap } from './container-service';
+import { normalizeHostname } from './tab-service';
 
 export interface Account {
   id: string;
@@ -138,5 +138,61 @@ export class StorageService {
     }
 
     await StorageService.hostnameAccounts.setValue(newMap);
+  }
+
+  static async registerAccountForHostname(account: Account, hostname: string): Promise<void> {
+    const [currentAccounts, currentHostnameMap] = await StorageService.getAccountAndHostnameMaps();
+    const accountIds = currentHostnameMap[hostname] ?? [];
+    const hasStoredDefault = accountIds.some((id) => currentAccounts[id]?.isDefault);
+
+    await StorageService.upsertAccount(account);
+    await StorageService.addAccountToHostname(hostname, account.id);
+
+    if (!hasStoredDefault) {
+      const defaultAccount = StorageService.synthesizeDefaultAccount(hostname);
+      await StorageService.upsertAccount(defaultAccount);
+      await StorageService.addAccountToHostname(hostname, defaultAccount.id);
+    }
+
+    await StorageService.setLastSelected(hostname, account.id);
+  }
+
+  static async removeAccountForHostname(
+    accountId: string,
+    hostname: string
+  ): Promise<{ wasActive: boolean; remainingAccountIds: string[] }> {
+    const [currentAccounts, currentHostnameMap, lastMap] = await Promise.all([
+      StorageService.accounts.getValue(),
+      StorageService.hostnameAccounts.getValue(),
+      StorageService.lastSelected.getValue(),
+    ]);
+
+    const { [accountId]: _removed, ...remainingAccounts } = currentAccounts;
+
+    const oldIds = currentHostnameMap[hostname] ?? [];
+    const newIds = oldIds.filter((id) => id !== accountId);
+
+    const newHostnameMap = { ...currentHostnameMap };
+    if (newIds.length === 0) {
+      delete newHostnameMap[hostname];
+    } else {
+      newHostnameMap[hostname] = newIds;
+    }
+
+    const hasDefault = newIds.some((id) => remainingAccounts[id]?.isDefault);
+    if (!hasDefault) {
+      delete remainingAccounts[StorageService.DEFAULT_CONTAINER_ID];
+    }
+
+    const { [hostname]: _last, ...remainingLast } = lastMap;
+
+    await Promise.all([
+      StorageService.accounts.setValue(remainingAccounts),
+      StorageService.hostnameAccounts.setValue(newHostnameMap),
+      StorageService.lastSelected.setValue(remainingLast),
+    ]);
+
+    const wasActive = lastMap[hostname] === accountId;
+    return { wasActive, remainingAccountIds: newIds };
   }
 }

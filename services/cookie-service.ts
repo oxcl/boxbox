@@ -53,7 +53,7 @@ async function getAllCookiesForHostname(hostname: string): Promise<chrome.cookie
   return all;
 }
 
-export class CookieStore {
+export class CookieService {
   constructor(private store: StorageItemLike<CookieJars>) {}
 
   async saveForHostname(accountId: string, hostname: string): Promise<void> {
@@ -89,7 +89,6 @@ export class CookieStore {
       const url = buildCookieUrl(cookie, hostname);
       if (!url) continue;
       try {
-        // Don't pass domain for host-only cookies (required for __Host- prefix)
         const setDetails: Record<string, unknown> = {
           url,
           name: cookie.name,
@@ -105,7 +104,7 @@ export class CookieStore {
         }
         await chrome.cookies.set(setDetails as never);
       } catch (e) {
-        console.warn('[cookie-store] Failed to set cookie:', cookie.name, e);
+        console.warn('[cookie-service] Failed to set cookie:', cookie.name, e);
       }
     }
   }

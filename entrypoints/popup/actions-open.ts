@@ -1,5 +1,5 @@
 import { StorageService } from '@/services/storage';
-import { tabService, getCurrentTab, toHttpsUrl } from '@/services/tabs';
+import { tabService, toHttpsUrl } from '@/services/tab-service';
 import type { AppData } from './types';
 import { checkSupportReminder } from './actions-support';
 
@@ -8,7 +8,7 @@ export async function handleOpenInNewTab(accountId: string, data: AppData): Prom
 
   await StorageService.setLastSelected(data.hostname, accountId);
 
-  const currentTab = await getCurrentTab();
+  const currentTab = await tabService.getCurrentTab();
   await tabService.openInAccount(
     toHttpsUrl(data.hostname),
     accountId,
@@ -28,7 +28,7 @@ export async function handleOpenInTabWithoutSwitch(
 
   await StorageService.setLastSelected(data.hostname, accountId);
 
-  const currentTab = await getCurrentTab();
+  const currentTab = await tabService.getCurrentTab();
   await tabService.openInAccount(toHttpsUrl(data.hostname), accountId, currentTab.index + 1);
 
   window.close();

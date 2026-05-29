@@ -1,5 +1,5 @@
 import { StorageService, type Account } from '@/services/storage';
-import { containerService } from '@/services/container-api';
+import { containerService } from '@/services/container-service';
 import { t } from '@/services/i18n';
 import { showConfirm, showPrompt } from './modal';
 import type { AppData } from './types';

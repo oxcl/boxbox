@@ -1,94 +1,45 @@
-import { registerService, type ProxyServiceKey } from '@webext-core/proxy-service';
+import { registerService } from '@webext-core/proxy-service';
 import { StorageService } from '@/services/storage';
 import {
   TAB_SERVICE_KEY,
   type TabService,
   type TabBinding,
+  TabService as TabServiceImpl,
   getHostname,
   hostnameMatches,
   isFirefox,
   normalizeHostname,
-} from '@/services/tabs';
+} from '@/services/tab-service';
 import {
-  FirefoxContainerApi,
-  ChromeContainerApi,
+  FirefoxContainerService,
+  ChromeContainerService,
   hasBlockingWebRequest,
-  type ContainerApi,
   type ContainerService,
-} from '@/services/container-api';
-const CONTAINER_SERVICE_KEY = 'container-service' as ProxyServiceKey<ContainerService>;
-import { CookieStore } from '@/services/cookie-store';
+  CONTAINER_SERVICE_KEY,
+} from '@/services/container-service';
+import { CookieService } from '@/services/cookie-service';
 
 const tabBindings = new Map<number, TabBinding>();
 const pendingSwitches = new Set<number>();
 
-let containerApi: ContainerApi;
-let cookieStore: CookieStore | null = null;
+let containerService: ContainerService;
+let tabService: TabService;
+let cookieService: CookieService | null = null;
 
-function initContainerApi(): void {
-  if (isFirefox()) {
-    containerApi = new FirefoxContainerApi(tabBindings, pendingSwitches);
+function initServices(): void {
+  const firefox = isFirefox();
+  if (firefox) {
+    containerService = new FirefoxContainerService(tabBindings, pendingSwitches);
   } else {
-    cookieStore = new CookieStore(StorageService.cookieJars);
-    containerApi = new ChromeContainerApi(
+    cookieService = new CookieService(StorageService.cookieJars);
+    containerService = new ChromeContainerService(
       tabBindings,
-      cookieStore,
+      cookieService,
       StorageService.chromeContainerMeta
     );
   }
+  tabService = new TabServiceImpl(tabBindings, pendingSwitches, firefox);
 }
-
-function registerNewTab(tab: Browser.tabs.Tab, url: string, cookieStoreId: string): void {
-  if (!tab.id) return;
-  const hostname = getHostname(url);
-  if (!hostname) return;
-  tabBindings.set(tab.id, { hostname: normalizeHostname(hostname), cookieStoreId });
-  pendingSwitches.add(tab.id);
-}
-
-const tabServiceImpl: TabService = {
-  async openInContainer(url, cookieStoreId, index, replaceCurrentTabId) {
-    const createProps: Record<string, unknown> = { url, index };
-    if (isFirefox()) {
-      createProps.cookieStoreId = cookieStoreId;
-    }
-    const newTab = await browser.tabs.create(createProps as Browser.tabs.CreateProperties);
-    registerNewTab(newTab, url, cookieStoreId);
-    if (replaceCurrentTabId) browser.tabs.remove(replaceCurrentTabId);
-  },
-
-  async openInDefault(url, index, replaceCurrentTabId) {
-    const newTab = await browser.tabs.create({ url, index });
-    registerNewTab(newTab, url, StorageService.DEFAULT_CONTAINER_ID);
-    if (replaceCurrentTabId) browser.tabs.remove(replaceCurrentTabId);
-  },
-
-  async openInAccount(url, accountId, index, replaceCurrentTabId) {
-    if (accountId === StorageService.DEFAULT_CONTAINER_ID) {
-      await this.openInDefault(url, index, replaceCurrentTabId);
-    } else {
-      await this.openInContainer(url, accountId, index, replaceCurrentTabId);
-    }
-  },
-
-  async saveCookiesForHostname(hostname) {
-    if (cookieStore) {
-      await cookieStore.saveForHostname(StorageService.DEFAULT_CONTAINER_ID, hostname);
-    }
-  },
-
-  cleanupBindingsForContainer(cookieStoreId) {
-    for (const [tabId, binding] of tabBindings) {
-      if (binding.cookieStoreId === cookieStoreId) {
-        tabBindings.delete(tabId);
-      }
-    }
-  },
-
-  getTabBinding(tabId) {
-    return Promise.resolve(tabBindings.get(tabId) ?? null);
-  },
-};
 
 function badge() {
   return isFirefox() ? browser.browserAction : browser.action;
@@ -137,16 +88,9 @@ function protocolCheck(url: string): boolean {
 }
 
 export default defineBackground(() => {
-  initContainerApi();
-  registerService(TAB_SERVICE_KEY, tabServiceImpl);
-
-  const containerServiceImpl: ContainerService = {
-    query: () => containerApi.query(),
-    create: (name, color, icon) => containerApi.create(name, color, icon),
-    update: (id, details) => containerApi.update(id, details),
-    remove: (id) => containerApi.remove(id),
-  };
-  registerService(CONTAINER_SERVICE_KEY, containerServiceImpl);
+  initServices();
+  registerService(TAB_SERVICE_KEY, tabService);
+  registerService(CONTAINER_SERVICE_KEY, containerService);
 
   browser.runtime.onInstalled.addListener(async () => {
     const existing = await StorageService.supportReminder.getValue();
@@ -186,7 +130,7 @@ export default defineBackground(() => {
     if (pendingSwitches.has(details.tabId)) {
       pendingSwitches.delete(details.tabId);
       // For Chrome MV3: swap cookies for the pending tab navigation
-      if (!isFirefox() && !hasBlockingWebRequest() && cookieStore) {
+      if (!isFirefox() && !hasBlockingWebRequest() && cookieService) {
         const binding = tabBindings.get(details.tabId);
         const rawHostname = getHostname(details.url);
         const hostname = rawHostname ? normalizeHostname(rawHostname) : null;
@@ -196,7 +140,7 @@ export default defineBackground(() => {
           hostnameMatches(binding.hostname, hostname) &&
           binding.cookieStoreId !== StorageService.DEFAULT_CONTAINER_ID
         ) {
-          await cookieStore.restoreForHostname(binding.cookieStoreId, hostname);
+          await cookieService.restoreForHostname(binding.cookieStoreId, hostname);
         }
       }
       return;
@@ -223,7 +167,11 @@ export default defineBackground(() => {
 
       // Navigating away from previous hostname — cleanup
       if (binding && binding.hostname !== hostname) {
-        await containerApi.onNavigateAway(details.tabId, binding.hostname, binding.cookieStoreId);
+        await containerService.onNavigateAway(
+          details.tabId,
+          binding.hostname,
+          binding.cookieStoreId
+        );
         tabBindings.delete(details.tabId);
       }
 
@@ -231,18 +179,18 @@ export default defineBackground(() => {
       const map = await StorageService.lastSelected.getValue();
       const accountId = map[hostname] ?? map['www.' + hostname];
       if (!accountId) {
-        await containerApi.applyDefault(tab, details.url, hostname);
+        await containerService.applyDefault(tab, details.url, hostname);
         return;
       }
 
-      await containerApi.applyAccount(tab, details.url, hostname, accountId);
+      await containerService.applyAccount(tab, details.url, hostname, accountId);
     } catch (err) {
       console.error('[background] Error switching tab:', err);
     }
   });
 
   // Chrome-specific: cookie change sync for MV3
-  if (!isFirefox() && !hasBlockingWebRequest() && cookieStore) {
+  if (!isFirefox() && !hasBlockingWebRequest() && cookieService) {
     chrome.cookies.onChanged.addListener((changeInfo) => {
       const hostname = getHostname(
         `${changeInfo.cookie.secure ? 'https' : 'http'}://${changeInfo.cookie.domain.replace(/^\./, '')}${changeInfo.cookie.path}`
@@ -256,7 +204,7 @@ export default defineBackground(() => {
           if (!tabs[0]?.id) return;
           const binding = tabBindings.get(tabs[0].id);
           if (binding && hostnameMatches(binding.hostname, hostname)) {
-            cookieStore!.onCookieChanged(changeInfo, {
+            cookieService!.onCookieChanged(changeInfo, {
               accountId: binding.cookieStoreId,
               hostname: binding.hostname,
             });
