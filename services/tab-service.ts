@@ -1,5 +1,6 @@
 import type { ProxyServiceKey } from '@webext-core/proxy-service';
 import { createProxyService } from '@webext-core/proxy-service';
+import type { CookieService } from './cookie-service';
 
 export interface TabBinding {
   hostname: string;
@@ -10,7 +11,8 @@ export class TabService {
   constructor(
     private tabBindings: Map<number, TabBinding>,
     private pendingSwitches: Set<number>,
-    private isFirefox: boolean
+    private isFirefox: boolean,
+    private cookieService: CookieService | null
   ) {}
 
   private registerNewTab(tab: Browser.tabs.Tab, url: string, cookieStoreId: string): void {
@@ -21,12 +23,34 @@ export class TabService {
     this.pendingSwitches.add(tab.id);
   }
 
+  private async swapCookiesForTab(
+    replaceCurrentTabId: number | undefined,
+    newCookieStoreId: string,
+    url: string
+  ): Promise<void> {
+    if (!replaceCurrentTabId || this.isFirefox || !this.cookieService) return;
+
+    const hostname = getHostname(url);
+    if (!hostname) return;
+
+    const binding = this.tabBindings.get(replaceCurrentTabId);
+    if (binding && binding.cookieStoreId !== newCookieStoreId) {
+      await this.cookieService.saveForHostname(binding.cookieStoreId, binding.hostname);
+      if (newCookieStoreId === 'firefox-default') {
+        await this.cookieService.clearForHostname(hostname);
+      } else {
+        await this.cookieService.restoreForHostname(newCookieStoreId, hostname);
+      }
+    }
+  }
+
   async openInContainer(
     url: string,
     cookieStoreId: string,
     index: number,
     replaceCurrentTabId?: number
   ): Promise<void> {
+    await this.swapCookiesForTab(replaceCurrentTabId, cookieStoreId, url);
     const createProps: Record<string, unknown> = { url, index };
     if (this.isFirefox) {
       createProps.cookieStoreId = cookieStoreId;
@@ -37,6 +61,7 @@ export class TabService {
   }
 
   async openInDefault(url: string, index: number, replaceCurrentTabId?: number): Promise<void> {
+    await this.swapCookiesForTab(replaceCurrentTabId, 'firefox-default', url);
     const newTab = await browser.tabs.create({ url, index });
     this.registerNewTab(newTab, url, 'firefox-default');
     if (replaceCurrentTabId) browser.tabs.remove(replaceCurrentTabId);
@@ -75,7 +100,12 @@ export class TabService {
 
 export type TabProxyService = Omit<
   TabService,
-  'registerNewTab' | 'tabBindings' | 'pendingSwitches' | 'isFirefox'
+  | 'registerNewTab'
+  | 'swapCookiesForTab'
+  | 'tabBindings'
+  | 'pendingSwitches'
+  | 'isFirefox'
+  | 'cookieService'
 >;
 
 export const TAB_SERVICE_KEY = 'tab-service' as ProxyServiceKey<TabProxyService>;

@@ -60,11 +60,6 @@ export class ChromeContainerService implements ContainerService {
     };
 
     await StorageService.registerAccountForHostname(account, hostname);
-
-    if (!hasBlockingWebRequest()) {
-      await this.cookieService.saveForHostname(StorageService.DEFAULT_CONTAINER_ID, hostname);
-    }
-
     return containerInfo;
   }
 

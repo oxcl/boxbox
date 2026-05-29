@@ -38,7 +38,7 @@ function initServices(): void {
       StorageService.chromeContainerMeta
     );
   }
-  tabService = new TabServiceImpl(tabBindings, pendingSwitches, firefox);
+  tabService = new TabServiceImpl(tabBindings, pendingSwitches, firefox, cookieService);
 }
 
 function badge() {
@@ -129,20 +129,6 @@ export default defineBackground(() => {
 
     if (pendingSwitches.has(details.tabId)) {
       pendingSwitches.delete(details.tabId);
-      // For Chrome MV3: swap cookies for the pending tab navigation
-      if (!isFirefox() && !hasBlockingWebRequest() && cookieService) {
-        const binding = tabBindings.get(details.tabId);
-        const rawHostname = getHostname(details.url);
-        const hostname = rawHostname ? normalizeHostname(rawHostname) : null;
-        if (
-          binding &&
-          hostname &&
-          hostnameMatches(binding.hostname, hostname) &&
-          binding.cookieStoreId !== StorageService.DEFAULT_CONTAINER_ID
-        ) {
-          await cookieService.restoreForHostname(binding.cookieStoreId, hostname);
-        }
-      }
       return;
     }
 
