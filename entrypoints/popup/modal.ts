@@ -51,7 +51,7 @@ export function showConfirm(message: string): Promise<ModalResult> {
   });
 }
 
-export function showPrompt(defaultValue: string): Promise<ModalResult> {
+export function showPrompt(defaultValue: string, promptTitle?: string): Promise<ModalResult> {
   return new Promise((resolve) => {
     const overlay = document.getElementById('modal-overlay')!;
     const title = document.getElementById('modal-title')!;
@@ -59,7 +59,7 @@ export function showPrompt(defaultValue: string): Promise<ModalResult> {
     const cancelBtn = document.getElementById('modal-cancel')!;
     const confirmBtn = document.getElementById('modal-confirm')!;
 
-    title.textContent = t('renameAccount');
+    title.textContent = promptTitle ?? t('renameAccount');
     body.replaceChildren();
     const input = document.createElement('input');
     input.type = 'text';

@@ -2,6 +2,7 @@ import { tabService, toHttpsUrl, normalizeHostname } from '@/services/tab-servic
 import { containerService } from '@/services/container-service';
 import { t } from '@/services/i18n';
 import { showError } from './error';
+import { showConfirm, showPrompt } from './modal';
 import type { AppData } from './types';
 
 export async function handleCreate(data: AppData): Promise<void> {
@@ -9,7 +10,36 @@ export async function handleCreate(data: AppData): Promise<void> {
 
   try {
     const hostname = normalizeHostname(data.hostname);
-    const accountName = `${t('accountPrefix')}${data.currentAccounts.length + 1}`;
+    const defaultName = `${t('accountPrefix')}${data.currentAccounts.length + 1}`;
+
+    const result = await showPrompt(defaultName, t('createNewAccount'));
+    if (!result.confirmed || !result.value) return;
+
+    const accountName = result.value.trim();
+    if (accountName === '') return;
+
+    if (accountName === 'Default') {
+      await showConfirm(t('nameReserved'));
+      return;
+    }
+
+    if (accountName.length > 50) {
+      await showConfirm(t('nameTooLong'));
+      return;
+    }
+
+    if (/[()]/.test(accountName)) {
+      await showConfirm(t('nameNoParens'));
+      return;
+    }
+
+    const duplicate = data.currentAccounts.find(
+      (p) => p.name.toLowerCase() === accountName.toLowerCase()
+    );
+    if (duplicate) {
+      await showConfirm(t('nameDuplicate', accountName));
+      return;
+    }
 
     const newContainer = await containerService.registerAccount(accountName, hostname);
 

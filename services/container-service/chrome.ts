@@ -5,11 +5,21 @@ import { StorageService, type Account } from '../storage';
 import { hasBlockingWebRequest } from './utils';
 
 export class ChromeContainerService implements ContainerService {
+  private saveCallback: (() => void) | null = null;
+
   constructor(
     private tabBindings: Map<number, TabBinding>,
     private cookieService: CookieService,
     private metaStorage: StorageItemLike<ContainerMetaMap>
   ) {}
+
+  setSaveCallback(cb: () => void): void {
+    this.saveCallback = cb;
+  }
+
+  private notifySave(): void {
+    if (this.saveCallback) this.saveCallback();
+  }
 
   async create(name: string, color = 'toolbar', icon = 'circle'): Promise<ContainerInfo> {
     const id = crypto.randomUUID();
@@ -74,6 +84,7 @@ export class ChromeContainerService implements ContainerService {
     }
     if (tab.id) {
       this.tabBindings.set(tab.id, { hostname, cookieStoreId: accountId });
+      this.notifySave();
     }
   }
 
@@ -86,6 +97,7 @@ export class ChromeContainerService implements ContainerService {
         hostname,
         cookieStoreId: 'firefox-default',
       });
+      this.notifySave();
     }
   }
 

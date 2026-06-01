@@ -1,4 +1,3 @@
-import type { CookieJars } from './cookie-service';
 import type { ContainerMetaMap } from './container-service';
 import { normalizeHostname } from './tab-service';
 
@@ -50,10 +49,6 @@ export class StorageService {
       fallback: {},
     }
   );
-
-  static readonly cookieJars = storage.defineItem<CookieJars>('local:cookieJars', {
-    fallback: {},
-  });
 
   static synthesizeDefaultAccount(hostname: string): Account {
     return {

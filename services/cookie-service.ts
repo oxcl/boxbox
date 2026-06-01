@@ -12,11 +12,6 @@ export interface StoredCookie {
 
 export type CookieJars = Record<string, Record<string, StoredCookie[]>>;
 
-interface StorageItemLike<T> {
-  getValue(): Promise<T>;
-  setValue(value: T): Promise<void>;
-}
-
 function buildCookieUrl(
   cookie: { domain: string; path: string; secure: boolean; hostOnly?: boolean },
   fallbackHostname?: string
@@ -53,14 +48,17 @@ async function getAllCookiesForHostname(hostname: string): Promise<chrome.cookie
   return all;
 }
 
-export class CookieService {
-  constructor(private store: StorageItemLike<CookieJars>) {}
+function cookieJarKey(accountId: string): string {
+  return `cookieJar:${accountId}`;
+}
 
+export class CookieService {
   async saveForHostname(accountId: string, hostname: string): Promise<void> {
     const cookies = await getAllCookiesForHostname(hostname);
-    const jars = await this.store.getValue();
-    if (!jars[accountId]) jars[accountId] = {};
-    jars[accountId][hostname] = cookies.map((c) => ({
+    const key = cookieJarKey(accountId);
+    const stored = await chrome.storage.local.get(key);
+    const jar = (stored[key] as Record<string, StoredCookie[]>) ?? {};
+    jar[hostname] = cookies.map((c) => ({
       name: c.name,
       value: c.value,
       domain: c.domain,
@@ -71,7 +69,7 @@ export class CookieService {
       sameSite: c.sameSite,
       expirationDate: c.expirationDate,
     }));
-    await this.store.setValue(jars);
+    await chrome.storage.local.set({ [key]: jar });
   }
 
   async restoreForHostname(accountId: string, hostname: string): Promise<void> {
@@ -83,8 +81,10 @@ export class CookieService {
       }
     }
 
-    const jars = await this.store.getValue();
-    const hostnameCookies = jars[accountId]?.[hostname] ?? [];
+    const key = cookieJarKey(accountId);
+    const stored = await chrome.storage.local.get(key);
+    const jar = (stored[key] as Record<string, StoredCookie[]>) ?? {};
+    const hostnameCookies = jar[hostname] ?? [];
     for (const cookie of hostnameCookies) {
       const url = buildCookieUrl(cookie, hostname);
       if (!url) continue;
@@ -124,12 +124,13 @@ export class CookieService {
     binding: { accountId: string; hostname: string } | null
   ): Promise<void> {
     if (!binding) return;
-    const jars = await this.store.getValue();
-    if (!jars[binding.accountId]) jars[binding.accountId] = {};
-    if (!jars[binding.accountId][binding.hostname]) {
-      jars[binding.accountId][binding.hostname] = [];
+    const key = cookieJarKey(binding.accountId);
+    const stored = await chrome.storage.local.get(key);
+    const jar = (stored[key] as Record<string, StoredCookie[]>) ?? {};
+    if (!jar[binding.hostname]) {
+      jar[binding.hostname] = [];
     }
-    const hostCookies = jars[binding.accountId][binding.hostname];
+    const hostCookies = jar[binding.hostname];
     const idx = hostCookies.findIndex(
       (c: StoredCookie) =>
         c.name === changeInfo.cookie.name &&
@@ -156,11 +157,13 @@ export class CookieService {
         hostCookies.push(stored);
       }
     }
-    await this.store.setValue(jars);
+    await chrome.storage.local.set({ [key]: jar });
   }
 
   async getCookies(accountId: string, hostname: string): Promise<StoredCookie[]> {
-    const jars = await this.store.getValue();
-    return jars[accountId]?.[hostname] ?? [];
+    const key = cookieJarKey(accountId);
+    const stored = await chrome.storage.local.get(key);
+    const jar = (stored[key] as Record<string, StoredCookie[]>) ?? {};
+    return jar[hostname] ?? [];
   }
 }

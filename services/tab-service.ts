@@ -8,6 +8,8 @@ export interface TabBinding {
 }
 
 export class TabService {
+  private saveCallback: (() => void) | null = null;
+
   constructor(
     private tabBindings: Map<number, TabBinding>,
     private pendingSwitches: Set<number>,
@@ -15,12 +17,21 @@ export class TabService {
     private cookieService: CookieService | null
   ) {}
 
+  setSaveCallback(cb: () => void): void {
+    this.saveCallback = cb;
+  }
+
+  private notifySave(): void {
+    if (this.saveCallback) this.saveCallback();
+  }
+
   private registerNewTab(tab: Browser.tabs.Tab, url: string, cookieStoreId: string): void {
     if (!tab.id) return;
     const hostname = getHostname(url);
     if (!hostname) return;
     this.tabBindings.set(tab.id, { hostname: normalizeHostname(hostname), cookieStoreId });
     this.pendingSwitches.add(tab.id);
+    this.notifySave();
   }
 
   private async swapCookiesForTab(
@@ -86,6 +97,7 @@ export class TabService {
         this.tabBindings.delete(tabId);
       }
     }
+    this.notifySave();
   }
 
   getTabBinding(tabId: number): Promise<TabBinding | null> {
