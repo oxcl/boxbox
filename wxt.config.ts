@@ -5,7 +5,7 @@ export default defineConfig({
     if (browser === 'firefox') {
       return {
         homepage_url: 'https://oxcl.github.io/boxbox',
-        permissions: ['contextualIdentities', 'tabs', 'storage', 'webNavigation'],
+        permissions: ['contextualIdentities', 'cookies', 'tabs', 'storage', 'webNavigation'],
         browser_specific_settings: {
           gecko: {
             id: '@oxcl.boxbox',
