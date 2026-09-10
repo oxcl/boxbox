@@ -153,6 +153,78 @@ export default defineBackground(() => {
   registerService(TAB_SERVICE_KEY, tabService);
   registerService(CONTAINER_SERVICE_KEY, containerService);
 
+  // Helper: for Firefox ensure tabs opened by an opener inherit the opener's container
+  async function waitForTabUrl(tabId: number, timeoutMs = 3000): Promise<string | undefined> {
+    return new Promise((resolve) => {
+      let done = false;
+      const onUpdated = (id: number, changeInfo: Browser.tabs.OnUpdatedInfo, tab: Browser.tabs.Tab) => {
+        if (id !== tabId) return;
+        if (changeInfo.url && changeInfo.url !== 'about:blank') {
+          finish(changeInfo.url);
+        }
+      };
+      const t = setTimeout(() => finish(undefined), timeoutMs);
+      function finish(result?: string) {
+        if (done) return;
+        done = true;
+        clearTimeout(t);
+        browser.tabs.onUpdated.removeListener(onUpdated);
+        resolve(result);
+      }
+      browser.tabs.onUpdated.addListener(onUpdated);
+    });
+  }
+
+  async function ensureTabInOpenerContainer(tab: Browser.tabs.Tab): Promise<void> {
+    if (!isFirefox()) return;
+    if (!tab.openerTabId) return;
+    if (!tab.id) return;
+
+    try {
+      const opener = await browser.tabs.get(tab.openerTabId);
+      const openerBinding = tabBindings.get(opener.id);
+      if (!openerBinding) return;
+
+      const targetStoreId = openerBinding.cookieStoreId;
+      // already correct
+      if (tab.cookieStoreId === targetStoreId) {
+        tabBindings.set(tab.id, { hostname: openerBinding.hostname, cookieStoreId: targetStoreId });
+        saveTabBindings();
+        return;
+      }
+
+      // Wait for a navigated URL if it's about:blank
+      let url = tab.url && tab.url !== 'about:blank' ? tab.url : undefined;
+      if (!url) {
+        url = await waitForTabUrl(tab.id, 5000);
+        if (!url) return;
+      }
+
+      // Create new tab in the correct container and close the original
+      const newTab = await browser.tabs.create({
+        url,
+        cookieStoreId: targetStoreId,
+        index: tab.index,
+        openerTabId: opener.id,
+        active: tab.active ?? false,
+      });
+
+      if (newTab.id) {
+        tabBindings.set(newTab.id, { hostname: openerBinding.hostname, cookieStoreId: targetStoreId });
+        pendingSwitches.add(newTab.id);
+        saveTabBindings();
+      }
+
+      try {
+        await browser.tabs.remove(tab.id);
+      } catch {
+        // ignore
+      }
+    } catch (err) {
+      // ignore failures (tab may have been removed)
+    }
+  }
+
   browser.runtime.onInstalled.addListener(async () => {
     const existing = await StorageService.supportReminder.getValue();
     if (!existing) {
@@ -179,6 +251,28 @@ export default defineBackground(() => {
         console.error('[background] Error swapping cookies on tab switch:', err);
       }
     });
+  }
+
+  // Ensure opener-created tabs inherit the opener's container (Firefox only)
+  if (isFirefox()) {
+    // tabs created by window.open/target=_blank
+    browser.tabs.onCreated.addListener((tab) => {
+      setTimeout(() => {
+        void ensureTabInOpenerContainer(tab);
+      }, 50);
+    });
+
+    // webNavigation fires for target=_blank/new-window navigations
+    if (browser.webNavigation && browser.webNavigation.onCreatedNavigationTarget) {
+      browser.webNavigation.onCreatedNavigationTarget.addListener(async (details) => {
+        try {
+          const newTab = await browser.tabs.get(details.tabId);
+          await ensureTabInOpenerContainer(newTab);
+        } catch {
+          // ignore
+        }
+      });
+    }
   }
 
   browser.tabs.onActivated.addListener((activeInfo) => {
