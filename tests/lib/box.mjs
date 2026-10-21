@@ -46,8 +46,12 @@ export class BoxHelper {
   /** Which Box account (id) is the tab in, according to the extension. */
   async tabAccount(tab) {
     const id = await tab.boxId();
-    const st = await this.state();
-    const e = st.tabs.find(([tid]) => tid === id);
+    let e;
+    for (let i = 0; i < 20 && !e; i++) {
+      const st = await this.state();
+      e = st.tabs.find(([tid]) => tid === id);
+      if (!e) await sleep(150);
+    }
     return e ? e[1] : null;
   }
 }
