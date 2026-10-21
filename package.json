@@ -1,0 +1,19 @@
+{
+  "name": "box-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Box — per-tab session isolation for Firefox and Chrome",
+  "scripts": {
+    "build": "node build/build.mjs",
+    "test": "node tests/run.mjs",
+    "fixture": "node fixture/server.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "puppeteer-core": "^25.15.0",
+    "selenium-webdriver": "^4.51.0",
+    "tldts": "^7.4.19",
+    "ws": "^8.22.0"
+  }
+}
