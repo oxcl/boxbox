@@ -1,0 +1,52 @@
+{
+  "firefox": [
+    {
+      "name": "navigating between domains of one service keeps the account",
+      "status": "pass",
+      "ms": 2384,
+      "error": null
+    },
+    {
+      "name": "user navigation to another service leaves the account",
+      "status": "pass",
+      "ms": 3005,
+      "error": null
+    },
+    {
+      "name": "page-initiated navigation (no user gesture) stays in the account",
+      "status": "pass",
+      "ms": 1592,
+      "error": null
+    },
+    {
+      "name": "OAuth: redirect flow to another service and back stays in the account",
+      "status": "pass",
+      "ms": 1172,
+      "error": null
+    },
+    {
+      "name": "popup (window.open) login stays inside the account",
+      "status": "pass",
+      "ms": 2412,
+      "error": null
+    },
+    {
+      "name": "embedded content (iframes) uses the tab's account",
+      "status": "pass",
+      "ms": 2668,
+      "error": null
+    },
+    {
+      "name": "link opened in a new tab: same service inherits the account, other service does not",
+      "status": "pass",
+      "ms": 1155,
+      "error": null
+    },
+    {
+      "name": "switching one tab's account never affects other tabs",
+      "status": "pass",
+      "ms": 2688,
+      "error": null
+    }
+  ]
+}

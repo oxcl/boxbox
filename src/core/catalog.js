@@ -1,0 +1,47 @@
+// Built-in service catalog. Bundled with the extension; never fetched, never updated remotely.
+// Each entry: id, name, domains (registrable domains — all sub-domains are implied).
+export const CATALOG = [
+  { id: 'google', name: 'Google', domains: ['google.com', 'youtube.com', 'youtu.be', 'googleapis.com', 'gstatic.com', 'googleusercontent.com', 'ggpht.com', 'ytimg.com', 'googlevideo.com', 'google.co.uk', 'google.de', 'google.fr', 'google.co.jp', 'google.ca', 'google.com.au', 'google.es', 'google.it', 'google.com.br', 'google.co.in', 'blogger.com', 'blogspot.com', 'withgoogle.com', 'gvt1.com', 'gvt2.com', 'googleadservices.com', 'googlesyndication.com', 'doubleclick.net', 'recaptcha.net', 'firebaseapp.com', 'appspot.com', 'goo.gl', 'g.co', 'gmail.com', 'googlemail.com'] },
+  { id: 'microsoft', name: 'Microsoft', domains: ['microsoft.com', 'live.com', 'office.com', 'office365.com', 'outlook.com', 'microsoftonline.com', 'msn.com', 'bing.com', 'azure.com', 'azureedge.net', 'windows.net', 'sharepoint.com', 'onedrive.com', 'skype.com', 'xbox.com', 'msecnd.net', 'msauth.net', 'msftauth.net', 'microsoftonline-p.com', 'officeapps.live.com', 'powerbi.com', 'visualstudio.com'] },
+  { id: 'meta', name: 'Meta', domains: ['facebook.com', 'fb.com', 'fbcdn.net', 'instagram.com', 'cdninstagram.com', 'messenger.com', 'whatsapp.com', 'whatsapp.net', 'threads.net', 'meta.com', 'oculus.com', 'fbsbx.com', 'facebook.net'] },
+  { id: 'amazon', name: 'Amazon', domains: ['amazon.com', 'amazon.co.uk', 'amazon.de', 'amazon.fr', 'amazon.it', 'amazon.es', 'amazon.ca', 'amazon.co.jp', 'amazon.in', 'amazon.com.au', 'amazon.com.br', 'amazon.nl', 'amazonaws.com', 'media-amazon.com', 'ssl-images-amazon.com', 'primevideo.com', 'twitch.tv', 'twitchcdn.net', 'ttvnw.net', 'jtvnw.net', 'audible.com', 'goodreads.com', 'imdb.com', 'amazonpay.com', 'a2z.com', 'awsstatic.com'] },
+  { id: 'x', name: 'X (Twitter)', domains: ['x.com', 'twitter.com', 't.co', 'twimg.com', 'twitterstat.us', 'pscp.tv', 'periscope.tv'] },
+  { id: 'github', name: 'GitHub', domains: ['github.com', 'githubusercontent.com', 'githubassets.com', 'github.io', 'githubapp.com', 'ghcr.io', 'github.dev', 'githubcopilot.com', 'npmjs.com', 'npmjs.org'] },
+  { id: 'reddit', name: 'Reddit', domains: ['reddit.com', 'redd.it', 'redditmedia.com', 'redditstatic.com', 'reddituploads.com', 'redditinc.com'] },
+  { id: 'apple', name: 'Apple', domains: ['apple.com', 'icloud.com', 'icloud-content.com', 'mzstatic.com', 'cdn-apple.com', 'apple-cloudkit.com', 'itunes.com'] },
+  { id: 'linkedin', name: 'LinkedIn', domains: ['linkedin.com', 'licdn.com', 'lnkd.in'] },
+  { id: 'netflix', name: 'Netflix', domains: ['netflix.com', 'nflxvideo.net', 'nflximg.net', 'nflxext.com', 'nflxso.net'] },
+  { id: 'spotify', name: 'Spotify', domains: ['spotify.com', 'scdn.co', 'spotifycdn.com', 'spoti.fi'] },
+  { id: 'dropbox', name: 'Dropbox', domains: ['dropbox.com', 'dropboxstatic.com', 'dropboxusercontent.com', 'db.tt'] },
+  { id: 'slack', name: 'Slack', domains: ['slack.com', 'slack-edge.com', 'slack-files.com', 'slack-imgs.com'] },
+  { id: 'discord', name: 'Discord', domains: ['discord.com', 'discordapp.com', 'discord.gg', 'discordapp.net', 'discord.media'] },
+  { id: 'paypal', name: 'PayPal', domains: ['paypal.com', 'paypalobjects.com', 'paypal.me', 'venmo.com'] },
+  { id: 'ebay', name: 'eBay', domains: ['ebay.com', 'ebay.co.uk', 'ebay.de', 'ebayimg.com', 'ebaystatic.com', 'ebay.fr', 'ebay.it', 'ebay.es', 'ebay.com.au', 'ebay.ca'] },
+  { id: 'yahoo', name: 'Yahoo', domains: ['yahoo.com', 'yahoo.co.jp', 'yimg.com', 'flickr.com', 'aol.com', 'yahooapis.com', 'tumblr.com', 'ymail.com'] },
+  { id: 'atlassian', name: 'Atlassian', domains: ['atlassian.com', 'atlassian.net', 'bitbucket.org', 'trello.com', 'atl-paas.net', 'jira.com', 'statuspage.io'] },
+  { id: 'adobe', name: 'Adobe', domains: ['adobe.com', 'adobelogin.com', 'adobe.io', 'typekit.net', 'behance.net', 'adobess.com', 'creativecloud.com'] },
+  { id: 'zoom', name: 'Zoom', domains: ['zoom.us', 'zoom.com', 'zoomgov.com'] },
+  { id: 'notion', name: 'Notion', domains: ['notion.so', 'notion.site', 'notion-static.com'] },
+  { id: 'openai', name: 'OpenAI', domains: ['openai.com', 'chatgpt.com', 'oaistatic.com', 'oaiusercontent.com'] },
+  { id: 'anthropic', name: 'Anthropic', domains: ['anthropic.com', 'claude.ai', 'claude.com'] },
+  { id: 'gitlab', name: 'GitLab', domains: ['gitlab.com', 'gitlab.io', 'gitlab-static.net'] },
+  { id: 'stackexchange', name: 'Stack Exchange', domains: ['stackoverflow.com', 'stackexchange.com', 'serverfault.com', 'superuser.com', 'askubuntu.com', 'sstatic.net', 'mathoverflow.net'] },
+  { id: 'wikimedia', name: 'Wikimedia', domains: ['wikipedia.org', 'wikimedia.org', 'wiktionary.org', 'wikidata.org', 'wikibooks.org', 'wikiquote.org', 'mediawiki.org'] },
+  { id: 'pinterest', name: 'Pinterest', domains: ['pinterest.com', 'pinimg.com', 'pin.it'] },
+  { id: 'tiktok', name: 'TikTok', domains: ['tiktok.com', 'tiktokv.com', 'tiktokcdn.com', 'byteoversea.com', 'ibytedtos.com'] },
+  { id: 'cloudflare', name: 'Cloudflare', domains: ['cloudflare.com', 'workers.dev', 'pages.dev', 'cloudflareinsights.com'] },
+  { id: 'shopify', name: 'Shopify', domains: ['shopify.com', 'myshopify.com', 'shopifycdn.com', 'shopifysvc.com'] },
+  { id: 'salesforce', name: 'Salesforce', domains: ['salesforce.com', 'force.com', 'salesforce-setup.com', 'herokuapp.com', 'heroku.com'] },
+  { id: 'twilio', name: 'Twilio', domains: ['twilio.com', 'sendgrid.com', 'segment.com'] },
+  { id: 'vercel', name: 'Vercel', domains: ['vercel.com', 'vercel.app', 'now.sh'] },
+  { id: 'medium', name: 'Medium', domains: ['medium.com' ] },
+  { id: 'telegram', name: 'Telegram', domains: ['telegram.org', 't.me', 'telegram.me', 'telesco.pe'] },
+  { id: 'figma', name: 'Figma', domains: ['figma.com', 'figstatic.com'] },
+  { id: 'canva', name: 'Canva', domains: ['canva.com', 'canva.cn'] },
+];
+
+// Test-only entries (appended by `BOX_TEST=1` builds; absent from production bundles).
+export const TEST_CATALOG = [
+  { id: 'fx-alpha', name: 'Alpha', domains: ['alpha.localhost', 'alpha-static.localhost'] },
+  { id: 'fx-beta', name: 'Beta', domains: ['beta.localhost'] },
+];

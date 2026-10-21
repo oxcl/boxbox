@@ -1,0 +1,83 @@
+{
+  "manifest_version": 2,
+  "name": "Box",
+  "version": "0.1.0",
+  "description": "Isolated accounts per tab: log in to the same site with different accounts at the same time.",
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
+    },
+    {
+      "matches": [
+        "http://*.localhost/*",
+        "http://*.fixture.test/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "options_ui": {
+    "page": "settings.html",
+    "open_in_tab": true
+  },
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "Box",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "box@box.local",
+      "strict_min_version": "140.0"
+    }
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": true
+  },
+  "permissions": [
+    "tabs",
+    "webRequest",
+    "webNavigation",
+    "storage",
+    "cookies",
+    "proxy",
+    "<all_urls>",
+    "webRequestBlocking",
+    "contextualIdentities",
+    "browsingData",
+    "tabGroups"
+  ],
+  "web_accessible_resources": [
+    "popup.html",
+    "picker.html",
+    "settings.html",
+    "ui.css",
+    "popup.js",
+    "picker.js",
+    "settings.js"
+  ]
+}
