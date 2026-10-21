@@ -1750,7 +1750,7 @@
       const cs = acc.cookieStoreId;
       if (!cs) return;
       try {
-        await ext.browsingData.remove({ cookieStoreId: cs }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true, cacheStorage: true, pluginData: true, downloads: false, history: false, formData: true, passwords: false });
+        await ext.browsingData.remove({ cookieStoreId: cs }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true, formData: true });
       } catch (e) {
         console.warn("browsingData.remove", e);
       }
@@ -1804,6 +1804,25 @@
       } catch (e) {
       }
     }
+    async testCall(call, args) {
+      if (call === "containers") return ext.contextualIdentities.query({});
+      if (call === "cookies") {
+        try {
+          return await ext.cookies.getAll({ cookieStoreId: args.cookieStoreId });
+        } catch (e) {
+          return { err: String(e) };
+        }
+      }
+      if (call === "wipeDefault") {
+        await ext.browsingData.remove({ since: 0 }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true });
+        if (args && args.origins && args.origins.length) {
+          await ext.browsingData.remove({ origins: args.origins }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true });
+        }
+        return true;
+      }
+      if (call === "groups") return ext.tabGroups ? ext.tabGroups.query({}) : null;
+      return null;
+    }
     // ---------------------------------------------------------------- proxy
     proxyFor(cs) {
       const accId = this.accountForCs(cs);
@@ -1851,7 +1870,7 @@
           case "test:sender":
             return { tabId: sender?.tab?.id, windowId: sender?.tab?.windowId };
           case "test:state":
-            return { ...controller2.state, tabs: [...controller2.tabs.entries()] };
+            return { ...controller2.state, tabs: [...controller2.tabs.entries()], pickers: [...controller2.pickerFor.entries()] };
           case "test:reset": {
             for (const id of Object.keys(controller2.accounts)) await controller2.deleteAccount(id);
             const d = DEFAULT_STATE();
@@ -1862,6 +1881,7 @@
               s.origins = {};
             });
             controller2.tabs.clear();
+            await platform2.testCall?.("wipeDefault", { origins: msg.origins });
             return true;
           }
           case "test:closeTab":

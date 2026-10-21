@@ -180,7 +180,7 @@ export class FirefoxPlatform {
     const cs = acc.cookieStoreId;
     if (!cs) return;
     try {
-      await ext.browsingData.remove({ cookieStoreId: cs }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true, cacheStorage: true, pluginData: true, downloads: false, history: false, formData: true, passwords: false });
+      await ext.browsingData.remove({ cookieStoreId: cs }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true, formData: true });
     } catch (e) { console.warn('browsingData.remove', e); }
     await ext.contextualIdentities.remove(cs);
     this.csToAccount.delete(cs);
@@ -223,6 +223,20 @@ export class FirefoxPlatform {
         await ext.tabGroups.update(gid, { title: acc.name, color: nearest(acc.color, { grey: '#9aa0a6', blue: '#1a73e8', red: '#d93025', yellow: '#f9ab00', green: '#188038', pink: '#d01884', purple: '#9334e6', cyan: '#007b83', orange: '#e8710a' }) });
       }
     } catch (e) { /* tab groups unavailable */ }
+  }
+
+  async testCall(call, args) {
+    if (call === 'containers') return ext.contextualIdentities.query({});
+    if (call === 'cookies') { try { return await ext.cookies.getAll({ cookieStoreId: args.cookieStoreId }); } catch (e) { return { err: String(e) }; } }
+    if (call === 'wipeDefault') {
+      await ext.browsingData.remove({ since: 0 }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true });
+      if (args && args.origins && args.origins.length) {
+        await ext.browsingData.remove({ origins: args.origins }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true });
+      }
+      return true;
+    }
+    if (call === 'groups') return ext.tabGroups ? ext.tabGroups.query({}) : null;
+    return null;
   }
 
   // ---------------------------------------------------------------- proxy

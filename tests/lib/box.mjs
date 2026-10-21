@@ -7,7 +7,10 @@ export class BoxHelper {
   box(m) { return this.drv.box(m); }
 
   async state() { return this.box({ type: 'test:state' }); }
-  async reset() { await this.box({ type: 'test:reset' }); }
+  async reset() {
+    const hosts = ['alpha.localhost', 'mail.alpha.localhost', 'video.alpha.localhost', 'accounts.alpha.localhost', 'alpha-static.localhost', 'beta.localhost', 'gamma.localhost', 'delta.localhost', 'ctl.localhost'];
+    await this.box({ type: 'test:reset', origins: hosts.map((x) => this.fx.url(x, '')) });
+  }
 
   async createAccount(serviceId, name, extra = {}) {
     return this.box({ type: 'createAccount', serviceId, name, ...extra });

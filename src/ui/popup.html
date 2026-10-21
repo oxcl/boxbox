@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Box</title><link rel="stylesheet" href="ui.css">
+<style>
+  body { width: 360px; min-height: 120px; max-height: 600px; overflow: hidden; position: relative; background: var(--bg); }
+  #app { display: flex; flex-direction: column; max-height: 600px; }
+  header { padding: 14px 14px 10px; display: flex; gap: 12px; align-items: center; background: linear-gradient(180deg, var(--surface), var(--bg)); }
+  .site { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; box-shadow: var(--shadow-sm); overflow: hidden; flex: none; font-weight: 800; color: var(--muted); }
+  .site img { width: 24px; height: 24px; }
+  h1 { margin: 0; font-size: 16px; line-height: 1.2; letter-spacing: -.01em; }
+  .list { padding: 4px 14px 10px; display: grid; gap: 8px; overflow: auto; }
+  .add { border: 1.5px dashed var(--border2); background: transparent; color: var(--muted); box-shadow: none; justify-content: center; font-weight: 600; }
+  .add:hover { color: var(--primary); border-color: var(--primary); background: color-mix(in srgb, var(--primary) 6%, transparent); }
+  footer { padding: 10px 14px 14px; border-top: 1px solid var(--border); display: grid; gap: 8px; background: var(--surface); }
+  .empty { padding: 28px 22px; text-align: center; display: grid; gap: 10px; justify-items: center; }
+  .domains { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; max-height: 24px; overflow: hidden; }
+  .card .more { margin-left: auto; }
+</style></head>
+<body><div id="app"></div><script src="popup.js"></script></body></html>

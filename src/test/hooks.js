@@ -19,12 +19,13 @@ export function installTestHooks(controller, platform) {
           return tabs.map((t) => ({ id: t.id, url: t.url, title: t.title, cookieStoreId: t.cookieStoreId, windowId: t.windowId, index: t.index, active: t.active, groupId: t.groupId, state: controller.tabs.get(t.id) || null }));
         }
         case 'test:sender': return { tabId: sender?.tab?.id, windowId: sender?.tab?.windowId };
-        case 'test:state': return { ...controller.state, tabs: [...controller.tabs.entries()] };
+        case 'test:state': return { ...controller.state, tabs: [...controller.tabs.entries()], pickers: [...controller.pickerFor.entries()] };
         case 'test:reset': {
           for (const id of Object.keys(controller.accounts)) await controller.deleteAccount(id);
           const d = DEFAULT_STATE();
           await controller.store.update((s) => { s.settings = d.settings; s.user = d.user; s.lastAccount = {}; s.origins = {}; });
           controller.tabs.clear();
+          await platform.testCall?.('wipeDefault', { origins: msg.origins });
           return true;
         }
         case 'test:closeTab': await ext.tabs.remove(msg.tabId); return true;

@@ -46,5 +46,6 @@ export default function (R, h) {
     a.eq((await h.readState(def)).ls, 'defaultuser');
     await def.goto(url);
     a.eq((await h.readState(def)).server.user, 'defaultuser', 'default still logged in after reload');
+    await h.logout(def);   // Cache Storage is not covered by Firefox's browsingData wipe used between tests
   });
 }
