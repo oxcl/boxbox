@@ -1,11 +1,19 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Hero</title><link rel="stylesheet" href="../../dist/chrome-mv3/ui.css"><link rel="stylesheet" href="../store.css"><script src="../gen/compose.js"></script><script src="../hero-box.js"></script><style></style></head><body><div class="scene"></div>
-<div style="position:absolute;left:84px;top:78px"><div class="brandmark"><span data-mini="#c9a06c" data-size="34"></span>BoxBox</div></div>
-<div style="position:absolute;left:84px;top:210px;width:640px">
-  <h1 class="headline" style="font-size:88px">One browser.<br>Many lives.</h1>
-  <p class="sub" style="font-size:25px;margin-top:26px;max-width:470px">Log into the same site with different accounts, side by side. Each one lives in its own box.</p>
-  <div style="display:flex;gap:12px;margin-top:38px"><span class="chip">Chrome</span><span class="chip">Firefox</span><span class="chip">Helium</span></div>
+<!doctype html><html><head><meta charset="utf-8"><title>Hero</title><link rel="stylesheet" href="../../dist/chrome-mv3/ui.css"><link rel="stylesheet" href="../store.css"><script src="../gen/compose.js"></script><script src="../hero-box.js"></script><script src="../chrome.js"></script><script src="../gen/sample.js"></script><style></style></head><body><div class="scene" style="background:linear-gradient(135deg,#fdf8ef 0%,#f8e7cb 55%,#f2d3a8 100%)"></div>
+<div class="lightcast" style="left:640px;top:-180px;width:900px;height:900px;background:radial-gradient(closest-side,rgba(255,236,196,.95),rgba(255,236,196,0))"></div>
+<div class="abs" style="left:72px;top:70px"><div class="brandmark"><span data-mini="#c9a06c" data-size="32"></span>BoxBox</div></div>
+<div class="abs" style="left:72px;top:176px;width:700px">
+  <div class="eyebrow">Account boxes for your browser</div>
+  <h1 class="headline" style="font-size:94px;margin-top:20px;letter-spacing:-.05em">One browser.<br>Many lives.</h1>
+  <p class="sub" style="font-size:25px;margin-top:30px;max-width:520px">The same site, logged in as different people, at the same time. Each in its own box.</p>
+  <div style="display:flex;gap:10px;margin-top:42px"><span class="chip">Chrome</span><span class="chip">Firefox</span><span class="chip">Helium</span><span class="chip" style="background:#1c1730;color:#fff;box-shadow:none">Free</span></div>
 </div>
-<div id="stage" style="position:absolute;right:-30px;top:150px;width:680px;height:560px;display:grid;place-items:center"></div>
-<script>document.querySelectorAll('[data-mini]').forEach(e=>e.append(BB.mini(e.dataset.mini, +e.dataset.size||20)));
-const h = makeHero({ size: 200 }); h.style.scale = '1.12'; h.style.marginTop = '50px'; document.getElementById('stage').append(h);
-h.querySelector('.cube').style.transform = 'rotateX(-24deg) rotateY(-32deg)';</script></body></html>
+<div class="ground" style="left:640px;top:640px;width:700px;height:96px"></div>
+<div class="stage3d" style="left:560px;top:0;width:720px;height:800px"><div class="t3" style="left:0;top:0;width:720px;height:800px">
+  <div class="tabcard" style="left:8px;top:96px;width:204px;height:136px;--c:#3b82f6;transform:rotate(-8deg) translateZ(-80px);filter:blur(1px);"><div class="th"><i></i><i></i><i></i><b>Postbox</b></div><div class="tb"></div><div class="tpill"><span data-mini="#3b82f6" data-size="12"></span>Work</div><div class="tc"><i></i><i></i><i></i><i></i></div></div><div class="tabcard" style="left:486px;top:44px;width:206px;height:138px;--c:#fb7185;transform:rotate(7deg) translateZ(-60px);"><div class="th"><i></i><i></i><i></i><b>Postbox</b></div><div class="tb"></div><div class="tpill"><span data-mini="#fb7185" data-size="12"></span>Personal</div><div class="tc"><i></i><i></i><i></i><i></i></div></div><div class="tabcard" style="left:570px;top:470px;width:150px;height:100px;--c:#22c55e;transform:rotate(10deg) translateZ(-120px);filter:blur(3px);"><div class="th"><i></i><i></i><i></i><b>Postbox</b></div><div class="tb"></div><div class="tpill"><span data-mini="#22c55e" data-size="12"></span>Gaming</div><div class="tc"><i></i><i></i><i></i><i></i></div></div>
+  <div id="hb" class="abs" style="left:60px;top:150px;width:640px;height:560px;display:grid;place-items:center"></div></div></div>
+<div class="fbox blur2" id="fb1" style="left:1130px;top:86px"></div><div class="fbox blur3" id="fb2" style="left:1170px;top:610px"></div><div class="fbox blur1" id="fb3" style="left:620px;top:690px"></div>
+<script>
+const h=makeHero({size:200,open:.62});h.style.scale='1.24';h.style.marginTop='70px';document.getElementById('hb').append(h);h.querySelector('.cube').style.transform='rotateX(-23deg) rotateY(-30deg)';
+const fb=(id,c,i,s,rot)=>{const b=BB.box({color:c,icon:i,size:s,hover:false,check:false});b.style.transform='rotate('+rot+'deg)';document.getElementById(id).append(b)};
+fb('fb1','#14b8a6','book',46,-10);fb('fb2','#ec4899','heart',78,14);fb('fb3','#a855f7','game',58,8);
+</script><div class="grain"></div><script>document.querySelectorAll("[data-mini]").forEach(e=>{if(!e.firstChild)e.append(BB.mini(e.dataset.mini,+e.dataset.size||20))});</script></body></html>

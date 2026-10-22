@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import zlib from 'node:zlib';
+import { execFileSync } from 'node:child_process';
 import { decodePng } from '../tests/lib/png.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const S = (...p) => path.join(root, 'store', ...p);
@@ -45,22 +46,25 @@ await esbuild.build({ entryPoints: [S('compose.js')], bundle: true, format: 'iif
 const crcT = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 const crc = (b) => { let c = ~0; for (const x of b) c = crcT[(c ^ x) & 255] ^ (c >>> 8); return ~c >>> 0; };
 const chunk = (type, data) => { const l = Buffer.alloc(4); l.writeUInt32BE(data.length); const td = Buffer.concat([Buffer.from(type), data]); const c = Buffer.alloc(4); c.writeUInt32BE(crc(td)); return Buffer.concat([l, td, c]); };
-function rgbPng(buf) {
-  const d = decodePng(buf), raw = Buffer.alloc((d.w * 3 + 1) * d.h);
-  for (let y = 0; y < d.h; y++) for (let x = 0; x < d.w; x++) { const [r, g, b] = d.px(x, y); const o = y * (d.w * 3 + 1) + 1 + x * 3; raw[o] = r; raw[o + 1] = g; raw[o + 2] = b; }
-  const ih = Buffer.alloc(13); ih.writeUInt32BE(d.w, 0); ih.writeUInt32BE(d.h, 4); ih[8] = 8; ih[9] = 2;
+function rgbPng(buf, k = 1) {   // decodes, box-filters down by k (supersampling), drops alpha
+  const d = decodePng(buf), W = d.w / k, H = d.h / k, raw = Buffer.alloc((W * 3 + 1) * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let r = 0, g = 0, b = 0; for (let j = 0; j < k; j++) for (let i = 0; i < k; i++) { const q = d.px(x * k + i, y * k + j); r += q[0]; g += q[1]; b += q[2]; } const n = k * k, o = y * (W * 3 + 1) + 1 + x * 3; raw[o] = Math.round(r / n); raw[o + 1] = Math.round(g / n); raw[o + 2] = Math.round(b / n); }
+  const ih = Buffer.alloc(13); ih.writeUInt32BE(W, 0); ih.writeUInt32BE(H, 4); ih[8] = 8; ih[9] = 2;
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ih), chunk('IDAT', zlib.deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
 }
+
+// ---- compositions
+execFileSync('python3', [S('pages.py')], { stdio: 'inherit' });
 
 // ---- render
 const SIZES = JSON.parse(fs.readFileSync(S('sizes.json'), 'utf8'));
 const b = await puppeteer.launch({ executablePath: process.env.BOX_CHROME, headless: true, args: ['--no-sandbox', '--allow-file-access-from-files', '--force-color-profile=srgb', '--font-render-hinting=none'] });
 for (const [name, [w, h, wait = 3200]] of Object.entries(SIZES)) {
   if (only.length && !only.includes(name)) continue;
-  const p = await b.newPage(); await p.setViewport({ width: w, height: h, deviceScaleFactor: 1 });
+  const p = await b.newPage(); await p.setViewport({ width: w, height: h, deviceScaleFactor: 2 });
   p.on('pageerror', (e) => console.warn(`[${name}]`, e.message));
   await p.goto(pathToFileURL(S('pages', name + '.html')).href); await new Promise((r) => setTimeout(r, wait));
-  const file = S('out', name + '.png'); fs.writeFileSync(file, rgbPng(Buffer.from(await p.screenshot({ type: 'png' })))); await p.close();
+  const file = S('out', name + '.png'); fs.writeFileSync(file, rgbPng(Buffer.from(await p.screenshot({ type: 'png' })), 2)); await p.close();
   console.log('rendered', name, `${w}x${h}`);
 }
 // icons: 128x128 with the 96x96 artwork centred (Chrome), 64x64 for Firefox's listing

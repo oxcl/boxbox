@@ -1,8 +1,13 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Settings</title><link rel="stylesheet" href="../../dist/chrome-mv3/ui.css"><link rel="stylesheet" href="../store.css"><script src="../gen/compose.js"></script><script src="../hero-box.js"></script><style></style></head><body><div class="scene"></div>
-<div style="position:absolute;left:84px;top:56px"><h1 class="headline" style="font-size:58px">Every service, neatly organised.</h1><p class="sub" style="font-size:22px;margin-top:14px">Logos, domains, entry modes and all your boxes in one place.</p></div>
-<div class="win" style="left:70px;top:186px;width:1140px;height:614px;border-radius:16px 16px 0 0">
-  <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="tabs"><div class="tab"><span class="fv" style="background:#a9714b">B</span>BoxBox settings</div></div></div>
-  <div class="bar"><span class="nav">‹ › ↻</span><div class="url">chrome-extension://boxbox/settings.html</div></div>
-  <div class="page" style="background:#fffdf9"><iframe id="sf" class="live" src="../gen/frames/settings.html" width="1267" height="760" scrolling="no" style="transform:scale(.9);transform-origin:top left"></iframe></div>
-</div>
-</body></html>
+<!doctype html><html><head><meta charset="utf-8"><title>Settings</title><link rel="stylesheet" href="../../dist/chrome-mv3/ui.css"><link rel="stylesheet" href="../store.css"><script src="../gen/compose.js"></script><script src="../hero-box.js"></script><script src="../chrome.js"></script><script src="../gen/sample.js"></script><style>.popwrap2{width:1000px;height:560px;border-radius:22px;overflow:hidden;background:#fffdf9;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 50px 90px -24px rgba(60,40,20,.5),0 18px 36px rgba(60,40,20,.18)}
+.logotile{position:absolute;border-radius:22%;background:#fff;display:grid;place-items:center;box-shadow:0 18px 34px -10px rgba(60,40,20,.38),0 0 0 1px rgba(0,0,0,.05);z-index:6}.logotile svg{width:56%;height:56%}</style></head><body><div class="scene" style="background:linear-gradient(135deg,#fdf8ef 0%,#f6e4c8 70%,#eecb98 100%)"></div>
+<div class="lightcast" style="left:300px;top:-120px;width:1000px;height:900px;background:radial-gradient(closest-side,rgba(255,236,196,.9),rgba(255,236,196,0))"></div>
+<div class="abs" style="left:72px;top:70px"><div class="brandmark"><span data-mini="#c9a06c" data-size="32"></span>BoxBox</div></div>
+<div class="abs" style="left:72px;top:200px;width:400px"><div class="eyebrow">Services</div><h1 class="headline" style="font-size:68px;margin-top:18px">Every service,<br>neatly<br>organised.</h1><p class="sub" style="font-size:21px;margin-top:24px;max-width:330px">Logos, domains, entry modes and all your boxes in one place.</p></div>
+<div class="stage3d" style="left:430px;top:0;width:900px;height:800px"><div class="t3" style="left:40px;top:130px;width:1000px;height:560px;transform:rotateY(-17deg) rotateX(5deg) rotateZ(-1deg);transform-origin:left center">
+  <div class="popwrap2"><iframe class="live" src="../gen/frames/settings.html" width="1250" height="680" scrolling="no" style="transform:scale(.8);transform-origin:top left"></iframe></div></div></div>
+<div id="logos"></div>
+<script>
+const L=null;
+const pos=[['github',414,84,64,-10,0],['figma',1186,56,56,8,2],['spotify',1190,664,64,-8,0]];
+for(const [k,x,y,s,r,b] of pos){const l=globalThis.__sample.logos[k];if(!l)continue;document.getElementById('logos').insertAdjacentHTML('beforeend','<div class="logotile blur'+b+'" style="left:'+x+'px;top:'+y+'px;width:'+s+'px;height:'+s+'px;transform:rotate('+r+'deg)"><svg viewBox="0 0 24 24"><path d="'+l.d+'" fill="'+l.hex+'"/></svg></div>')}
+</script><div class="grain"></div><script>document.querySelectorAll("[data-mini]").forEach(e=>{if(!e.firstChild)e.append(BB.mini(e.dataset.mini,+e.dataset.size||20))});</script></body></html>
