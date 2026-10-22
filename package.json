@@ -23,6 +23,7 @@
     "esbuild": "^0.28.2",
     "puppeteer-core": "^25.15.0",
     "selenium-webdriver": "^4.51.0",
+    "simple-icons": "^16.35.0",
     "tldts": "^7.4.19",
     "ws": "^8.22.0"
   }

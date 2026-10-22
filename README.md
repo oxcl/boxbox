@@ -11,7 +11,7 @@ time — in Firefox, Chrome (Manifest V3) and Helium (Manifest V2) — as if eve
 * **Entry modes** (global, with per-service override): open in the default session · remember the last account · ask with a picker *before the page loads*.
 * **Visible at a glance:** the toolbar icon *is* the active box, a coloured favicon badge, a coloured tab group / container, and a coloured page border with a small name pill.
 * **A first-run welcome** (three slides, the screen closes like a box lid between them) that also lets you pick your default entry mode.
-* **No network, no telemetry.** The catalog is bundled; BoxBox never fetches anything.
+* **No telemetry, nothing sent anywhere.** The catalog and the logos of ~37 common services are bundled; for other services BoxBox remembers the icon a page you visit already loaded (re-read from the browser cache, stored locally).
 
 <p>
   <img src="docs/screens/popup.png" width="230" alt="Popup: the boxes for the current service">
@@ -123,6 +123,8 @@ fixture/  tests/  scripts/launch.mjs
 
 ## Privacy
 
-Box makes no network requests of its own and ships no telemetry. The favicon badge fetches the *page's own* icon from the
-page's origin without credentials, to draw a dot on it. Cookies of accounts (Chrome builds) are stored in
-`storage.local` inside the browser profile; deleting an account deletes them.
+BoxBox ships no telemetry and sends nothing anywhere. The one thing it reads beyond your pages is the icon a page you visit has already
+loaded (from the HTTP cache, ≤30 KB, never for incognito tabs or tabs of a proxied account), kept in `storage.local` to show that service in
+Settings. The favicon badge fetches the *page's own* icon from the page's origin without credentials, to draw a dot on it. Cookies of
+accounts (Chrome builds) are stored in `storage.local` inside the browser profile; deleting an account deletes them.
+Logos are bundled from simple-icons (CC0) plus a few hand-made marks, only to identify the service; the brands belong to their owners.

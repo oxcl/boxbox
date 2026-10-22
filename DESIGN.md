@@ -341,3 +341,4 @@ Implementation and testing on the real browsers changed these points. Each is co
   the gentle bob on a handful of showcase boxes and they pause when the tab is idle or hidden.
 * **Identity surfaces:** toolbar icon = active box (`core/boxicon.js`), tab-group title carries the glyph emoji, page frame + name pill, favicon badge.
 * **Entry:** the welcome page is opened once by `runtime.onInstalled` (reason `install`), not in test builds.
+* **Service logos:** `scripts/gen-logos.mjs` bundles logos (simple-icons, CC0) for catalog services into `src/ui/logos.js`; services without a bundled logo show the icon learned from visited pages (`Controller.noteFavicon`, stored under `box.icons`, re-read from the HTTP cache), else a coloured letter.

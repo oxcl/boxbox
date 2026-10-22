@@ -25,6 +25,7 @@ export function installTestHooks(controller, platform) {
           const d = DEFAULT_STATE();
           await controller.store.update((s) => { s.settings = d.settings; s.user = d.user; s.lastAccount = {}; s.origins = {}; });
           controller.tabs.clear(); controller.pickerFor.clear();
+          controller._icons = Promise.resolve({}); await ext.storage.local.remove('box.icons');
           await platform.testCall?.('wipeDefault', { origins: msg.origins });
           return true;
         }

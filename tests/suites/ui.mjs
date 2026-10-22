@@ -145,6 +145,16 @@ export default function (R, h, drv) {
     await waitFor(async () => (await h.state()).settings.defaultMode === 'ask', { message: 'default mode saved from the welcome page' });
   });
 
+  R.test('service icons: the icon of a visited page is remembered for its service (and shown in settings)', async (ctx, a) => {
+    const u = ui(ctx);
+    await h.openIn(null, h.url('alpha.localhost', '/blank'));
+    const icons = await waitFor(async () => { const m = await h.box({ type: 'icons' }); return m && m[A] ? m : null; }, { message: 'icon learned from the page', timeout: 15000 });
+    a.ok(/^data:image\//.test(icons[A]), 'stored as a small data URL: ' + icons[A].slice(0, 40));
+    await u.open('settings.html', 1100, 800);
+    await waitIn(u, (id) => !!document.querySelector(`.svc[data-service="${id}"] .fav.logo img`), 'the learned icon is shown in the service row', A);
+    await waitIn(u, () => !!document.querySelector('.svc[data-service="google"] .fav.logo'), 'a bundled logo is shown for a catalog service');
+  });
+
   R.test('picker UI screenshot (light + dark)', async (ctx, a) => {
     const u = ui(ctx);
     const acc = (await h.createAccount(A, 'Alice', { color: '#14b8a6', icon: 'user' })).id;

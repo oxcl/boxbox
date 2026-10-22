@@ -1,6 +1,7 @@
 import { h, icon, api, toast, applyTheme, params, proxyLabel } from './lib.js';
 import * as MO from './motion.js';
 import { box, tabInto, KRAFT } from './box.js';
+import { favTile } from './favtile.js';
 
 const app = document.getElementById('app');
 const tabId = Number(params().get('tab'));
@@ -13,7 +14,8 @@ async function main() {
   let host = ''; try { host = new URL(p.url).host; } catch { /* ignore */ }
   document.title = `Open ${p.service.name} in… · BoxBox`;
   const opts = [{ id: null, acc: null }, ...p.accounts.map((a) => ({ id: a.id, acc: a }))];
-  const logo = h('div', { class: 'logo', id: 'logo', 'data-letter': p.service.name.charAt(0).toUpperCase() }, p.service.name.charAt(0).toUpperCase());
+  const icons = await api('icons').catch(() => ({}));
+  const logo = h('div', { class: 'logo', id: 'logo', 'data-letter': p.service.name.charAt(0).toUpperCase() }, favTile(p.service, icons[p.service.id]));
   const tiles = h('div', { class: 'tiles', role: 'radiogroup', 'aria-label': 'Box' },
     opts.map((o, i) => {
       const b = o.acc ? box({ color: o.acc.color, icon: o.acc.icon, label: o.acc.name, size: 100, lid: true }) : box({ kraft: true, icon: 'home', label: 'default', size: 100, lid: true });

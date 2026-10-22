@@ -3,6 +3,7 @@ import { openAccountEditor } from './account-editor.js';
 import { ext } from '../core/ext.js';
 import * as MO from './motion.js';
 import { box, mini, slideSeg, KRAFT } from './box.js';
+import { favTile } from './favtile.js';
 
 const SECTIONS = [['services', 'Services', 'layers'], ['general', 'Entry modes', 'sliders'], ['proxy', 'Proxies', 'network'], ['appearance', 'Appearance & privacy', 'shield'], ['about', 'About', 'info']];
 let st = null, section = (location.hash || '#services').slice(1), selectedService = null, query = '', openedFresh = null;
@@ -11,6 +12,7 @@ if (!SECTIONS.some(([id]) => id === section)) section = 'services';
 
 async function refresh() {
   st = await api('state');
+  st.icons = await api('icons').catch(() => ({}));
   if (st.settings.theme === 'light' || st.settings.theme === 'dark') document.documentElement.setAttribute('data-theme', st.settings.theme); else document.documentElement.removeAttribute('data-theme');
   render();
 }
@@ -84,7 +86,7 @@ function appearance() {
       toggle('border', 'Page border', 'Draw a colored frame and a small name pill around pages that are in a box.'),
       toggle('badge', 'Favicon badge', 'Add a small dot in the box color to the site’s icon.'),
       toggle('tabGroups', 'Tab groups', 'Group tabs of the same box and color the group (in browsers without tab groups the tab title gets a [Box] tag).')),
-    h('div', { class: 'panel' }, h('h2', {}, 'Privacy'), h('p', { class: 'muted', style: { margin: 0 } }, 'BoxBox makes no network requests of its own and has no telemetry. The service catalog ships with the extension and changes only with extension updates. Cookies of Chrome-based boxes are stored in this browser profile; deleting a box deletes them.')));
+    h('div', { class: 'panel' }, h('h2', {}, 'Privacy'), h('p', { class: 'muted', style: { margin: 0 } }, 'BoxBox has no telemetry and sends nothing anywhere. Logos for common services ship inside the extension; for other services it remembers the icon a page you visit has already loaded (re-read from the browser cache, kept only on this device). Cookies of Chrome-based boxes are stored in this browser profile; deleting a box deletes them.')));
 }
 
 // ------------------------------------------------------------------ Services (accordion) + their boxes
@@ -108,7 +110,7 @@ function services() {
   function row(s) {
     const accs = accountsOf(s.id), open = s.id === selectedService;
     const r = h('div', { class: 'svc' + (open ? ' open' : ''), 'data-service': s.id, 'data-name': s.name.toLowerCase() });
-    const fav = h('span', { class: 'fav', style: { '--c': hue(s.name) } }, s.name.charAt(0).toUpperCase());
+    const fav = favTile(s, st.icons && st.icons[s.id]);
     const minis = h('div', { class: 'minis' }, accs.slice(0, 3).map((a) => mini(a.color, 22)), accs.length > 3 ? h('span', { class: 'more' }, '+' + (accs.length - 3)) : null);
     const head = h('button', { class: 'svc-h', type: 'button', 'aria-expanded': String(open), onclick: () => { selectedService = open ? null : s.id; openedFresh = selectedService; services_rerender(); } },
       fav, h('span', { class: 'name' }, s.name), h('div', { class: 'doms' }, s.domains.slice(0, 3).map((d) => h('span', { class: 'chip' }, d)), s.domains.length > 3 ? h('span', { class: 'chip' }, '+' + (s.domains.length - 3)) : null), minis, h('span', { class: 'chev' }, icon('chevron')));

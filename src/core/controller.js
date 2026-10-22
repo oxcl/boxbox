@@ -252,6 +252,28 @@ export class Controller {
       .sort((a, b) => (b.accounts - a.accounts) || (Object.keys(this.state.settings.modes).includes(b.id) - Object.keys(this.state.settings.modes).includes(a.id)) || a.name.localeCompare(b.name));
   }
 
+  // ---- learned service icons ----------------------------------------------------
+  // The icon a page you visit has already loaded is remembered per service (stored locally, shown in Settings for services
+  // that have no bundled logo). It is re-read from the browser cache, never from anywhere but the page's own icon URL.
+  async loadIcons() {
+    if (!this._icons) this._icons = ext.storage.local.get('box.icons').then((g) => g['box.icons'] || {});
+    return this._icons;
+  }
+  async noteFavicon(tab) {
+    try {
+      if (!tab || tab.incognito || !tab.favIconUrl || !tab.url || !isWebUrl(tab.url)) return;
+      const sid = this.serviceOfUrl(tab.url); if (!sid) return;
+      const acc = this.getTab(tab.id).accountId && this.accounts[this.getTab(tab.id).accountId];
+      if (acc && acc.proxy) return;                       // never make a request outside a proxied account's route
+      const icons = await this.loadIcons(), cur = icons[sid];
+      if (cur && Date.now() - cur.at < 30 * 864e5) return;
+      const d = await readIcon(tab.favIconUrl); if (!d) return;
+      icons[sid] = { d, at: Date.now() };
+      const keys = Object.keys(icons); if (keys.length > 250) for (const k of keys.sort((a, b) => icons[a].at - icons[b].at).slice(0, keys.length - 250)) delete icons[k];
+      await ext.storage.local.set({ 'box.icons': icons });
+    } catch { /* an icon is never worth an error */ }
+  }
+
   // ---- messages -----------------------------------------------------------------
   async handle(msg, sender) {
     switch (msg.type) {
@@ -261,6 +283,7 @@ export class Controller {
         settings: this.state.settings, accounts: Object.values(this.accounts).map((a) => this.publicAccount(a)),
         services: this.allServices(), target: TARGET, user: this.state.user,
       };
+      case 'icons': { const m = await this.loadIcons(); return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, v.d])); }
       case 'identity': return this.identityFor(sender?.tab?.id ?? msg.tabId);
       case 'createAccount': return this.createAccount(msg);
       case 'updateAccount': return this.updateAccount(msg.id, msg.patch);
@@ -294,4 +317,21 @@ export class Controller {
     const id = await this.platform.moveTab(tabId, accountId, { url: p.url, explicit: true, fromPicker: true });
     return { tabId: id ?? tabId };
   }
+}
+
+const ICON_MAX = 30000;
+/** Reads a page's icon (data: URL or its own URL, from the HTTP cache when possible) into a small data URL, or null. */
+async function readIcon(url) {
+  if (/^data:image\//.test(url)) return url.length <= ICON_MAX * 1.4 ? url : null;
+  if (!/^https?:/.test(url)) return null;
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), 8000);
+  try {
+    const r = await fetch(url, { cache: 'force-cache', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ac.signal });
+    if (!r.ok) return null;
+    const type = (r.headers.get('content-type') || '').split(';')[0].trim();
+    if (!/^image\//.test(type)) return null;
+    const buf = new Uint8Array(await r.arrayBuffer()); if (!buf.length || buf.length > ICON_MAX) return null;
+    let bin = ''; for (let i = 0; i < buf.length; i += 8192) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 8192));
+    return `data:${type};base64,${btoa(bin)}`;
+  } catch { return null; } finally { clearTimeout(t); }
 }

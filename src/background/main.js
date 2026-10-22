@@ -24,6 +24,9 @@ ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return true;
 });
 
+// remember the icon of every service you visit (shown in Settings when no logo is bundled for it)
+ext.tabs.onUpdated.addListener((id, info, tab) => { if (info.favIconUrl && tab) ready.then(() => controller.noteFavicon(tab)).catch(() => {}); });
+
 // first run: show the welcome page (never in test builds, which are driven by scripts)
 if (typeof __TEST__ === 'undefined' || !__TEST__) ext.runtime.onInstalled?.addListener?.((d) => { if (d && d.reason === 'install') ext.tabs.create({ url: ext.runtime.getURL('welcome.html') }).catch(() => {}); });
 
