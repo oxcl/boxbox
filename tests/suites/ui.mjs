@@ -23,7 +23,7 @@ export default function (R, h, drv) {
     await u.open(`popup.html?tab=${await t.boxId()}`);
     await waitIn(u, () => document.getElementById('svc-name')?.textContent, 'service name');
     a.eq(await u.ev(() => document.getElementById('svc-name').textContent), 'Alpha', 'mail.alpha.localhost belongs to the Alpha service');
-    a.eq(await u.ev(() => [...document.querySelectorAll('.card[data-account]')].map((c) => c.querySelector('.title').textContent)), ['Default session', 'Work', 'Personal']);
+    a.eq(await u.ev(() => [...document.querySelectorAll('.card[data-account]')].map((c) => c.querySelector('.title').textContent)), ['No box', 'Work', 'Personal']);
     a.eq(await u.ev(() => document.querySelector('.card.selected').dataset.account), 'default');
     await sleep(600); await u.shot('popup-default');
 
@@ -91,9 +91,13 @@ export default function (R, h, drv) {
     const u = ui(ctx);
     const acc = (await h.createAccount(A, 'Settings acct')).id;
     await u.open('settings.html', 1100, 800);
-    await waitIn(u, () => !!document.querySelector('[data-mode="ask"].card'), 'general section');
+    await waitIn(u, () => !!document.getElementById('new-service'), 'services section is the landing page');
+    await u.ev(() => document.querySelector('[data-section="general"]').click());
+    await waitIn(u, () => !!document.querySelector('[data-mode="ask"].card'), 'entry modes section');
     await u.ev(() => document.querySelector('.card[data-mode="remember"]').click());
     await waitFor(async () => (await h.state()).settings.defaultMode === 'remember', { message: 'default mode saved' });
+    await u.ev(() => document.querySelector('[data-section="appearance"]').click());
+    await waitIn(u, () => !!document.querySelector('[data-theme-opt="dark"]'), 'appearance section');
     await u.ev(() => document.querySelector('[data-theme-opt="dark"]').click());
     await waitFor(async () => (await h.state()).settings.theme === 'dark', { message: 'theme saved' });
     await sleep(500); await u.shot('settings-general-dark');
@@ -109,19 +113,36 @@ export default function (R, h, drv) {
     await u.ev(() => document.getElementById('ns-save').click());
     await waitFor(async () => (await h.service(h.url('gamma.localhost')))?.name === 'Work apps', { message: 'service created by UI' });
     // services: select Alpha, split a domain, then merge
-    await u.ev(() => document.querySelector('[data-service="fx-alpha"].svc').click());
+    await u.ev(() => document.querySelector('.svc[data-service="fx-alpha"] .svc-h').click());
     await waitIn(u, () => !!document.querySelector('[data-split="alpha-static.localhost"]'), 'alpha detail');
     await sleep(500); await u.shot('settings-services');
     await u.ev(() => document.querySelector('[data-split="alpha-static.localhost"]').click());
     await waitIn(u, () => !!document.getElementById('split-save'), 'split sheet');
     await u.ev(() => document.getElementById('split-save').click());
     await waitFor(async () => (await h.service(h.url('alpha-static.localhost')))?.id !== A, { message: 'split by UI' });
-    // accounts section
-    await u.ev(() => document.querySelector('[data-section="accounts"]').click());
-    await waitIn(u, (id) => !!document.querySelector(`[data-account="${id}"]`), 'account row', acc);
+    await waitIn(u, () => { const o = document.querySelector('.svc.open'); return !!o && o.dataset.service !== 'fx-alpha'; }, 'the new service opens after the split');
+    // the account is listed inside its service
+    await u.ev(() => document.querySelector('.svc[data-service="fx-alpha"] .svc-h').click());
+    await waitIn(u, (id) => !!document.querySelector(`[data-account="${id}"]`), 'account tile in the service', acc).catch(async (e) => { throw new Error(e.message + ' | DOM: ' + JSON.stringify(await u.ev(() => [document.getElementById('main').innerText.slice(0, 300), [...document.querySelectorAll('.svc.open')].map((x) => x.dataset.service)]))); });
     await sleep(400); await u.shot('settings-accounts');
     await u.ev(() => document.querySelector('[data-section="proxy"]').click());
     await sleep(400); await u.shot('settings-proxy');
+  });
+
+  R.test('welcome: the lid-wipe slides work and the chosen entry mode is saved', async (ctx, a) => {
+    const u = ui(ctx);
+    await u.open('welcome.html', 1100, 760);
+    await waitIn(u, () => document.querySelectorAll('.slide').length === 3 && document.querySelectorAll('.slide')[0].classList.contains('on'), 'first slide');
+    await sleep(2200); await u.shot('welcome-1');
+    await u.ev(() => document.getElementById('next1').click());
+    await waitIn(u, () => document.querySelectorAll('.slide')[1].classList.contains('on'), 'slide 2 after the lid wipe');
+    await waitIn(u, () => !document.querySelector('.lidwipe'), 'the lid has opened again');
+    await u.ev(() => document.getElementById('next2').click());
+    await waitIn(u, () => document.querySelectorAll('.slide')[2].classList.contains('on'), 'slide 3 after the lid wipe');
+    await u.ev(() => document.querySelector('.mode[data-mode="ask"]').click());
+    await sleep(700); await u.shot('welcome-3');
+    await u.ev(() => document.getElementById('finish').click());
+    await waitFor(async () => (await h.state()).settings.defaultMode === 'ask', { message: 'default mode saved from the welcome page' });
   });
 
   R.test('picker UI screenshot (light + dark)', async (ctx, a) => {

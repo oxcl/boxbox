@@ -328,3 +328,16 @@ Implementation and testing on the real browsers changed these points. Each is co
     nor puppeteer-over-BiDi can navigate to or script extension pages, and because Firefox containers are invisible to puppeteer's BiDi.
     The fixture services are added to the built-in catalog only in these builds.
 
+
+
+## 13. The BoxBox interface (as built)
+
+* **Pages:** `popup`, `picker`, `settings`, `welcome` share `ui.css` (tokens, light/dark, boxes, tiles, sheets, controls) and two small modules:
+  `motion.js` (springs, one-shot animations, the lid-close wipe) and `box.js` (the CSS-3D box, `mini()` flat cube, `recolor()`, `swapTab()`).
+* **Box rendering:** a `.bx` is three visible faces of a CSS-3D cube; the top is two flaps hinged on the long edges (they meet under the tape and open
+  outward). Detail is chosen by size (`sm` / `md` / `lg`): small boxes carry only faces and a glyph. Colours are CSS custom properties, so a
+  recolour is a mask-driven paint-fill on a single box. Nested 3D (the Welcome hero) requires `transform-style: preserve-3d` on every ancestor.
+* **No layout of motion at rest:** the spring loop is started by pointer movement or an animation and stops itself; the only infinite animations are
+  the gentle bob on a handful of showcase boxes and they pause when the tab is idle or hidden.
+* **Identity surfaces:** toolbar icon = active box (`core/boxicon.js`), tab-group title carries the glyph emoji, page frame + name pill, favicon badge.
+* **Entry:** the welcome page is opened once by `runtime.onInstalled` (reason `install`), not in test builds.

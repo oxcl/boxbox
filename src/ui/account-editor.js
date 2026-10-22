@@ -1,4 +1,5 @@
-import { h, icon, avatar, api, sheet, toast, COLORS, iconNames } from './lib.js';
+import { h, icon, api, sheet, toast, COLORS, iconNames } from './lib.js';
+import { box, recolor, setGlyph, GLYPHS } from './box.js';
 
 /** Create/edit sheet. opts: {account?, serviceId, serviceName, target, onDone(kind, account?)} */
 export function openAccountEditor({ account, serviceId, serviceName, target, onDone, host, withProxy = false, existing = 0 }) {
@@ -8,19 +9,23 @@ export function openAccountEditor({ account, serviceId, serviceName, target, onD
     proxyOn: !!account?.proxy || withProxy, proxy: { type: 'http', host: '', port: '', username: '', password: '', ...(account?.proxy || {}) },
   };
   return sheet((close) => {
-    const preview = h('div', { class: 'row' });
+    const preview = h('div', { class: 'stage-prev' }); preview.style.setProperty('--c', st.color);
+    const pbox = box({ color: st.color, icon: st.icon, label: st.name, size: 96, lid: true });
+    preview.append(pbox);
     const swatches = h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': 'Color' });
     const icons = h('div', { class: 'icons', role: 'radiogroup', 'aria-label': 'Icon' });
     const proxyBox = h('div', { class: 'grid', style: { display: 'grid', gap: '10px' } });
     const nameIn = h('input', { class: 'input', id: 'acc-name', placeholder: `${serviceName} ${existing + 1}`, value: st.name, maxlength: 40, oninput: (e) => { st.name = e.target.value; paintPreview(); } });
 
-    function paintPreview() {
-      preview.replaceChildren(avatar({ color: st.color, icon: st.icon }), h('div', { class: 'grow' }, h('div', { style: { fontWeight: 700 } }, st.name || 'New account'), h('div', { class: 'muted' }, serviceName)));
+    function paintPreview(what) {
+      preview.style.setProperty('--c', st.color);
+      if (what === 'color') recolor(pbox, st.color); else if (what === 'icon') setGlyph(pbox, st.icon);
+      const lb = pbox.querySelector('.label b'); if (lb) lb.textContent = st.name || 'Box';
       sw.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.c === st.color)));
       ic.forEach((b) => { b.setAttribute('aria-checked', String(b.dataset.i === st.icon)); b.style.setProperty('--c', st.color); });
     }
-    const sw = COLORS.map((c) => h('button', { class: 'swatch', type: 'button', role: 'radio', 'data-c': c, 'aria-label': c, style: { '--c': c }, onclick: () => { st.color = c; paintPreview(); } }));
-    const ic = iconNames.map((i) => h('button', { class: 'iconpick', type: 'button', role: 'radio', 'data-i': i, 'aria-label': i, onclick: () => { st.icon = i; paintPreview(); } }, icon(i)));
+    const sw = COLORS.map((c) => h('button', { class: 'swatch', type: 'button', role: 'radio', 'data-c': c, 'aria-label': c, style: { '--c': c }, onclick: () => { if (st.color === c) return; st.color = c; paintPreview('color'); } }));
+    const ic = iconNames.map((i) => h('button', { class: 'iconpick', type: 'button', role: 'radio', 'data-i': i, 'aria-label': i, onclick: () => { if (st.icon === i) return; st.icon = i; paintPreview('icon'); }, html: GLYPHS[i] }));
     swatches.append(...sw); icons.append(...ic);
 
     function paintProxy() {
@@ -49,7 +54,7 @@ export function openAccountEditor({ account, serviceId, serviceName, target, onD
         const res = editing ? await api('updateAccount', { id: account.id, patch: payload }) : await api('createAccount', { serviceId, ...payload });
         close(); onDone?.(editing ? 'updated' : 'created', res);
       } catch (e) { toast(e.message); save.disabled = false; }
-    } }, editing ? 'Save changes' : 'Create account');
+    } }, editing ? 'Save changes' : 'Create box');
 
     const del = editing ? h('button', { class: 'btn danger', id: 'acc-delete', type: 'button', onclick: () => confirmDelete() }, icon('trash'), 'Delete') : null;
     function confirmDelete() {
@@ -64,7 +69,7 @@ export function openAccountEditor({ account, serviceId, serviceName, target, onD
 
     paintPreview(); paintProxy();
     return [
-      h('div', { class: 'row' }, h('h3', { class: 'grow' }, editing ? 'Edit account' : `New ${serviceName} account`), h('button', { class: 'iconbtn', type: 'button', 'aria-label': 'Close', onclick: close }, icon('x'))),
+      h('div', { class: 'row' }, h('h3', { class: 'grow' }, editing ? 'Edit box' : `New box for ${serviceName}`), h('button', { class: 'iconbtn', type: 'button', 'aria-label': 'Close', onclick: close }, icon('x'))),
       preview,
       h('div', { class: 'field' }, h('label', { for: 'acc-name' }, 'Name'), nameIn),
       h('div', { class: 'field' }, h('span', { class: 'label' }, 'Color'), swatches),

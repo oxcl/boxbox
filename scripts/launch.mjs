@@ -22,7 +22,7 @@ if (b.status !== 0) process.exit(b.status);
 const extDir = path.join(root, 'dist', TARGET);
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), `box-${which}-`));
 const cleanup = () => { try { fs.rmSync(profile, { recursive: true, force: true }); } catch { /* ignore */ } };
-console.log(`\n  Box (${TARGET}) — fresh profile: ${profile}\n  Close the browser window to end the session; the profile is then deleted.\n`);
+console.log(`\n  BoxBox (${TARGET}) — fresh profile: ${profile}\n  Close the browser window to end the session; the profile is then deleted.\n`);
 
 if (which === 'firefox') {
   const { Builder } = await import('selenium-webdriver');

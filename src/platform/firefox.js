@@ -1,6 +1,7 @@
 // Firefox: native isolation via contextual identities (containers).
 import { ext, sleep } from '../core/ext.js';
 import { nearest, FF_COLORS, FF_ICONS, ICON_EMOJI } from '../core/model.js';
+import { boxIconData } from '../core/boxicon.js';
 import { isWebUrl } from '../core/services.js';
 
 const DEFAULT_CS = 'firefox-default';
@@ -191,6 +192,15 @@ export class FirefoxPlatform {
   // ---------------------------------------------------------------- identity
   async pushIdentity(tabId) {
     try { await ext.tabs.sendMessage(tabId, { box: true, type: 'identity', identity: this.c.identityFor(tabId) }); } catch { /* no content script yet */ }
+    this.paintIcon(tabId);
+  }
+  /** The toolbar icon is the active box (kraft when the tab is in no box). */
+  async paintIcon(tabId) {
+    try {
+      const st = this.c.getTab(tabId), acc = st.accountId ? this.c.accounts[st.accountId] : null;
+      const img = acc ? boxIconData(acc.color) : null;
+      if (img) await ext.browserAction.setIcon({ tabId, imageData: img }); else await ext.browserAction.setIcon({ tabId, path: { 16: 'icons/16.png', 32: 'icons/32.png' } });
+    } catch { /* tab gone */ }
   }
   tabChanged(tabId) { this.pushIdentity(tabId); this.syncWebRtc(); }
   tabDropped() { this.syncWebRtc(); }

@@ -110,23 +110,24 @@ function showBorder(acct, status) {
     root.innerHTML = `
       <style>
         :host{all:initial}
-        .frame{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;border:3px solid var(--c);border-radius:0;
-          box-shadow:inset 0 0 0 1px rgba(255,255,255,.35), inset 0 0 28px -6px var(--c);opacity:0;animation:in .35s ease-out forwards}
-        .pill{position:fixed;top:0;left:50%;transform:translate(-50%,-110%);display:flex;align-items:center;gap:7px;padding:4px 12px 5px;
-          border-radius:0 0 12px 12px;background:var(--c);color:#fff;font:600 12px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;
-          letter-spacing:.01em;pointer-events:none;box-shadow:0 4px 14px -4px rgba(0,0,0,.45);white-space:nowrap;max-width:60vw;
-          animation:drop .45s .1s cubic-bezier(.2,.9,.25,1.2) forwards;transition:opacity .2s, transform .25s}
+        .frame{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;border:4px solid var(--c);border-radius:0;opacity:0;animation:in .35s ease-out forwards}
+        .sweep{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;padding:4px;overflow:hidden;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+        .sweep i{position:absolute;left:50%;top:50%;width:300vmax;height:300vmax;margin:-150vmax 0 0 -150vmax;background:conic-gradient(from 0deg,transparent 0 70%,var(--c) 90%,transparent 100%);filter:brightness(1.45) saturate(1.1);animation:spin 1.1s .15s cubic-bezier(.4,0,.2,1) both}
+        .pill{position:fixed;top:0;left:50%;transform:translate(-50%,-110%);display:flex;align-items:center;gap:6px;padding:4px 11px 5px 7px;
+          border-radius:0 0 12px 12px;background:#fff;color:#2a2118;border-bottom:2px solid var(--c);font:700 12px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;
+          letter-spacing:.005em;pointer-events:none;box-shadow:0 6px 16px -6px rgba(0,0,0,.4);white-space:nowrap;max-width:60vw;
+          animation:drop .6s .1s cubic-bezier(.2,.9,.25,1.15) forwards;transition:opacity .2s, transform .25s}
         .pill.away{opacity:0;transform:translate(-50%,-110%)}
-        .dot{width:8px;height:8px;border-radius:50%;background:#fff;opacity:.9;flex:none}
-        .warn{background:#fff;color:#b45309;border-radius:8px;padding:1px 6px;font-size:11px}
-        .ico{font-size:13px;line-height:1}
+        .cube{width:16px;height:16px;flex:none}
+        .warn{background:#fef3c7;color:#b45309;border-radius:8px;padding:1px 6px;font-size:11px}
         .name{overflow:hidden;text-overflow:ellipsis}
         @keyframes in{to{opacity:1}}
         @keyframes drop{to{transform:translate(-50%,0)}}
-        @media (prefers-reduced-motion:reduce){.frame,.pill{animation-duration:.01s}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @media (prefers-reduced-motion:reduce){.frame,.pill,.sweep i{animation-duration:.01s;animation-delay:0s}}
       </style>
-      <div class="frame" part="frame"></div>
-      <div class="pill" part="label"><span class="dot"></span><span class="ico"></span><span class="name"></span><span class="warn" hidden></span></div>`;
+      <div class="frame" part="frame"></div><div class="sweep"><i></i></div>
+      <div class="pill" part="label"><svg class="cube" viewBox="0 0 24 24"><polygon points="12,2 21.5,7 12,12 2.5,7" fill="var(--c)" style="filter:brightness(1.3)"/><polygon points="2.5,7 12,12 12,22.5 2.5,17.5" fill="var(--c)"/><polygon points="21.5,7 12,12 12,22.5 21.5,17.5" fill="var(--c)" style="filter:brightness(.72)"/></svg><span class="name"></span><span class="warn" hidden></span></div>`;
     (document.documentElement || document).appendChild(hostEl);
     moveHandler = (e) => { const p = hostEl?.shadowRoot?.querySelector('.pill'); if (p) p.classList.toggle('away', e.clientY < 46 && Math.abs(e.clientX - innerWidth / 2) < 180); };
     window.addEventListener('mousemove', moveHandler, { passive: true });
@@ -142,7 +143,6 @@ function showBorder(acct, status) {
   root.host.style.setProperty('--c', acct.color);
   root.querySelector('.frame').style.setProperty('--c', acct.color);
   const pill = root.querySelector('.pill'); pill.style.setProperty('--c', acct.color);
-  root.querySelector('.ico').textContent = EMOJI[acct.icon] || '';
   root.querySelector('.name').textContent = acct.name;
   const warn = root.querySelector('.warn');
   const lvl = status && status.level;

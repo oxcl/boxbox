@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Welcome to BoxBox</title><link rel="stylesheet" href="ui.css">
+<style>
+ body { display: grid; place-items: center; min-height: 100vh; padding: 20px 28px; background: radial-gradient(1200px 700px at 15% -10%, #fff 0, transparent 60%), radial-gradient(900px 600px at 100% 100%, var(--bg2) 0, transparent 60%), var(--bg); }
+ @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body { background: radial-gradient(1100px 650px at 20% -10%, #3a2d20 0, transparent 60%), radial-gradient(900px 600px at 100% 100%, #2a2018 0, transparent 60%), var(--bg); } }
+ :root[data-theme="dark"] body { background: radial-gradient(1100px 650px at 20% -10%, #3a2d20 0, transparent 60%), radial-gradient(900px 600px at 100% 100%, #2a2018 0, transparent 60%), var(--bg); }
+
+ 
+ .win { position: relative; width: min(1180px, 100%); height: min(720px, calc(100vh - 90px)); border-radius: 34px; overflow: hidden; }
+ .bar { position: absolute; z-index: 5; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 26px 34px; }
+ .count { color: var(--muted); font-weight: 600; }
+ .track { position: relative; height: 100%; }
+ .slide { position: absolute; inset: 0; visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 64px 40px 96px; gap: 6px; } .slide.on { visibility: visible; }
+ .slide h1 { font-size: clamp(34px, 5vw, 54px); letter-spacing: -.035em; margin: 34px 0 4px; line-height: 1.05; }
+ .slide p { margin: 0 0 22px; color: var(--muted); font-size: 18px; font-weight: 500; max-width: 560px; }
+ .slide > * { opacity: 0; transform: translateY(16px); transition: .8s var(--ease-out); } .slide.on > * { opacity: 1; transform: none; } .slide.on > :nth-child(2) { transition-delay: .1s } .slide.on > :nth-child(3) { transition-delay: .2s } .slide.on > :nth-child(4) { transition-delay: .3s }
+ .dots { position: absolute; z-index: 5; bottom: 26px; left: 50%; transform: translateX(-50%); display: flex; gap: 14px; }
+ .dots button { width: 12px; height: 12px; border-radius: 99px; background: #d9cbbb; transition: .5s var(--ease); } .dots button.on { width: 30px; background: var(--brand); }
+ .skip { position: absolute; z-index: 5; bottom: 22px; right: 32px; color: var(--muted); font-weight: 700; padding: 8px 14px; }
+ .prev { position: absolute; z-index: 5; bottom: 22px; left: 32px; color: var(--muted); font-weight: 700; padding: 8px 14px; opacity: 0; pointer-events: none; transition: .3s; } .prev.on { opacity: 1; pointer-events: auto; }
+ /* slide 2: tabs → boxes */
+ .tabsdemo { width: min(760px, 90%); display: grid; gap: 14px; }
+ .brow { display: grid; grid-template-columns: 1fr 80px 120px; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 20px; text-align: left; }
+ .brow .tab { display: flex; align-items: center; gap: 12px; font-weight: 700; } .brow .tab .fav { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-weight: 800; }
+ .brow .who { display: block; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+ .brow .wire { height: 4px; border-radius: 4px; background: repeating-linear-gradient(90deg, var(--c) 0 10px, transparent 10px 18px); background-size: 36px 4px; animation: wire 1s linear infinite; opacity: .8; } @keyframes wire { to { background-position: 36px 0; } }
+ .brow .bx { justify-self: end; }
+ /* slide 3: modes */
+ .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; width: min(860px, 92%); }
+ .mode { padding: 22px 18px; border-radius: 26px; text-align: center; transition: transform .5s var(--ease), box-shadow .3s; position: relative; }
+ .mode:hover { transform: translateY(-3px); } .mode.sel { box-shadow: var(--shadow); }
+ .mode h3 { margin: 10px 0 4px; font-size: 19px; } .mode p { margin: 0; font-size: 14px; }
+ .mode .stage { height: 120px; display: grid; place-items: center; position: relative; }
+ .mode .q { position: absolute; font-size: 28px; font-weight: 800; color: var(--brand); animation: qpop 2s ease-in-out infinite; right: 18%; top: 6%; } @keyframes qpop { 50% { transform: translateY(-8px) rotate(10deg) scale(1.2); } }
+ .hero { position: relative; width: 520px; height: 260px; margin: 34px auto 0; display: grid; place-items: center; }
+ .hero-box { margin-top: 56px; scale: .84; }
+ .hero-box .in { position: absolute; backface-visibility: visible; }
+ .hero-box .in.b { width: var(--w); height: var(--h); left: calc(50% - var(--w) / 2); top: calc(50% - var(--h) / 2); transform: rotateY(180deg) translateZ(calc(var(--d) / 2)); background: linear-gradient(180deg, #a77d49, #6e4d28); }
+ .hero-box .in.l { width: var(--d); height: var(--h); left: calc(50% - var(--d) / 2); top: calc(50% - var(--h) / 2); transform: rotateY(-90deg) translateZ(calc(var(--w) / 2)); background: linear-gradient(90deg, #8a6538, #b08550); }
+ .hero-box .in.f { width: var(--w); height: var(--d); left: calc(50% - var(--w) / 2); top: calc(50% - var(--d) / 2); transform: rotateX(-90deg) translateZ(calc(var(--h) / 2)); background: radial-gradient(circle at 50% 50%, #7a5731, #523a1f); }
+ .hero-box .inside { display: none; }
+ .plus { width: 26px; height: 26px; margin-left: -8px; border-radius: 8px; background: rgba(255,255,255,.92); color: #94603c; display: grid; place-items: center; flex: none; } .plus svg { width: 16px; height: 16px; } .btn svg { width: 18px; height: 18px; }
+
+ .win { background: color-mix(in srgb, var(--card-solid) 90%, transparent); box-shadow: var(--shadow-lg), 0 0 0 1px var(--line); border-radius: 34px; }
+ .win { height: min(720px, calc(100vh - 40px)); }
+ .slide:not(.on) * { animation-play-state: paused !important; }
+ .slide h1 { color: var(--text); } .count { color: var(--muted); }
+ .glass { background: var(--card); box-shadow: var(--shadow-md), 0 0 0 1px var(--line); }
+ .btn.big { height: 52px; padding: 0 28px; font-size: 15px; }
+ .pin { margin-top: 10px; font-size: 13px; }
+ .mode { padding: 22px 18px; border-radius: 26px; text-align: center; position: relative; cursor: pointer; } .mode .tick { top: -9px; right: -9px; }
+ .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -.02em; }
+</style></head>
+<body>
+<div class="win">
+  <div class="bar"><span class="logo"></span><span class="count" id="count">1 / 3</span></div>
+  <div class="track" id="track">
+    <section class="slide on">
+      <div class="hero" id="hero"></div>
+      <h1>One browser. Many lives.</h1><p>Log into the same site with different accounts, side by side.</p>
+      <button class="btn primary big" id="next1"><span class="plus" id="plus"></span>Make your first box<span id="arr"></span></button>
+    </section>
+    <section class="slide">
+      <div class="tabsdemo" id="tabsdemo"></div>
+      <h1>Every tab lives in its own box.</h1><p>Cookies, logins and storage stay inside the box. Nothing leaks out, nothing leaks in.</p>
+      <button class="btn primary big" id="next2">Continue<span id="arr3"></span></button>
+    </section>
+    <section class="slide">
+      <div class="modes" id="modes"></div>
+      <h1>You decide how sites open.</h1><p>Skip the box, remember the last one, or get asked every time. Change it any time in settings.</p>
+      <button class="btn primary big" id="finish">Get started<span id="arr2"></span></button>
+      <div class="pin muted" id="pinhint"></div>
+    </section>
+  </div>
+  <div class="dots" id="dots"><button class="on" aria-label="Page 1"></button><button aria-label="Page 2"></button><button aria-label="Page 3"></button></div>
+  <button class="prev" id="back">Back</button><button class="skip" id="skip">Skip</button>
+</div>
+<script src="welcome.js"></script></body></html>

@@ -1,6 +1,6 @@
-# Box
+# BoxBox
 
-**Isolated accounts, per tab, in one browser profile.** Log in to the same website with different accounts at the same
+**Isolated accounts, per tab, in one browser profile. Every account lives in its own little cardboard box.** Log in to the same website with different accounts at the same
 time — in Firefox, Chrome (Manifest V3) and Helium (Manifest V2) — as if every tab were its own browser profile.
 
 * **Services, not domains.** `youtube.com`, `accounts.google.com` and `gstatic.com` are one service, *Google*; moving
@@ -9,17 +9,22 @@ time — in Firefox, Chrome (Manifest V3) and Helium (Manifest V2) — as if eve
 * **Accounts per service**, each with a name, colour, icon and an optional proxy. Switching one tab never touches another.
 * **Default session** is your normal browser, untouched.
 * **Entry modes** (global, with per-service override): open in the default session · remember the last account · ask with a picker *before the page loads*.
-* **Visible at a glance:** coloured favicon badge, coloured tab group / container, and a coloured, labelled page border.
-* **No network, no telemetry.** The catalog is bundled; Box never fetches anything.
+* **Visible at a glance:** the toolbar icon *is* the active box, a coloured favicon badge, a coloured tab group / container, and a coloured page border with a small name pill.
+* **A first-run welcome** (three slides, the screen closes like a box lid between them) that also lets you pick your default entry mode.
+* **No network, no telemetry.** The catalog is bundled; BoxBox never fetches anything.
 
 <p>
-  <img src="docs/screens/popup.png" width="230" alt="Popup: current service and its accounts">
-  <img src="docs/screens/picker.png" width="420" alt="Account picker (Ask mode)">
+  <img src="docs/screens/popup.png" width="230" alt="Popup: the boxes for the current service">
+  <img src="docs/screens/picker.png" width="420" alt="Box picker (Ask mode)">
 </p>
 <p>
   <img src="docs/screens/settings-dark.png" width="420" alt="Settings, dark mode">
   <img src="docs/screens/settings-services.png" width="420" alt="Service editor">
 </p>
+
+The UI is plain DOM + CSS (no framework, no images): the boxes are CSS-3D cubes that tilt with the cursor, open their lid and
+take any colour; motion is one small spring engine that only runs while something moves (`src/ui/motion.js`, `src/ui/box.js`).
+`prototype/` holds the standalone design prototype these screens were developed from (open `prototype/index.html`).
 
 How isolation is achieved on each build is in [DESIGN.md](DESIGN.md); what works, what doesn't, and the evidence is in
 [REPORT.md](REPORT.md).
@@ -70,6 +75,12 @@ Helium (Manifest V2) `chrome.tabGroups` does not exist, so account identity ther
 Chrome shows its *"Box started debugging this browser"* bar on tabs that are inside an account — that is the price of
 isolation on Manifest V3 (see DESIGN.md §4.1). Closing it makes that tab **fail closed** (blocked, with a *Restore
 isolation* action in the popup) rather than silently unisolated.
+
+## Performance check
+
+```sh
+direnv exec . node tests/perf/proto-bench.mjs --headless   # scripted hovers/clicks on the prototype pages: frame pacing, CPU per second, DOM size, heap
+```
 
 ## Tests
 

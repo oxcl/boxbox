@@ -19,25 +19,27 @@ const inPoly = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i
 const rr = (x, y, r) => { const dx = Math.max(Math.abs(x - 0.5) - (0.5 - r), 0), dy = Math.max(Math.abs(y - 0.5) - (0.5 - r), 0); return dx * dx + dy * dy <= r * r; };
 
 export function icon(size, { gray = false } = {}) {
+  // an isometric kraft box on a transparent background (same geometry as the runtime toolbar icon in src/core/boxicon.js)
   const S = 4, buf = Buffer.alloc(size * size * 4);
-  // isometric cube faces in unit coordinates
-  const top = [[0.5, 0.2], [0.78, 0.35], [0.5, 0.5], [0.22, 0.35]];
-  const left = [[0.22, 0.35], [0.5, 0.5], [0.5, 0.82], [0.22, 0.67]];
-  const right = [[0.78, 0.35], [0.5, 0.5], [0.5, 0.82], [0.78, 0.67]];
+  const TOP = [[.5, .06], [.93, .29], [.5, .52], [.07, .29]], LEFT = [[.07, .29], [.5, .52], [.5, .95], [.07, .72]], RIGHT = [[.93, .29], [.5, .52], [.5, .95], [.93, .72]];
+  const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  const a = lerp(TOP[0], TOP[1], .4), b = lerp(TOP[0], TOP[1], .62), c = lerp(TOP[3], TOP[2], .62), d = lerp(TOP[3], TOP[2], .4);
+  const tapeTop = [a, b, c, d];
+  const tapeLeft = [d, c, [c[0] + (LEFT[2][0] - LEFT[1][0]) * .34, c[1] + (LEFT[2][1] - LEFT[1][1]) * .34], [d[0] + (LEFT[3][0] - LEFT[0][0]) * .34, d[1] + (LEFT[3][1] - LEFT[0][1]) * .34]];
+  const kraft = { top: [227, 196, 150], left: [201, 160, 108], right: [166, 124, 71] }, grey = { top: [200, 204, 212], left: [160, 165, 175], right: [120, 125, 135] };
+  const col = gray ? grey : kraft;
   for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
-    let r = 0, g = 0, b = 0, a = 0;
+    let r = 0, g = 0, bl = 0, al = 0;
     for (let sy = 0; sy < S; sy++) for (let sx = 0; sx < S; sx++) {
       const x = (px + (sx + 0.5) / S) / size, y = (py + (sy + 0.5) / S) / size;
-      if (!rr(x, y, 0.22)) continue;
-      const t = (x + y) / 2;
-      let c = gray ? [120 + t * 40, 124 + t * 40, 130 + t * 40] : [99 - t * 30, 102 - t * 50, 241 - t * 10];  // indigo -> violet-ish
-      if (inPoly(x, y, top)) c = [255, 255, 255];
-      else if (inPoly(x, y, left)) c = [226, 232, 255];
-      else if (inPoly(x, y, right)) c = [196, 206, 255];
-      r += c[0]; g += c[1]; b += c[2]; a += 1;
+      let cc = null;
+      if (inPoly(x, y, TOP)) cc = col.top; else if (inPoly(x, y, LEFT)) cc = col.left; else if (inPoly(x, y, RIGHT)) cc = col.right;
+      if (!cc) continue;
+      if (inPoly(x, y, tapeTop) || inPoly(x, y, tapeLeft)) cc = [cc[0] + (255 - cc[0]) * .5, cc[1] + (255 - cc[1]) * .5, cc[2] + (255 - cc[2]) * .5];
+      r += cc[0]; g += cc[1]; bl += cc[2]; al += 1;
     }
     const n = S * S, o = (py * size + px) * 4;
-    if (a) { buf[o] = r / a; buf[o + 1] = g / a; buf[o + 2] = b / a; buf[o + 3] = Math.round((a / n) * 255); }
+    if (al) { buf[o] = r / al; buf[o + 1] = g / al; buf[o + 2] = bl / al; buf[o + 3] = Math.round((al / n) * 255); }
   }
   return png(size, size, buf);
 }

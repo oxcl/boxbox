@@ -196,3 +196,29 @@ Cross-device sync, import/export, fingerprint isolation, remote catalog updates.
 15. **Not changing page titles / not injecting visible DOM besides the border host**: tab identity on builds without tab groups is the favicon badge and border only.
 16. **`--silent-debugger-extension-api` is not passed anywhere** (launchers or tests): users should see the real MV3 behaviour.
 17. **Test-profile hygiene**: every driver deletes its temporary profile; nothing is installed outside the flake.
+
+
+## Addendum — the BoxBox UI (prototype → extension)
+
+The interface was redesigned as a standalone prototype (`prototype/`, open `prototype/index.html`) and then ported into the real
+extension pages. What changed in the extension:
+
+* **Name and look:** the product is **BoxBox**. Warm cardboard palette, light and warm-espresso dark themes, Plus Jakarta Sans bundled
+  in the extension (no network). Accounts are shown as CSS-3D boxes (`src/ui/box.js`): any colour, any of the 16 glyphs, a two-flap lid
+  that opens, detail by size (so the many small ones stay cheap). Motion is a single spring engine that only runs while something moves
+  (`src/ui/motion.js`); nothing runs at rest, and everything honours `prefers-reduced-motion`.
+* **Popup:** the site header shrinks into the previous box while the new box lets a copy out, as one overlapped motion that also hands the
+  real `setTabAccount` call over at the hand-over moment. The selection tick sits on the tile's border in the box colour.
+* **Settings:** Services (accordion with domains, entry mode and the service's boxes), Entry modes, Proxies, Appearance & privacy, About.
+  The old separate *Accounts* section is now inside each service.
+* **Welcome:** first-run page (opened by `runtime.onInstalled`, never in test builds) with three slides and a lid-close transition; the
+  entry mode chosen on the last slide is saved as the default.
+* **In the page:** smaller name pill with a flat mini cube, a 4 px frame with a one-off light sweep; the **toolbar icon is the active box**
+  (drawn with a canvas at runtime: `src/core/boxicon.js`), kraft when the tab is in no box.
+* **Tests:** the UI suite follows the new pages (settings sections, accordion) and gained a welcome-page test. After the port:
+  Firefox 43 pass / 7 skip, Chrome 50 pass, Helium 47 pass / 3 skip, 0 failures (one pre-existing pixel assertion on the page border
+  needed the light sweep to be colour-matched; fixed and re-run on all three).
+* **Performance:** `tests/perf/proto-bench.mjs` scripts hovers and clicks and records frame pacing, CPU per second, DOM size and heap.
+  Findings that shaped the code: a big `backdrop-filter` over continuously animating content costs a lot (removed from large panels),
+  hidden slides must pause their animations, and per-service account tiles are built only when a row opens. On software rendering the
+  popup averages ~18 ms/frame through every interaction phase; JS heap stays under 2 MB.

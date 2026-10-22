@@ -2,29 +2,13 @@
 import { ext, sleep, uid, TARGET, IS_MV3 } from '../core/ext.js';
 import { isWebUrl, hostOf } from '../core/services.js';
 import { nearest, CHROME_GROUP_COLORS, ICON_EMOJI } from '../core/model.js';
+import { boxIconData } from '../core/boxicon.js';
 import { Jar, requestContext } from '../chrome/jar.js';
 import { ChromeProxy } from './chrome-proxy.js';
 
 export const SYNC_PATH = '/__box_sync';
 const pfxOf = (accId) => '__box_' + accId.replace(/^acc_/, '') + '__';
 export const prefixFor = pfxOf;
-
-/** Toolbar icon for an account: a rounded square in the account colour with its emoji (null when no canvas is available). */
-function accountIconData(acc) {
-  try {
-    const out = {};
-    for (const n of [16, 32]) {
-      const cv = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(n, n) : document.createElement('canvas');
-      cv.width = n; cv.height = n;
-      const g = cv.getContext('2d'), r = n * 0.22;
-      g.fillStyle = acc.color; g.beginPath(); g.moveTo(r, 0); g.arcTo(n, 0, n, n, r); g.arcTo(n, n, 0, n, r); g.arcTo(0, n, 0, 0, r); g.arcTo(0, 0, n, 0, r); g.fill();
-      g.font = `${Math.round(n * 0.62)}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText(ICON_EMOJI[acc.icon] || (acc.name || '?')[0].toUpperCase(), n / 2, n / 2 + n * 0.04);
-      out[n] = g.getImageData(0, 0, n, n);
-    }
-    return out;
-  } catch { return null; }
-}
 
 export class ChromeBase {
   constructor() {
@@ -246,9 +230,9 @@ export class ChromeBase {
       const warn = st.accountId && status.level !== 'ok';
       await act.setBadgeText({ tabId, text: warn ? '!' : '' });
       if (warn) await act.setBadgeBackgroundColor({ tabId, color: status.level === 'fail' ? '#e5484d' : '#d97706' });
-      // the toolbar icon itself carries the active account's colour and emoji
+      // the toolbar icon itself is the active box
       const acc = st.accountId ? this.c.accounts[st.accountId] : null;
-      const img = acc ? accountIconData(acc) : null;
+      const img = acc ? boxIconData(acc.color) : null;
       if (img) await act.setIcon({ tabId, imageData: img });
       else if (typeof act.setIcon === 'function') await act.setIcon({ tabId, path: { 16: 'icons/16.png', 32: 'icons/32.png' } });
     } catch { /* tab gone */ }

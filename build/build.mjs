@@ -24,7 +24,7 @@ const TARGETS = {
   'chrome-mv2': { platform: 'src/platform/chrome-mv2-entry.js' },
 };
 
-const UI_PAGES = ['popup', 'picker', 'settings'];
+const UI_PAGES = ['popup', 'picker', 'settings', 'welcome'];
 const GATE_TARGETS = new Set(['chrome-mv3']);
 const FIXTURE_MATCHES = ['http://*.localhost/*', 'http://*.fixture.test/*'];
 
@@ -32,14 +32,14 @@ function manifest(target) {
   const ff = target === 'firefox', mv3 = target === 'chrome-mv3';
   const m = {
     manifest_version: mv3 ? 3 : 2,
-    name: 'Box',
+    name: 'BoxBox',
     version: pkg.version,
     description: 'Isolated accounts per tab: log in to the same site with different accounts at the same time.',
     icons: { 16: 'icons/16.png', 32: 'icons/32.png', 48: 'icons/48.png', 128: 'icons/128.png' },
     content_scripts: [{ matches: ['http://*/*', 'https://*/*'], js: ['content.js'], run_at: 'document_start', all_frames: true, match_about_blank: true }],
     options_ui: { page: 'settings.html', open_in_tab: true },
   };
-  const action = { default_popup: 'popup.html', default_title: 'Box', default_icon: { 16: 'icons/16.png', 32: 'icons/32.png' } };
+  const action = { default_popup: 'popup.html', default_title: 'BoxBox', default_icon: { 16: 'icons/16.png', 32: 'icons/32.png' } };
   if (mv3) m.action = action; else m.browser_action = action;
   const perms = ['tabs', 'webRequest', 'webNavigation', 'storage', 'proxy', '<all_urls>'];
   if (ff) {
@@ -63,7 +63,7 @@ function manifest(target) {
   if (TEST) m.permissions.push(...(ff ? [] : ['cookies', 'browsingData']));
   if (TEST) {
     m.content_scripts.push({ matches: FIXTURE_MATCHES, js: ['bridge.js'], run_at: 'document_start', all_frames: false });
-    const war = UI_PAGES.map((p) => `${p}.html`).concat(['ui.css', 'popup.js', 'picker.js', 'settings.js']);
+    const war = UI_PAGES.map((p) => `${p}.html`).concat(['ui.css', 'fonts/jakarta.woff2'], UI_PAGES.map((p) => `${p}.js`));
     if (mv3) m.web_accessible_resources.push({ resources: war, matches: FIXTURE_MATCHES });
     else m.web_accessible_resources = war;
   }
@@ -88,6 +88,7 @@ async function build(target) {
   for (const p of UI_PAGES) { const f = path.join(root, `src/ui/${p}.html`); if (fs.existsSync(f)) fs.copyFileSync(f, path.join(out, `${p}.html`)); }
   if (GATE_TARGETS.has(target)) fs.copyFileSync(path.join(root, 'src/ui/gate.html'), path.join(out, 'gate.html'));
   for (const css of ['ui.css']) { const f = path.join(root, 'src/ui', css); if (fs.existsSync(f)) fs.copyFileSync(f, path.join(out, css)); }
+  fs.mkdirSync(path.join(out, 'fonts'), { recursive: true }); fs.copyFileSync(path.join(root, 'src/ui/fonts/jakarta.woff2'), path.join(out, 'fonts/jakarta.woff2'));
   for (const s of [16, 32, 48, 128]) fs.writeFileSync(path.join(out, 'icons', `${s}.png`), icon(s));
   fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(manifest(target), null, 2));
   if (TEST && target !== 'firefox') fs.writeFileSync(path.join(out, '.extension-id'), chromeExtensionId());

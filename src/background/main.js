@@ -24,4 +24,7 @@ ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return true;
 });
 
+// first run: show the welcome page (never in test builds, which are driven by scripts)
+if (typeof __TEST__ === 'undefined' || !__TEST__) ext.runtime.onInstalled?.addListener?.((d) => { if (d && d.reason === 'install') ext.tabs.create({ url: ext.runtime.getURL('welcome.html') }).catch(() => {}); });
+
 globalThis.__box = { controller, platform, TARGET };
