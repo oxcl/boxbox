@@ -1,0 +1,44 @@
+{
+  "chrome": {
+    "saucedemo": {
+      "status": "pass",
+      "ms": 3957,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "tab A holds the standard_user session: standard_user"
+        },
+        {
+          "ok": true,
+          "msg": "tab B holds the problem_user session: problem_user"
+        },
+        {
+          "ok": true,
+          "msg": "default session was bounced back to the login page"
+        }
+      ]
+    }
+  },
+  "helium": {
+    "saucedemo": {
+      "status": "pass",
+      "ms": 3793,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "tab A holds the standard_user session: standard_user"
+        },
+        {
+          "ok": true,
+          "msg": "tab B holds the problem_user session: problem_user"
+        },
+        {
+          "ok": true,
+          "msg": "default session was bounced back to the login page"
+        }
+      ]
+    }
+  }
+}

@@ -6,7 +6,7 @@
   "description": "Box \u2014 per-tab session isolation for Firefox and Chrome",
   "scripts": {
     "build": "node build/build.mjs",
-    "test": "node tests/run.mjs",
+    "test": "node tests/unit.mjs && node tests/run.mjs",
     "fixture": "node fixture/server.mjs",
     "launch:firefox": "node scripts/launch.mjs firefox",
     "launch:chrome": "node scripts/launch.mjs chrome",
@@ -14,7 +14,9 @@
     "test:firefox": "node tests/run.mjs --browser firefox",
     "test:chrome": "node tests/run.mjs --browser chrome",
     "test:helium": "node tests/run.mjs --browser helium",
-    "smoke": "node tests/smoke.mjs"
+    "smoke": "node tests/smoke.mjs",
+    "test:unit": "node tests/unit.mjs",
+    "test:e2e": "node tests/run.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

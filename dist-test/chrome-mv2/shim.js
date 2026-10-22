@@ -61,12 +61,15 @@
       } catch {
       }
     };
+    const NX = g.XMLHttpRequest;
+    const xOpen = NX.prototype.open, xSend = NX.prototype.send;
+    const xStatus = Object.getOwnPropertyDescriptor(NX.prototype, "status").get, xText = Object.getOwnPropertyDescriptor(NX.prototype, "responseText").get;
     const sync = (op, args) => {
       try {
-        const x = new XMLHttpRequest();
-        x.open("GET", ORIGIN() + "/__box_sync?q=" + encodeURIComponent(JSON.stringify({ op, a: cfg.acct, ...args })), false);
-        x.send();
-        if (x.status === 200) return JSON.parse(x.responseText);
+        const x = new NX();
+        xOpen.call(x, "GET", ORIGIN() + "/__box_sync?q=" + encodeURIComponent(JSON.stringify({ op, a: cfg.acct, ...args })), false);
+        xSend.call(x);
+        if (xStatus.call(x) === 200) return JSON.parse(xText.call(x));
       } catch {
       }
       return null;
@@ -434,7 +437,8 @@ importScripts(${JSON.stringify(abs)});`;
     }
     if (cfg.guardPopups && !isWorker) {
       const http = (u) => /^https?:/i.test(u);
-      const asyncOp = (op, args) => g.fetch(ORIGIN() + "/__box_sync?q=" + encodeURIComponent(JSON.stringify({ op, a: cfg.acct, ...args })), { cache: "no-store", credentials: "omit" }).then((r) => r.json()).catch(() => null);
+      const nativeFetch = g.fetch;
+      const asyncOp = (op, args) => nativeFetch.call(g, ORIGIN() + "/__box_sync?q=" + encodeURIComponent(JSON.stringify({ op, a: cfg.acct, ...args })), { cache: "no-store", credentials: "omit" }).then((r) => r.json()).catch(() => null);
       redefine(Object.getOwnPropertyDescriptor(g, "open") ? g : Window.prototype, "open", (o) => function open(url, target, features) {
         try {
           const t = target === void 0 || target === "" ? "_blank" : String(target);

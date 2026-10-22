@@ -1,206 +1,34 @@
 {
-  "chrome": [
-    {
-      "name": "Web Storage under isolation behaves like real Web Storage and stays private to the account",
-      "status": "pass",
-      "ms": 1736,
-      "error": null
-    },
-    {
-      "name": "IndexedDB / Cache Storage listings only show the account's own names",
-      "status": "pass",
-      "ms": 1226,
-      "error": null
-    },
-    {
-      "name": "BroadcastChannel is per account",
-      "status": "pass",
-      "ms": 2194,
-      "error": null
-    },
-    {
-      "name": "dedicated Worker sees the account's IndexedDB, Cache Storage and cookies — not the default session's",
-      "status": "pass",
-      "ms": 1592,
-      "error": null
-    },
-    {
-      "name": "a strict CSP (script nonce, connect-src self) does not break an account tab",
-      "status": "pass",
-      "ms": 1399,
-      "error": null
-    },
-    {
-      "name": "cookies written by page script are scoped, readable and sent to the server only within the account",
-      "status": "pass",
-      "ms": 1075,
-      "error": null
-    },
-    {
-      "name": "account data persists when its tabs close and reopen, and never reaches the default session",
-      "status": "pass",
-      "ms": 1577,
-      "error": null
-    },
-    {
-      "name": "deleting an account leaves no namespaced data in the origin storage",
-      "status": "pass",
-      "ms": 1439,
-      "error": null
-    },
-    {
-      "name": "a default-session service worker does not take over an account tab",
-      "status": "pass",
-      "ms": 1221,
-      "error": null
-    },
-    {
-      "name": "restored tab (browser restart) re-enters its account from its sessionStorage marker",
-      "status": "pass",
-      "ms": 1596,
-      "error": null
-    },
-    {
-      "name": "MV3: closing the debugging bar fails closed; \"Restore isolation\" brings the tab back",
-      "status": "pass",
-      "ms": 1725,
-      "error": null
-    }
-  ],
-  "helium": [
-    {
-      "name": "Web Storage under isolation behaves like real Web Storage and stays private to the account",
-      "status": "pass",
-      "ms": 1237,
-      "error": null
-    },
-    {
-      "name": "IndexedDB / Cache Storage listings only show the account's own names",
-      "status": "pass",
-      "ms": 1116,
-      "error": null
-    },
-    {
-      "name": "BroadcastChannel is per account",
-      "status": "pass",
-      "ms": 2061,
-      "error": null
-    },
-    {
-      "name": "dedicated Worker sees the account's IndexedDB, Cache Storage and cookies — not the default session's",
-      "status": "pass",
-      "ms": 2059,
-      "error": null
-    },
-    {
-      "name": "a strict CSP (script nonce, connect-src self) does not break an account tab",
-      "status": "pass",
-      "ms": 1128,
-      "error": null
-    },
-    {
-      "name": "cookies written by page script are scoped, readable and sent to the server only within the account",
-      "status": "pass",
-      "ms": 1251,
-      "error": null
-    },
-    {
-      "name": "account data persists when its tabs close and reopen, and never reaches the default session",
-      "status": "pass",
-      "ms": 1613,
-      "error": null
-    },
-    {
-      "name": "deleting an account leaves no namespaced data in the origin storage",
-      "status": "pass",
-      "ms": 1639,
-      "error": null
-    },
-    {
-      "name": "a default-session service worker does not take over an account tab",
-      "status": "pass",
-      "ms": 2012,
-      "error": null
-    },
-    {
-      "name": "restored tab (browser restart) re-enters its account from its sessionStorage marker",
-      "status": "pass",
-      "ms": 1568,
-      "error": null
-    },
-    {
-      "name": "MV3: closing the debugging bar fails closed; \"Restore isolation\" brings the tab back",
-      "status": "skip",
-      "ms": 0,
-      "error": "MV3-only"
-    }
-  ],
   "firefox": [
     {
-      "name": "Web Storage under isolation behaves like real Web Storage and stays private to the account",
+      "name": "popup: shows the service, switches accounts, creates / edits / deletes an account",
       "status": "pass",
-      "ms": 3354,
+      "ms": 4422,
       "error": null
     },
     {
-      "name": "IndexedDB / Cache Storage listings only show the account's own names",
+      "name": "popup: per-service entry mode override",
       "status": "pass",
-      "ms": 1267,
+      "ms": 598,
       "error": null
     },
     {
-      "name": "BroadcastChannel is per account",
+      "name": "popup on a non-web page explains itself",
       "status": "pass",
-      "ms": 3672,
+      "ms": 655,
       "error": null
     },
     {
-      "name": "dedicated Worker sees the account's IndexedDB, Cache Storage and cookies — not the default session's",
+      "name": "settings: general modes, theme, services editor (merge / split / create) and accounts",
       "status": "pass",
-      "ms": 2013,
+      "ms": 2933,
       "error": null
     },
     {
-      "name": "a strict CSP (script nonce, connect-src self) does not break an account tab",
+      "name": "picker UI screenshot (light + dark)",
       "status": "pass",
-      "ms": 1300,
+      "ms": 1751,
       "error": null
-    },
-    {
-      "name": "cookies written by page script are scoped, readable and sent to the server only within the account",
-      "status": "pass",
-      "ms": 1675,
-      "error": null
-    },
-    {
-      "name": "account data persists when its tabs close and reopen, and never reaches the default session",
-      "status": "pass",
-      "ms": 2381,
-      "error": null
-    },
-    {
-      "name": "deleting an account leaves no namespaced data in the origin storage",
-      "status": "pass",
-      "ms": 1864,
-      "error": null
-    },
-    {
-      "name": "a default-session service worker does not take over an account tab",
-      "status": "skip",
-      "ms": 0,
-      "error": "Chrome-only (Firefox containers are native)"
-    },
-    {
-      "name": "restored tab (browser restart) re-enters its account from its sessionStorage marker",
-      "status": "skip",
-      "ms": 0,
-      "error": "Chrome-only (Firefox containers are native)"
-    },
-    {
-      "name": "MV3: closing the debugging bar fails closed; \"Restore isolation\" brings the tab back",
-      "status": "skip",
-      "ms": 0,
-      "error": "MV3-only"
     }
   ]
 }
