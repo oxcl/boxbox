@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Popup</title><link rel="stylesheet" href="../../dist/chrome-mv3/ui.css"><link rel="stylesheet" href="../store.css"><script src="../gen/compose.js"></script><script src="../hero-box.js"></script><style>
+.repo{padding:70px 28px 20px;font-size:13px;color:#2b2638}.repo .rh{display:flex;align-items:center;gap:12px;margin-bottom:16px}.repo .rh b{font-size:18px;letter-spacing:-.02em}.tag{border:1px solid #ddd;border-radius:99px;padding:2px 10px;font-size:11px;color:#6b6577}
+.files{border:1px solid #e9e5de;border-radius:12px;overflow:hidden}.rw{display:grid;grid-template-columns:28px 160px 1fr;padding:11px 14px;border-top:1px solid #f0ece5;align-items:center}.rw:first-child{border-top:0;background:#faf8f4}.rw small{color:#8a8494}</style></head><body><div class="scene"></div>
+<div style="position:absolute;left:84px;top:150px;width:470px">
+  <div class="brandmark" style="margin-bottom:34px"><span data-mini="#c9a06c" data-size="34"></span>BoxBox</div>
+  <h1 class="headline" style="font-size:66px">A box for<br>every tab.</h1>
+  <p class="sub" style="font-size:22px;margin-top:22px">Pick a box for the page you are on, or make a new one. Nothing else to set up.</p>
+  <div style="display:grid;gap:26px;margin-top:44px">
+    <div class="feat" id="f1"><div class="slot"></div><div>One click to switch<small>Same tab, different account.</small></div></div>
+    <div class="feat" id="f2"><div class="slot"></div><div>Boxes stay separate<small>Logins, cookies and storage.</small></div></div>
+    <div class="feat" id="f3"><div class="slot"></div><div>Ask, remember or default<small>Per service, your rules.</small></div></div>
+  </div>
+</div>
+<div class="win" style="left:600px;top:96px;width:620px;height:600px;--c:#3b82f6">
+  <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="tabs"><div class="tab"><span class="fv" style="background:#24292f">G</span>boxbox/extension</div><div class="tab dim">New tab</div></div></div>
+  <div class="bar"><span class="nav">‹ › ↻</span><div class="url">https://github.com/boxbox/extension</div><span class="xbtn" data-mini="#3b82f6" data-size="22"></span></div>
+  <div class="page"><div class="frame-ring"></div><div class="pill"><span data-mini="#3b82f6" data-size="16"></span>Personal</div>
+   <div class="repo"><div class="rh"><b>boxbox / extension</b><span class="tag">Public</span></div><div class="files"><div class="rw"><span class="f">📁</span><b>src</b><small>Add the popup</small></div><div class="rw"><span class="f">📁</span><b>tests</b><small>Cover the welcome page</small></div><div class="rw"><span class="f">📄</span><b>README.md</b><small>Update screenshots</small></div><div class="rw"><span class="f">📄</span><b>package.json</b><small>Bump version</small></div><div class="rw"><span class="f">📄</span><b>DESIGN.md</b><small>Document the UI</small></div></div></div></div>
+</div>
+<div style="position:absolute;left:748px;top:132px;width:424px;height:600px;border-radius:26px;overflow:hidden;box-shadow:0 40px 90px -20px rgba(40,25,10,.5),0 0 0 1px rgba(0,0,0,.06);z-index:9"><iframe class="live" src="../gen/frames/popup.html" width="424" height="600" scrolling="no"></iframe></div>
+<script>document.querySelectorAll('[data-mini]').forEach(e=>e.append(BB.mini(e.dataset.mini, +e.dataset.size||20)));
+const g=(id,c,i)=>document.querySelector('#'+id+' .slot').append(BB.box({color:c,icon:i,size:46,hover:false,check:false}));
+g('f1','#3b82f6','user'); g('f2','#f97316','shield'); g('f3','#22c55e','star');</script></body></html>

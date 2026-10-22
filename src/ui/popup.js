@@ -3,9 +3,10 @@ import { openAccountEditor } from './account-editor.js';
 import { ext } from '../core/ext.js';
 import * as MO from './motion.js';
 import { box, mini, swapTab, slideSeg, KRAFT } from './box.js';
+import { favTile } from './favtile.js';
 
 const app = document.getElementById('app');
-let info = null, tabId = null, busy = false;
+let info = null, tabId = null, busy = false, learned = null;
 
 async function currentTabId() {
   const p = params().get('tab');
@@ -17,6 +18,7 @@ async function currentTabId() {
 async function load(animate = false) {
   tabId = tabId ?? await currentTabId();
   info = await api('tabInfo', { tabId });
+  if (!learned) learned = await api('icons').catch(() => ({}));
   render(animate);
 }
 
@@ -45,8 +47,9 @@ function render(animate) {
     return;
   }
   const svc = info.service, hostName = info.host || '';
-  const tile = h('div', { class: 'tile', 'data-letter': svc.name.charAt(0).toUpperCase() }, info.favIconUrl && !/^data:/.test(info.favIconUrl)
-    ? h('img', { src: info.favIconUrl, alt: '', onerror: (e) => { e.target.replaceWith(document.createTextNode(svc.name.charAt(0).toUpperCase())); } }) : svc.name.charAt(0).toUpperCase());
+  const logo = favTile(svc, learned && learned[svc.id]);
+  const tile = h('div', { class: 'tile', 'data-letter': svc.name.charAt(0).toUpperCase() }, (logo.classList.contains('logo') || logo.style.background) ? logo
+    : info.favIconUrl && !/^data:/.test(info.favIconUrl) ? h('img', { src: info.favIconUrl, alt: '', onerror: (e) => { e.target.replaceWith(logo); } }) : logo);
   const others = svc.domains.filter((d) => hostName !== d && !hostName.endsWith('.' + d));
   const header = h('div', { class: 'site' }, tile, h('div', { class: 'grow' }, h('h1', { id: 'svc-name' }, svc.name), h('span', { class: 'host' }, hostName + (others.length ? `  ·  +${others.length} more` : ''))));
   const status = h('div', { class: 'status', id: 'status' }); fillStatus(status);

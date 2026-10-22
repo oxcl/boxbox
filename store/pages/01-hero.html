@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Hero</title><link rel="stylesheet" href="../../dist/chrome-mv3/ui.css"><link rel="stylesheet" href="../store.css"><script src="../gen/compose.js"></script><script src="../hero-box.js"></script><style></style></head><body><div class="scene"></div>
+<div style="position:absolute;left:84px;top:78px"><div class="brandmark"><span data-mini="#c9a06c" data-size="34"></span>BoxBox</div></div>
+<div style="position:absolute;left:84px;top:210px;width:640px">
+  <h1 class="headline" style="font-size:88px">One browser.<br>Many lives.</h1>
+  <p class="sub" style="font-size:25px;margin-top:26px;max-width:470px">Log into the same site with different accounts, side by side. Each one lives in its own box.</p>
+  <div style="display:flex;gap:12px;margin-top:38px"><span class="chip">Chrome</span><span class="chip">Firefox</span><span class="chip">Helium</span></div>
+</div>
+<div id="stage" style="position:absolute;right:-30px;top:150px;width:680px;height:560px;display:grid;place-items:center"></div>
+<script>document.querySelectorAll('[data-mini]').forEach(e=>e.append(BB.mini(e.dataset.mini, +e.dataset.size||20)));
+const h = makeHero({ size: 200 }); h.style.scale = '1.12'; h.style.marginTop = '50px'; document.getElementById('stage').append(h);
+h.querySelector('.cube').style.transform = 'rotateX(-24deg) rotateY(-32deg)';</script></body></html>

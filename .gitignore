@@ -5,3 +5,4 @@ dist-test/
 result
 .tmp/
 test-results/
+store/gen/
