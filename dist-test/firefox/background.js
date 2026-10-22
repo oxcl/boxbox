@@ -1844,6 +1844,10 @@
         await ext.browsingData.remove({ since: 0 }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true });
         return true;
       }
+      if (call === "webrtc") {
+        const r = await ext.privacy.network.webRTCIPHandlingPolicy.get({});
+        return r.value;
+      }
       if (call === "groups") return ext.tabGroups ? ext.tabGroups.query({}) : null;
       return null;
     }
@@ -1927,6 +1931,7 @@
   // src/background/main.js
   var platform = createPlatform();
   var controller = new Controller(platform);
+  var bootId = Math.random().toString(36).slice(2, 8);
   var initState = "starting";
   var initError = null;
   var ready = controller.init().then(() => {
@@ -1940,7 +1945,7 @@
   ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (!msg || typeof msg.type !== "string") return false;
     if (msg.type === "ping") {
-      sendResponse({ ok: true, target: TARGET, init: initState, initError });
+      sendResponse({ ok: true, target: TARGET, init: initState, initError, bootId });
       return false;
     }
     (async () => {

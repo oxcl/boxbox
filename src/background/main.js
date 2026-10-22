@@ -8,12 +8,13 @@ import { installTestHooks } from '../test/hooks.js';
 
 const platform = createPlatform();
 const controller = new Controller(platform);
+const bootId = Math.random().toString(36).slice(2, 8);
 let initState = 'starting', initError = null;
 const ready = controller.init().then(() => { initState = 'ready'; }, (e) => { initState = 'failed'; initError = String(e && e.stack || e); console.error('Box init failed', e); throw e; });
 
 ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || typeof msg.type !== 'string') return false;
-  if (msg.type === 'ping') { sendResponse({ ok: true, target: TARGET, init: initState, initError }); return false; }
+  if (msg.type === 'ping') { sendResponse({ ok: true, target: TARGET, init: initState, initError, bootId }); return false; }
   (async () => {
     await ready;
     if (msg.type === 'badgeIcon') return badgedIcon(msg.href, msg.color, msg.host);

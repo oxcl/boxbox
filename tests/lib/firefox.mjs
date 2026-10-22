@@ -11,7 +11,7 @@ export const EXT_ID = 'box@box.local';
 
 export class FirefoxDriver {
   static async launch({ extDir, fixture, headless = true, prefs = {} }) {
-    const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'box-ff-'));
+    const profile = null;   // geckodriver creates (and removes) its own temporary profile
     const o = new firefox.Options().setBinary(process.env.BOX_FIREFOX);
     if (headless) o.addArguments('-headless');
     o.setPreference('extensions.webextensions.uuids', JSON.stringify({ [EXT_ID]: UUID }));

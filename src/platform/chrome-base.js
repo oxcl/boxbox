@@ -20,6 +20,22 @@ export class ChromeBase {
     this.saveTimers = new Map();
     this.wipeTabs = new Set();
     this.proxy = new ChromeProxy(this);
+    this.readyP = new Promise((r) => { this.markReady = r; });
+    // MV3: events that wake the service worker are only delivered to listeners registered synchronously at start-up, so the
+    // MV3 build binds everything in its constructor and gates each handler on `readyP` (resolved when init() has finished).
+    this.gate = (fn) => (...a) => this.readyP.then(() => fn.apply(this, a)).catch((e) => console.error('event handler', e));
+  }
+
+  bindEvents(wrap = (f) => f) {
+    this.eventsBound = true;
+    ext.windows.onCreated.addListener(wrap((w) => this.windowType.set(w.id, w.type)));
+    ext.windows.onRemoved.addListener(wrap((id) => this.windowType.delete(id)));
+    ext.tabs.onCreated.addListener(wrap((t) => this.onTabCreated(t)));
+    ext.tabs.onRemoved.addListener(wrap((id) => this.onTabRemoved(id)));
+    ext.tabs.onUpdated.addListener(wrap((id, info) => { if (info.status === 'complete' || info.url) this.pushIdentity(id); }));
+    ext.tabs.onActivated?.addListener?.(wrap(({ tabId }) => this.pushIdentity(tabId)));
+    ext.webNavigation.onCreatedNavigationTarget?.addListener?.(wrap((d) => this.onNavTarget(d)));
+    ext.webNavigation.onCommitted.addListener(wrap((d) => { if (d.frameId === 0) { this.tabTop.set(d.tabId, d.url); this.afterCommit(d); } }));
   }
 
   // ------------------------------------------------------------------ lifecycle
@@ -27,20 +43,13 @@ export class ChromeBase {
     this.c = c;
     await this.loadJars();
     for (const w of await ext.windows.getAll()) this.windowType.set(w.id, w.type);
-    ext.windows.onCreated.addListener((w) => this.windowType.set(w.id, w.type));
-    ext.windows.onRemoved.addListener((id) => this.windowType.delete(id));
     this.restoredTabs = new Set();
     for (const t of await ext.tabs.query({})) { this.trackTab(t, true); this.restoredTabs.add(t.id); }
-
-    ext.tabs.onCreated.addListener((t) => this.onTabCreated(t));
-    ext.tabs.onRemoved.addListener((id) => this.onTabRemoved(id));
-    ext.tabs.onUpdated.addListener((id, info) => { if (info.status === 'complete' || info.url) this.pushIdentity(id); });
-    ext.tabs.onActivated?.addListener?.(({ tabId }) => this.pushIdentity(tabId));
-    ext.webNavigation.onCreatedNavigationTarget?.addListener?.((d) => this.onNavTarget(d));
-    ext.webNavigation.onCommitted.addListener((d) => { if (d.frameId === 0) { this.tabTop.set(d.tabId, d.url); this.afterCommit(d); } });
+    if (!this.eventsBound) this.bindEvents();
 
     await this.installNet();
     await this.proxy.init();
+    this.markReady();
   }
 
   trackTab(t, initial = false) {

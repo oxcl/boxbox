@@ -22,16 +22,23 @@ export class ChromeProxy {
     this.timer = null;
   }
 
-  async init() {
+  /** Listeners (registered synchronously in MV3 so they can wake the service worker; `wrap` gates them on start-up). */
+  bindEvents(wrap = (f) => f) {
     const b = this.b;
-    try { ext.proxy.onProxyError?.addListener?.((e) => this.noteError(null, 'Proxy error: ' + (e.error || e.details || 'unknown'))); } catch { /* ignore */ }
-    ext.webRequest.onAuthRequired.addListener((d, cb) => this.onAuth(d, cb), { urls: ['<all_urls>'] }, ['asyncBlocking']);
-    ext.webRequest.onErrorOccurred.addListener((d) => {
+    try { ext.proxy.onProxyError?.addListener?.(wrap((e) => this.noteError(null, 'Proxy error: ' + (e.error || e.details || 'unknown')))); } catch { /* ignore */ }
+    // MV3 requires `asyncBlocking` + the callback form; the gate must not delay the callback past start-up, so it only wraps the body
+    ext.webRequest.onAuthRequired.addListener((d, cb) => { b.readyP.then(() => this.onAuth(d, cb)); }, { urls: ['<all_urls>'] }, ['asyncBlocking']);
+    ext.webRequest.onErrorOccurred.addListener(wrap((d) => {
       if (!/PROXY|TUNNEL|SOCKS/.test(d.error || '')) return;
       const accId = b.accountOf(d.tabId);
       const acc = accId && b.c.accounts[accId];
       if (acc && acc.proxy) this.noteError(accId, `Proxy ${acc.proxy.host}:${acc.proxy.port} failed (${d.error.replace('net::ERR_', '')}). The request was blocked, not sent directly.`, d.tabId);
-    }, { urls: ['<all_urls>'] });
+    }), { urls: ['<all_urls>'] });
+    this.bound = true;
+  }
+
+  async init() {
+    if (!this.bound) this.bindEvents();
     await this.recompute(true);
   }
 

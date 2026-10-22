@@ -51,9 +51,15 @@ export default function (R, h, drv) {
     const tabs = await h.box({ type: 'test:tabs' });
     const mine = tabs.find((x) => x.state && x.state.accountId === acc.id);
     a.ok(mine, 'tab known');
-    if (ctx.name !== 'firefox' || mine.groupId >= 0) {
-      const groups = await h.box({ type: 'test:platform', call: 'groups' });
-      if (groups) a.ok(groups.some((g) => g.title === 'Colored'), 'tab group titled with the account name: ' + JSON.stringify(groups));
+    const groups = await h.box({ type: 'test:platform', call: 'groups' });
+    if (ctx.name === 'helium') {
+      // documented limitation: chrome.tabGroups is Manifest-V3-only, so Helium (MV2) cannot title/colour tab groups
+      a.eq(groups, null, 'chrome.tabGroups is unavailable to Manifest V2 extensions');
+    } else if (ctx.name === 'chrome') {
+      a.ok(groups.some((g) => g.title === 'Colored' && g.color === 'red'), 'tab group titled with the account name, coloured red: ' + JSON.stringify(groups));
+      a.eq(mine.groupId >= 0, true, 'the tab is inside that group');
+    } else if (groups) {
+      a.ok(mine.groupId >= 0 ? groups.some((g) => g.title === 'Colored') : true, 'Firefox tab group (if the build supports them): ' + JSON.stringify(groups));
     }
   });
 }

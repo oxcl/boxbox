@@ -13,6 +13,9 @@ const which = process.argv[2];
 const TARGET = { firefox: 'firefox', chrome: 'chrome-mv3', helium: 'chrome-mv2' }[which];
 if (!TARGET) { console.error('usage: launch.mjs <firefox|chrome|helium>'); process.exit(2); }
 const startUrl = process.argv[3] || 'about:blank';
+const headless = process.env.BOX_HEADLESS === '1';                       // CI / verification only
+const exitAfter = Number(process.env.BOX_LAUNCH_EXIT_AFTER || 0);        // verification only: close after N ms
+
 
 const b = spawnSync('node', ['build/build.mjs', TARGET], { cwd: root, stdio: 'inherit' });
 if (b.status !== 0) process.exit(b.status);
@@ -25,6 +28,7 @@ if (which === 'firefox') {
   const { Builder } = await import('selenium-webdriver');
   const firefox = (await import('selenium-webdriver/firefox.js')).default;
   const o = new firefox.Options().setBinary(process.env.BOX_FIREFOX).setProfile(profile);
+  if (headless) o.addArguments('-headless');
   for (const [k, v] of Object.entries({
     'privacy.userContext.enabled': true, 'browser.shell.checkDefaultBrowser': false, 'browser.startup.homepage': 'about:blank', 'startup.homepage_welcome_url': 'about:blank',
     'datareporting.policy.dataSubmissionEnabled': false, 'app.update.auto': false, 'browser.aboutwelcome.enabled': false, 'browser.newtabpage.enabled': false,
@@ -33,7 +37,8 @@ if (which === 'firefox') {
   const d = await new Builder().forBrowser('firefox').setFirefoxOptions(o).setFirefoxService(new firefox.ServiceBuilder(process.env.BOX_GECKODRIVER)).build();
   await d.installAddon(extDir, true);
   if (startUrl !== 'about:blank') await d.get(startUrl);
-  const wait = async () => { for (;;) { try { await d.getAllWindowHandles(); } catch { return; } await new Promise((r) => setTimeout(r, 1500)); } };
+  const t0 = Date.now();
+  const wait = async () => { for (;;) { try { await d.getAllWindowHandles(); } catch { return; } if (exitAfter && Date.now() - t0 > exitAfter) { console.log('  (verification run: closing)'); return; } await new Promise((r) => setTimeout(r, 1500)); } };
   process.on('SIGINT', async () => { try { await d.quit(); } catch { /* ignore */ } cleanup(); process.exit(0); });
   await wait();
   try { await d.quit(); } catch { /* ignore */ }
@@ -42,14 +47,16 @@ if (which === 'firefox') {
   const puppeteer = (await import('puppeteer-core')).default;
   const common = ['--no-first-run', '--no-default-browser-check', '--password-store=basic', '--use-mock-keychain', '--disable-search-engine-choice-screen', '--disable-background-networking'];
   const browser = which === 'chrome'
-    ? await puppeteer.launch({ executablePath: process.env.BOX_CHROME, headless: false, pipe: true, enableExtensions: true, userDataDir: profile, args: common, defaultViewport: null, ignoreDefaultArgs: ['--enable-automation'] })
-    : await puppeteer.launch({ executablePath: process.env.BOX_HELIUM, headless: false, pipe: false, userDataDir: profile, defaultViewport: null,
+    ? await puppeteer.launch({ executablePath: process.env.BOX_CHROME, headless, pipe: true, enableExtensions: true, userDataDir: profile, args: common, defaultViewport: null, ignoreDefaultArgs: ['--enable-automation'] })
+    : await puppeteer.launch({ executablePath: process.env.BOX_HELIUM, headless, pipe: false, userDataDir: profile, defaultViewport: null,
       ignoreDefaultArgs: ['--disable-extensions', '--enable-automation'],
       args: [...common, '--no-sandbox', '--disable-extensions-except=' + extDir, '--load-extension=' + extDir, '--disable-features=ExtensionManifestV2Unsupported,ExtensionManifestV2Disabled'] });
   if (which === 'chrome') await browser.installExtension(extDir);
   const [page] = await browser.pages();
   if (page && startUrl !== 'about:blank') await page.goto(startUrl).catch(() => {});
   process.on('SIGINT', async () => { try { await browser.close(); } catch { /* ignore */ } cleanup(); process.exit(0); });
+  const targets = () => browser.targets().filter((t) => /extension/.test(t.type()) || /^chrome-extension:/.test(t.url())).map((t) => t.type() + ' ' + t.url().slice(0, 60));
+  if (exitAfter) { await new Promise((r) => setTimeout(r, exitAfter)); console.log('  extension targets:', JSON.stringify(targets())); await browser.close().catch(() => {}); cleanup(); process.exit(0); }
   await new Promise((r) => browser.on('disconnected', r));
   cleanup();
 }

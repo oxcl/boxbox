@@ -63,14 +63,14 @@
     "webRequest",
     "webNavigation",
     "storage",
-    "cookies",
     "proxy",
     "<all_urls>",
     "webRequestBlocking",
     "contextualIdentities",
     "browsingData",
     "tabGroups",
-    "privacy"
+    "privacy",
+    "cookies"
   ],
   "web_accessible_resources": [
     "popup.html",

@@ -22,15 +22,18 @@ export class ChromeMv3Platform extends ChromeBase {
     this.initiators = new Map();    // "tabId|url" -> {initiator, t}
     this.entering = new Set();      // tabIds currently being moved by onBeforeNavigate
     this.shimSrc = shim.toString();
+    // synchronous registration (see ChromeBase): these are the events that must be able to wake a sleeping service worker
+    const g = this.gate, f = { urls: NET_URLS };
+    this.bindEvents(g);
+    ext.webRequest.onHeadersReceived.addListener(g((d) => this.onHeadersReceived(d)), f, ['responseHeaders', 'extraHeaders']);
+    ext.webRequest.onBeforeRequest.addListener(g((d) => this.onBeforeRequestObserve(d)), f);
+    ext.debugger.onEvent.addListener(g((src, method, params) => this.onDebuggerEvent(src, method, params)));
+    ext.debugger.onDetach.addListener(g((src, reason) => this.onDetach(src, reason)));
+    ext.webNavigation.onBeforeNavigate.addListener(g((d) => { if (d.frameId === 0) this.onBeforeNavigate(d); }));
+    this.proxy.bindEvents(g);
   }
 
   async installNet() {
-    const f = { urls: NET_URLS };
-    ext.webRequest.onHeadersReceived.addListener((d) => this.onHeadersReceived(d), f, ['responseHeaders', 'extraHeaders']);
-    ext.webRequest.onBeforeRequest.addListener((d) => this.onBeforeRequestObserve(d), f);
-    ext.debugger.onEvent.addListener((src, method, params) => this.onDebuggerEvent(src, method, params));
-    ext.debugger.onDetach.addListener((src, reason) => this.onDetach(src, reason));
-    ext.webNavigation.onBeforeNavigate.addListener((d) => { if (d.frameId === 0) this.onBeforeNavigate(d); });
     await this.syncGateRules();
     const stale = await ext.declarativeNetRequest.getSessionRules();
     if (stale.length) await ext.declarativeNetRequest.updateSessionRules({ removeRuleIds: stale.map((r) => r.id) });
@@ -415,6 +418,16 @@ export class ChromeMv3Platform extends ChromeBase {
       return true;
     }
     if (call === 'sessions') return [...this.sessions.keys()];
+    if (call === 'simulateRestart') {   // forget everything held in memory and rebuild it exactly as a freshly started worker does
+      await sleep(200);                 // let the debounced storage.session mirror flush
+      this.sessions.clear(); this.lost.clear(); this.slots = null; this.hints = null; this.replay = null;
+      this.jar = new (this.jar.constructor)(); await this.loadJars();
+      this.c.tabs.clear(); await this.c.restoreTabs();
+      const stale = await ext.declarativeNetRequest.getSessionRules();
+      if (stale.length) await ext.declarativeNetRequest.updateSessionRules({ removeRuleIds: stale.map((r) => r.id) });
+      for (const [tabId, st] of this.c.tabs) if (st.accountId) await this.accountAssigned(tabId, null, st.accountId, true);
+      return [...this.sessions.keys()];
+    }
     return super.testCall(call, args);
   }
 

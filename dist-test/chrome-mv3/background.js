@@ -1751,19 +1751,26 @@
       this.applied = null;
       this.timer = null;
     }
-    async init() {
+    /** Listeners (registered synchronously in MV3 so they can wake the service worker; `wrap` gates them on start-up). */
+    bindEvents(wrap = (f) => f) {
       const b = this.b;
       try {
-        ext.proxy.onProxyError?.addListener?.((e) => this.noteError(null, "Proxy error: " + (e.error || e.details || "unknown")));
+        ext.proxy.onProxyError?.addListener?.(wrap((e) => this.noteError(null, "Proxy error: " + (e.error || e.details || "unknown"))));
       } catch {
       }
-      ext.webRequest.onAuthRequired.addListener((d, cb) => this.onAuth(d, cb), { urls: ["<all_urls>"] }, ["asyncBlocking"]);
-      ext.webRequest.onErrorOccurred.addListener((d) => {
+      ext.webRequest.onAuthRequired.addListener((d, cb) => {
+        b.readyP.then(() => this.onAuth(d, cb));
+      }, { urls: ["<all_urls>"] }, ["asyncBlocking"]);
+      ext.webRequest.onErrorOccurred.addListener(wrap((d) => {
         if (!/PROXY|TUNNEL|SOCKS/.test(d.error || "")) return;
         const accId = b.accountOf(d.tabId);
         const acc = accId && b.c.accounts[accId];
         if (acc && acc.proxy) this.noteError(accId, `Proxy ${acc.proxy.host}:${acc.proxy.port} failed (${d.error.replace("net::ERR_", "")}). The request was blocked, not sent directly.`, d.tabId);
-      }, { urls: ["<all_urls>"] });
+      }), { urls: ["<all_urls>"] });
+      this.bound = true;
+    }
+    async init() {
+      if (!this.bound) this.bindEvents();
       await this.recompute(true);
     }
     noteError(accId, msg, tabId) {
@@ -1932,34 +1939,43 @@
       this.saveTimers = /* @__PURE__ */ new Map();
       this.wipeTabs = /* @__PURE__ */ new Set();
       this.proxy = new ChromeProxy(this);
+      this.readyP = new Promise((r) => {
+        this.markReady = r;
+      });
+      this.gate = (fn) => (...a) => this.readyP.then(() => fn.apply(this, a)).catch((e) => console.error("event handler", e));
+    }
+    bindEvents(wrap = (f) => f) {
+      this.eventsBound = true;
+      ext.windows.onCreated.addListener(wrap((w) => this.windowType.set(w.id, w.type)));
+      ext.windows.onRemoved.addListener(wrap((id) => this.windowType.delete(id)));
+      ext.tabs.onCreated.addListener(wrap((t) => this.onTabCreated(t)));
+      ext.tabs.onRemoved.addListener(wrap((id) => this.onTabRemoved(id)));
+      ext.tabs.onUpdated.addListener(wrap((id, info) => {
+        if (info.status === "complete" || info.url) this.pushIdentity(id);
+      }));
+      ext.tabs.onActivated?.addListener?.(wrap(({ tabId }) => this.pushIdentity(tabId)));
+      ext.webNavigation.onCreatedNavigationTarget?.addListener?.(wrap((d) => this.onNavTarget(d)));
+      ext.webNavigation.onCommitted.addListener(wrap((d) => {
+        if (d.frameId === 0) {
+          this.tabTop.set(d.tabId, d.url);
+          this.afterCommit(d);
+        }
+      }));
     }
     // ------------------------------------------------------------------ lifecycle
     async init(c) {
       this.c = c;
       await this.loadJars();
       for (const w of await ext.windows.getAll()) this.windowType.set(w.id, w.type);
-      ext.windows.onCreated.addListener((w) => this.windowType.set(w.id, w.type));
-      ext.windows.onRemoved.addListener((id) => this.windowType.delete(id));
       this.restoredTabs = /* @__PURE__ */ new Set();
       for (const t of await ext.tabs.query({})) {
         this.trackTab(t, true);
         this.restoredTabs.add(t.id);
       }
-      ext.tabs.onCreated.addListener((t) => this.onTabCreated(t));
-      ext.tabs.onRemoved.addListener((id) => this.onTabRemoved(id));
-      ext.tabs.onUpdated.addListener((id, info) => {
-        if (info.status === "complete" || info.url) this.pushIdentity(id);
-      });
-      ext.tabs.onActivated?.addListener?.(({ tabId }) => this.pushIdentity(tabId));
-      ext.webNavigation.onCreatedNavigationTarget?.addListener?.((d) => this.onNavTarget(d));
-      ext.webNavigation.onCommitted.addListener((d) => {
-        if (d.frameId === 0) {
-          this.tabTop.set(d.tabId, d.url);
-          this.afterCommit(d);
-        }
-      });
+      if (!this.eventsBound) this.bindEvents();
       await this.installNet();
       await this.proxy.init();
+      this.markReady();
     }
     trackTab(t, initial = false) {
       this.tabMeta.set(t.id, { opener: t.openerTabId, windowId: t.windowId });
@@ -2855,16 +2871,18 @@ importScripts(${JSON.stringify(abs)});`;
       this.initiators = /* @__PURE__ */ new Map();
       this.entering = /* @__PURE__ */ new Set();
       this.shimSrc = shim.toString();
+      const g2 = this.gate, f = { urls: NET_URLS };
+      this.bindEvents(g2);
+      ext.webRequest.onHeadersReceived.addListener(g2((d) => this.onHeadersReceived(d)), f, ["responseHeaders", "extraHeaders"]);
+      ext.webRequest.onBeforeRequest.addListener(g2((d) => this.onBeforeRequestObserve(d)), f);
+      ext.debugger.onEvent.addListener(g2((src, method, params) => this.onDebuggerEvent(src, method, params)));
+      ext.debugger.onDetach.addListener(g2((src, reason) => this.onDetach(src, reason)));
+      ext.webNavigation.onBeforeNavigate.addListener(g2((d) => {
+        if (d.frameId === 0) this.onBeforeNavigate(d);
+      }));
+      this.proxy.bindEvents(g2);
     }
     async installNet() {
-      const f = { urls: NET_URLS };
-      ext.webRequest.onHeadersReceived.addListener((d) => this.onHeadersReceived(d), f, ["responseHeaders", "extraHeaders"]);
-      ext.webRequest.onBeforeRequest.addListener((d) => this.onBeforeRequestObserve(d), f);
-      ext.debugger.onEvent.addListener((src, method, params) => this.onDebuggerEvent(src, method, params));
-      ext.debugger.onDetach.addListener((src, reason) => this.onDetach(src, reason));
-      ext.webNavigation.onBeforeNavigate.addListener((d) => {
-        if (d.frameId === 0) this.onBeforeNavigate(d);
-      });
       await this.syncGateRules();
       const stale = await ext.declarativeNetRequest.getSessionRules();
       if (stale.length) await ext.declarativeNetRequest.updateSessionRules({ removeRuleIds: stale.map((r) => r.id) });
@@ -3355,6 +3373,22 @@ importScripts(${JSON.stringify(abs)});`;
         return true;
       }
       if (call === "sessions") return [...this.sessions.keys()];
+      if (call === "simulateRestart") {
+        await sleep(200);
+        this.sessions.clear();
+        this.lost.clear();
+        this.slots = null;
+        this.hints = null;
+        this.replay = null;
+        this.jar = new this.jar.constructor();
+        await this.loadJars();
+        this.c.tabs.clear();
+        await this.c.restoreTabs();
+        const stale = await ext.declarativeNetRequest.getSessionRules();
+        if (stale.length) await ext.declarativeNetRequest.updateSessionRules({ removeRuleIds: stale.map((r) => r.id) });
+        for (const [tabId, st] of this.c.tabs) if (st.accountId) await this.accountAssigned(tabId, null, st.accountId, true);
+        return [...this.sessions.keys()];
+      }
       return super.testCall(call, args);
     }
     async handleMessage(msg, sender) {
@@ -3482,6 +3516,7 @@ importScripts(${JSON.stringify(abs)});`;
   // src/background/main.js
   var platform = createPlatform();
   var controller = new Controller(platform);
+  var bootId = Math.random().toString(36).slice(2, 8);
   var initState = "starting";
   var initError = null;
   var ready = controller.init().then(() => {
@@ -3495,7 +3530,7 @@ importScripts(${JSON.stringify(abs)});`;
   ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (!msg || typeof msg.type !== "string") return false;
     if (msg.type === "ping") {
-      sendResponse({ ok: true, target: TARGET, init: initState, initError });
+      sendResponse({ ok: true, target: TARGET, init: initState, initError, bootId });
       return false;
     }
     (async () => {

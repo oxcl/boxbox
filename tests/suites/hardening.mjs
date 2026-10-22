@@ -161,17 +161,22 @@ export default function (R, h, drv) {
     a.eq((await h.box({ type: 'tabInfo', tabId: await t.boxId() })).status.level, 'warn');
   }, mv3Only);
 
-  R.test('MV3: isolation survives the extension service worker being terminated and restarted', async (ctx, a) => {
+  R.test('MV3: isolation state is rebuilt from storage after a service-worker restart', async (ctx, a) => {
+    // A real worker termination cannot be provoked under puppeteer (it holds the worker open, and a DevTools-stopped worker never restarts),
+    // so the restart path itself is exercised: drop every in-memory structure, then rebuild exactly as a fresh worker does at start-up.
     const acc = (await h.createAccount(A, 'Survivor')).id;
     const t = await h.openIn(acc, url()); await h.login(t, 'sw-survivor');
     const def = await h.openIn(null, url());
-    await ctx.drv.killExtensionWorker();
-    // the page keeps working: its requests wake the worker, which re-establishes the debugger session + rules + jar
-    await waitFor(async () => (await h.readState(t)).server.user === 'sw-survivor', { message: 'account session intact after worker restart', timeout: 20000 });
+    const id = await t.boxId();
+    const sessions = await h.box({ type: 'test:platform', call: 'simulateRestart' });
+    a.ok(sessions.includes(id), 'account tab re-attached after the rebuild: ' + JSON.stringify(sessions));
+    await waitFor(async () => (await h.readState(t)).server.user === 'sw-survivor', { message: 'account session intact after the rebuild', timeout: 20000 });
     a.eq((await h.readState(def)).server.user, null, 'default session untouched');
     a.eq((await h.tabAccount(t))?.accountId, acc, 'tab mapping restored from storage.session');
     await t.eval(() => { document.cookie = 'after=restart; path=/'; });
     a.eq(await t.eval(() => document.cookie.includes('after=restart')), true, 'JS cookies still virtualised');
     a.eq((await h.readState(def)).documentCookie, '', 'and not leaking into the real jar');
+    await t.goto(url());
+    a.eq((await h.readState(t)).server.user, 'sw-survivor', 'navigation after the rebuild is still isolated');
   }, mv3Only);
 }

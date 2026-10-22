@@ -12,6 +12,15 @@ time — in Firefox, Chrome (Manifest V3) and Helium (Manifest V2) — as if eve
 * **Visible at a glance:** coloured favicon badge, coloured tab group / container, and a coloured, labelled page border.
 * **No network, no telemetry.** The catalog is bundled; Box never fetches anything.
 
+<p>
+  <img src="docs/screens/popup.png" width="230" alt="Popup: current service and its accounts">
+  <img src="docs/screens/picker.png" width="420" alt="Account picker (Ask mode)">
+</p>
+<p>
+  <img src="docs/screens/settings-dark.png" width="420" alt="Settings, dark mode">
+  <img src="docs/screens/settings-services.png" width="420" alt="Service editor">
+</p>
+
 How isolation is achieved on each build is in [DESIGN.md](DESIGN.md); what works, what doesn't, and the evidence is in
 [REPORT.md](REPORT.md).
 
@@ -53,6 +62,10 @@ direnv exec . npm run launch:chrome
 direnv exec . npm run launch:helium
 # optional start page:  direnv exec . node scripts/launch.mjs chrome https://www.saucedemo.com/
 ```
+
+Helium always carries its own bundled content blocker in addition to Box (it is part of the browser, not of the profile). On
+Helium (Manifest V2) `chrome.tabGroups` does not exist, so account identity there is the favicon badge and the page border
+(Firefox uses container colours, Chrome uses coloured tab groups).
 
 Chrome shows its *"Box started debugging this browser"* bar on tabs that are inside an account — that is the price of
 isolation on Manifest V3 (see DESIGN.md §4.1). Closing it makes that tab **fail closed** (blocked, with a *Restore

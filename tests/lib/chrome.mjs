@@ -22,6 +22,7 @@ export class ChromeDriver {
       });
     }
     const drv = new ChromeDriver(browser, fixture, which, userDataDir);
+    drv.extDir = path.resolve(extDir);
     if (process.env.BOX_DEBUG) drv.captureBackground();
     drv.control = await drv.openControl();
     if (which === 'helium') {      // Helium's bundled extensions reload the first pages after start-up; get that out of the way
@@ -34,7 +35,7 @@ export class ChromeDriver {
   }
 
   constructor(browser, fixture, name, profile) {
-    this.browser = browser; this.fixture = fixture; this.name = name; this.profile = profile;
+    this.browser = browser; this.fixture = fixture; this.name = name; this.profile = profile; this.extDir = null;
     this.ids = new Map(); this.next = 1;
   }
 
@@ -114,20 +115,29 @@ export class ChromeDriver {
     return tab;
   }
 
-  /** Terminate the extension's service worker (MV3), like Chrome does after ~30s of idleness. */
+  /** Stop the extension's service worker the way Chrome does when it is idle (ServiceWorker.stopWorker through DevTools). */
   async killExtensionWorker() {
-    const t = this.browser.targets().find((x) => x.type() === 'service_worker' && /^chrome-extension:/.test(x.url()));
-    if (!t) throw new Error('no extension service worker');
-    const s = await this.browser.target().createCDPSession();
-    const { targetInfos } = await s.send('Target.getTargets');
-    const info = targetInfos.find((x) => x.type === 'service_worker' && x.url === t.url());
-    await s.send('Target.closeTarget', { targetId: info.targetId });
-    await s.detach();
-    await sleep(800);
+    const id = fs.readFileSync(path.join(this.extDir, '.extension-id'), 'utf8').trim();
+    const page = await this.browser.newPage();
+    try {
+      await page.goto(`chrome-extension://${id}/settings.html`).catch(() => {});
+      const cdp = await page.createCDPSession();
+      const versions = [];
+      cdp.on('ServiceWorker.workerVersionUpdated', (e) => versions.push(...e.versions));
+      await cdp.send('ServiceWorker.enable');
+      await sleep(500);
+      const v = [...versions].reverse().find((x) => x.scriptURL.includes(id) && x.runningStatus === 'running');
+      if (!v) throw new Error('extension worker version not found: ' + JSON.stringify(versions.map((x) => [x.scriptURL, x.runningStatus])));
+      await cdp.send('ServiceWorker.stopWorker', { versionId: v.versionId });
+      await sleep(1200);
+    } finally { await page.close().catch(() => {}); }
     return true;
   }
 
-  async quit() { try { await this.browser.close(); } catch { /* ignore */ } }
+  async quit() {
+    try { await this.browser.close(); } catch { /* ignore */ }
+    try { fs.rmSync(this.profile, { recursive: true, force: true }); } catch { /* ignore */ }
+  }
 }
 
 export class ChromeTab {
