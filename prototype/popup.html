@@ -1,0 +1,143 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BoxBox popup</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+ body { min-height: 100vh; }
+ .stage { position: fixed; inset: 0; background: linear-gradient(180deg, #8fb8ee 0, #cfe0f3 40%, #e9e2d3 62%, #7f9bb0 100%); z-index: -1; overflow: hidden; }
+ .stage::before { content: ''; position: absolute; left: -10%; right: -10%; bottom: 22%; height: 38%; background: linear-gradient(135deg, transparent 0 20%, #5f7d93 20% 45%, #7f9db2 45% 55%, transparent 55%), linear-gradient(225deg, transparent 0 25%, #6b8ba2 25% 60%, transparent 60%); opacity: .75; filter: blur(2px); }
+ .stage::after { content: ''; position: absolute; inset: 0; backdrop-filter: blur(5px); background: rgba(255, 255, 255, .15); }
+ .bar { position: fixed; left: 0; right: 0; top: 0; height: 58px; background: rgba(240, 244, 250, .92); backdrop-filter: blur(10px); display: flex; align-items: center; gap: 12px; padding: 0 16px; box-shadow: 0 1px 0 rgba(0, 0, 0, .06); }
+ .url { flex: 1; height: 36px; border-radius: 99px; background: #fff; display: flex; align-items: center; padding: 0 16px; color: #5b6472; font-size: 14px; font-weight: 500; }
+ .tbtn { position: relative; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: transparent; transition: background .2s, transform .3s var(--ease); }
+ .tbtn:hover, .tbtn.open { background: rgba(0, 0, 0, .08); } .tbtn:active { transform: scale(.9); }
+ .tbtn .bx { --s: 24px; } .tbtn .badge { position: absolute; right: 5px; bottom: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--c, transparent); box-shadow: 0 0 0 2px #fff; transition: background .4s; }
+ .demo-switch { position: fixed; left: 18px; top: 74px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+ .demo-switch button { text-align: left; padding: 10px 14px; border-radius: 14px; background: rgba(255, 255, 255, .8); font-weight: 700; font-size: 13px; box-shadow: 0 2px 10px rgba(0, 0, 0, .1); backdrop-filter: blur(8px); transition: .3s var(--ease); } .demo-switch button.on { background: #16142a; color: #fff; transform: translateX(6px); }
+ .pop { position: fixed; top: 68px; right: 74px; width: 424px; border-radius: 28px; padding: 22px 22px 20px; transform-origin: 88% -20px;  background: var(--card-solid); box-shadow: 0 30px 80px rgba(20, 20, 50, .3), 0 0 0 1px var(--line); }
+ .pop::before { content: ''; position: absolute; top: -8px; right: 20px; width: 18px; height: 18px; background: var(--card-solid); transform: rotate(45deg); border-radius: 4px; }
+ @keyframes popin { from { transform: scale(.6) translateY(-20px); opacity: 0; } }
+ .pop.out { pointer-events: none; }
+ .head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+ .head h1 { margin: 0; font-size: 22px; letter-spacing: -.02em; } .head .logo .bx { --s: 30px; }
+ .site { display: flex; align-items: center; gap: 14px; padding: 16px 0 12px; } .site .tile { width: 52px; height: 52px; border-radius: 16px; background: #fff; box-shadow: 0 4px 14px rgba(0, 0, 0, .1), 0 0 0 1px var(--line); display: grid; place-items: center; font-weight: 800; font-size: 26px; }
+ .site h2 { margin: 0; font-size: 20px; } .site span { color: var(--muted); font-weight: 500; }
+ .status { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; font-weight: 700; font-size: 16px; background: color-mix(in srgb, var(--c, #3b82f6) 12%, transparent); color: var(--ink); transition: background .5s; }
+ .status b { color: var(--c); transition: color .4s; } .status .bx { --s: 26px; }
+ .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 14px; padding: 22px 0 10px; }
+ .cell { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 4px 14px; border-radius: 22px; text-align: center; transition: background .3s; }
+ .cell:hover { background: rgba(120, 100, 80, .05); } .cell.selected { background: color-mix(in srgb, var(--c) 9%, transparent); }
+ .cell .bx { --s: 64px; margin: 14px 0 10px; } .cell .name { font-weight: 600; font-size: 15px; color: var(--muted); transition: color .3s; } .cell.selected .name { color: var(--c); font-weight: 800; }
+ .cell .menu { position: absolute; top: 6px; left: 6px; opacity: 0; transition: .2s; width: 26px; height: 26px; border-radius: 9px; background: var(--card-solid); box-shadow: 0 1px 6px rgba(0, 0, 0, .15); display: grid; place-items: center; } .cell:hover .menu { opacity: 1; } .menu svg { width: 14px; }
+ .cell .check { right: 8px; bottom: 36px; width: 26px; }
+ .newcell { border: 2px dashed rgba(120, 100, 80, .28); border-radius: 22px; margin: 0; min-height: 148px; padding: 0; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-weight: 600; transition: .3s var(--ease); min-height: 112px; }
+ .newcell:hover { border-color: var(--brand); color: var(--brand); transform: scale(1.05) rotate(-1.5deg); } .newcell svg { width: 30px; height: 30px; transition: transform .4s var(--ease); } .newcell:hover svg { transform: rotate(90deg) scale(1.2); }
+ .foot { border-top: 1px solid var(--line); padding-top: 16px; margin-top: 6px; } .foot p { margin: 0 0 12px; font-weight: 600; color: var(--muted); }
+ /* create sheet */
+ .sheet { position: absolute; inset: 0; border-radius: 28px; background: var(--card-solid); padding: 22px; display: flex; flex-direction: column; gap: 14px; transform: translateY(105%); visibility: hidden; transition: transform .55s var(--ease-out), visibility 0s .55s; z-index: 3; }
+ .sheet.on { transform: none; visibility: visible; transition-delay: 0s; } .sheet h3 { margin: 0; font-size: 20px; }
+ .sheet .prev { position: relative; overflow: hidden; display: grid; place-items: center; height: 160px; border-radius: 22px; background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%), rgba(120, 100, 80, .05); }
+ .sheet .prev .layer { position: absolute; inset: 0; display: grid; place-items: center; } .sheet .prev .bx { --s: 100px; } .input { width: 100%; padding: 14px 16px; border-radius: 14px; border: 2px solid transparent; background: rgba(120, 100, 80, .08); font: inherit; font-weight: 600; color: var(--ink); outline: 0; transition: .25s; } .input:focus { border-color: var(--c); background: transparent; box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 18%, transparent); }
+ .swatches, .icons { display: flex; flex-wrap: wrap; gap: 10px; } .swatches button { width: 30px; height: 30px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px var(--card-solid), 0 0 0 5px transparent; transition: .3s var(--ease); } .swatches button:hover { transform: scale(1.18); } .swatches button.on { box-shadow: 0 0 0 3px var(--card-solid), 0 0 0 5px var(--c); transform: scale(1.1); }
+ .icons button { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(120, 100, 80, .08); transition: .3s var(--ease); } .icons button svg { width: 20px; } .icons button:hover { transform: translateY(-3px); } .icons button.on { background: var(--c); color: #fff; transform: scale(1.1); }
+ .row { display: flex; gap: 10px; margin-top: auto; } .row .btn { flex: 1; justify-content: center; }
+ .shelf-view h1 { font-size: 26px; margin: 0; letter-spacing: -.02em; }
+ .shelf { position: relative; padding: 14px 6px 0; margin-top: 6px; } .shelf .boards { position: relative; display: flex; align-items: flex-end; justify-content: space-around; height: 128px; }
+ .shelf .boards::after { content: ''; position: absolute; left: -4px; right: -4px; bottom: -14px; height: 20px; border-radius: 8px 8px 14px 14px; background: linear-gradient(#e7c58f, #cf9f5a); box-shadow: 0 8px 14px rgba(110, 70, 20, .25); z-index: 0; }
+ .stack { position: relative; width: 150px; height: 120px; z-index: 1; } .stack .bx { position: absolute; }
+ .shelf .pill { position: relative; z-index: 2; margin-top: 26px; display: flex; justify-content: space-around; } .shelf .pill span { padding: 8px 16px; border-radius: 99px; font-weight: 700; font-size: 14px; background: color-mix(in srgb, var(--c) 18%, #fff); box-shadow: 0 2px 8px rgba(0, 0, 0, .08); transition: transform .3s var(--ease); } .shelf .pill span:hover { transform: translateY(-3px); }
+ .shelf + .shelf { margin-top: 22px; }
+ .manage { display: flex; align-items: center; gap: 14px; width: 100%; padding: 18px; margin-top: 22px; border-radius: 22px; background: rgba(120, 100, 80, .06); font-weight: 700; font-size: 17px; transition: .3s var(--ease); } .manage:hover { transform: translateX(4px); background: rgba(120, 100, 80, .1); } .manage svg { width: 22px; } .manage .grow { flex: 1; text-align: left; }
+ .chip-fly { position: fixed; z-index: 9000; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 14px; background: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.25); pointer-events: none; font-weight: 700; font-size: 13px; transform-origin: 20px 20px; } .chip-fly .tile2 { width: 32px; height: 32px; border-radius: 10px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.08); display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+</style></head><body>
+<div class="stage"></div>
+<div class="bar"><div class="tbtn" style="margin-left:6px"><svg width="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.4" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></div><div class="url" id="url">amazon.com</div><div class="tbtn" id="tb"><span id="tbicon" style="position:relative;display:block;width:30px;height:30px"></span></div></div>
+<div class="demo-switch" id="demo"><button data-v="site" class="on">On amazon.com</button><button data-v="nosite">New tab (no site)</button></div>
+<div class="pop" id="pop"></div>
+<script src="motion.js"></script><script src="shared.js"></script>
+<script>
+const C = BB.COLORS, ICONS = ['user', 'briefcase', 'home', 'cart', 'game', 'heart', 'school', 'laptop', 'flask', 'users'];
+let selecting = false;
+const state = { view: 'site', selected: 'work', accounts: [
+  { id: 'work', name: 'Work', color: C.blue, icon: 'laptop' }, { id: 'personal', name: 'Personal', color: C.orange, icon: 'home' }, { id: 'shop', name: 'Shopping', color: C.green, icon: 'cart' } ], mode: 'default' };
+const pop = document.getElementById('pop');
+const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h !== undefined) e.innerHTML = h; return e; };
+function setBadge(swap) {
+  const a = state.accounts.find((x) => x.id === state.selected); const i = document.getElementById('tbicon');
+  const nb = BB.box(a ? { color: a.color, icon: a.icon, size: 30, hover: false, sticker: false } : { kraft: true, icon: '', size: 30, hover: false });
+  if (swap && i.firstChild) { const old = i.firstChild; nb.style.position = 'absolute'; nb.style.left = '0'; nb.style.top = '0'; i.append(nb); MO.reveal(nb.parentNode === i ? nb : nb, 0, 0); MO.spinIn(nb); MO.A(old, [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(.5) rotate(40deg)' }], { duration: 320 }).finished.then(() => { old.remove(); nb.style.position = ''; }); }
+  else i.replaceChildren(nb);
+  document.getElementById('url').textContent = state.view === 'site' ? 'amazon.com' : 'Search Google or type a URL';
+}
+function head() { const h = el('div', 'head'); const l = BB.logo(30); l.style.fontSize = '22px'; const g = el('button', 'ico-btn', BB.icons.gear); h.append(l, g); return h; }
+function fillStatus(status) {
+  const cur = state.accounts.find((a) => a.id === state.selected);
+  status.style.setProperty('--c', cur ? cur.color : '#9a8a78');
+  const mb = BB.box(cur ? { color: cur.color, icon: '', size: 26, hover: false } : { kraft: true, icon: '', size: 26, hover: false });
+  status.replaceChildren(mb); status.insertAdjacentHTML('beforeend', cur ? `<span>This tab is in <b>${cur.name}</b></span>` : `<span>This tab is in your <b style="color:#a9714b">normal session</b></span>`);
+  MO.popIn(mb); const t = status.querySelector('span'); MO.A(t, [{ transform: 'translateX(14px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.3,.8,.3,1)' });
+}
+async function select(b, col) {
+  const cell = b.closest('.cell');
+  pop.querySelectorAll('.cell').forEach((c) => { c.classList.remove('selected'); const bx = c.querySelector('.bx'); bx.classList.remove('bx-selected', 'glow'); });
+  await BB.tabInto(b, pop.querySelector('.site .tile'), 'amazon.com', col);
+  pop.querySelectorAll('.cell').forEach((c) => { const on = (c.dataset.id || '') === (state.selected || ''); c.classList.toggle('selected', on); c.classList.toggle('rf', on); c.classList.remove('on'); const bx = c.querySelector('.bx'); bx.classList.toggle('bx-selected', on); bx.classList.toggle('glow', on); if (on) { void c.offsetWidth; c.style.setProperty('--rc', col || '#a9714b'); c.classList.add('on'); } });
+  setBadge(true); fillStatus(document.getElementById('status'));
+}
+function render(animate) {
+  pop.replaceChildren(); setBadge();
+  if (state.view === 'nosite') return renderShelf();
+  pop.append(head());
+  const site = el('div', 'site', `<div class="tile"><span style="color:#16142a">a</span></div><div><h2>Amazon</h2><span>amazon.com</span></div>`);
+  const cur = state.accounts.find((a) => a.id === state.selected);
+  const status = el('div', 'status'); status.id = 'status'; fillStatus(status);
+  const grid = el('div', 'grid');
+  const cells = [{ id: null, name: 'No box', kraft: true, icon: 'home' }, ...state.accounts];
+  cells.forEach((a, i) => {
+    const c = el('button', 'cell' + ((a.id || null) === (state.selected || null) ? ' selected' : '')); c.style.setProperty('--c', a.color || '#a9714b'); c.dataset.id = a.id || ''; if ((a.id || null) === (state.selected || null)) { c.classList.add('rf', 'on'); c.style.setProperty('--rc', a.color || '#a9714b'); }
+    const b = BB.box(a.kraft ? { kraft: true, icon: a.icon, label: 'default', size: 84 } : { color: a.color, icon: a.icon, label: a.name.slice(0, 8), size: 84, glow: a.id === state.selected }); MO.dropIn(b, i * 70);
+    if (a.id === state.selected) b.classList.add('bx-selected');
+    c.append(b, el('span', 'name', a.name)); if (a.id) c.append(el('span', 'menu', BB.icons.dots));
+    c.onclick = () => { if ((a.id || null) === state.selected) { MO.squish(b); MO.shine(b); return; } if (selecting) return; selecting = true; state.selected = a.id; select(b, a.color || '#a9714b').finally(() => (selecting = false)); };
+    grid.append(c);
+  });
+  const nb = el('button', 'newcell', BB.icons.plus + '<span>New</span>'); nb.onclick = openSheet; grid.append(nb);
+  const foot = el('div', 'foot', '<p>When I open Amazon:</p>'); const sg = el('div', 'seg'); sg.innerHTML = ['default:Default', 'last:Last used', 'ask:Ask'].map((x) => { const [v, t] = x.split(':'); return `<button data-v="${v}" aria-checked="${state.mode === v}">${t}</button>`; }).join(''); foot.append(sg);
+  pop.append(site, status, grid, foot); BB.seg(sg, (v) => { state.mode = v; BB.toast(`Amazon will open: ${{ default: 'in your normal session', last: 'in the last box you used', ask: 'after asking you' }[v]}`); });
+  pop.append(sheetEl());
+}
+function renderKeep() { const bs = pop.scrollTop; render(); pop.querySelectorAll('.drop').forEach((x) => { x.classList.remove('drop'); x.style.animation = 'none'; }); const sel = pop.querySelector('.cell.selected .bx'); if (sel) { MO.squish(sel); } }
+function sheetEl() {
+  const s = el('div', 'sheet'); s.id = 'sheet'; const n = state.accounts.length + 1; const draft = { name: `Amazon ${n}`, color: Object.values(C)[(n + 1) % 6], icon: 'user' };
+  s.style.setProperty('--c', draft.color);
+  s.innerHTML = '<h3>New box for Amazon</h3><div class="prev" id="prev"></div><input class="input" id="nm" maxlength="24"><div class="swatches" id="sw"></div><div class="icons" id="ic"></div><div class="row"><button class="btn ghost" id="cancel">Cancel</button><button class="btn blue" id="create">Create box</button></div>';
+  // colour / icon changes wash over the old box from the control that was clicked (an overlay, never a flash)
+  let shown = null;
+  const mkBox = () => BB.box({ color: draft.color, icon: draft.icon, label: draft.name.slice(0, 8), size: 104, float: true, glow: true });
+  const paint = (origin) => {
+    s.style.setProperty('--c', draft.color);
+    const prev = s.querySelector('#prev'); const layer = el('div', 'layer'); const nb = mkBox(); layer.append(nb); prev.append(layer);
+    if (!shown) { MO.spinIn(nb); } else {
+      const pr = prev.getBoundingClientRect(), o = origin ? origin.getBoundingClientRect() : pr;
+      MO.reveal(layer, o.left + o.width / 2, o.top + o.height / 2, { duration: 620 }); const old = shown; setTimeout(() => old.remove(), 640); MO.squish(nb);
+    }
+    shown = layer;
+    s.querySelectorAll('#sw button').forEach((b) => b.classList.toggle('on', b.dataset.c === draft.color)); s.querySelectorAll('#ic button').forEach((b) => b.classList.toggle('on', b.dataset.i === draft.icon));
+  };
+  s.querySelector('#nm').value = draft.name; s.querySelector('#nm').oninput = (e) => { draft.name = e.target.value; const l = s.querySelector('.label b'); if (l) l.textContent = draft.name.slice(0, 8); };
+  Object.values(C).slice(0, 7).forEach((c) => { const b = el('button'); b.dataset.c = c; b.style.setProperty('--c', c); b.onclick = () => { if (draft.color === c) return; draft.color = c; paint(b); }; s.querySelector('#sw').append(b); });
+  ICONS.forEach((i) => { const b = el('button', '', BB.icons[i]); b.dataset.i = i; b.onclick = () => { if (draft.icon === i) return; draft.icon = i; paint(b); }; s.querySelector('#ic').append(b); });
+  s.querySelector('#cancel').onclick = () => s.classList.remove('on');
+  s.querySelector('#create').onclick = () => { const id = 'a' + Date.now(); state.accounts.push({ id, name: draft.name.trim() || `Amazon ${n}`, color: draft.color, icon: draft.icon }); state.selected = id; render(); const sel = pop.querySelector('.cell.selected .bx'); BB.burstAt(sel || pop); BB.toast(`Created “${draft.name}”`); };
+  setTimeout(paint); return s;
+}
+function openSheet() { document.getElementById('sheet').classList.add('on'); setTimeout(() => document.getElementById('nm').select(), 450); }
+function renderShelf() {
+  const v = el('div', 'shelf-view'); const h = el('div', 'head'); h.style.border = '0'; h.append(el('h1', '', 'No site here'), el('button', 'ico-btn', BB.icons.gear)); v.append(h);
+  const mk = (rows) => { const sh = el('div', 'shelf'); const bd = el('div', 'boards'); const pl = el('div', 'pill'); rows.forEach(([col, ic, n, name, tabs]) => { const st = el('div', 'stack'); const pos = { 1: [[45, 4]], 2: [[8, 4], [64, 4]], 3: [[8, 4], [64, 4], [36, 50]] }[Math.min(n, 3)]; for (let i = 0; i < n && i < 3; i++) { const b = BB.box({ color: col, icon: ic, size: 54, label: name.slice(0, 6) }); b.style.left = pos[i][0] + 'px'; b.style.bottom = pos[i][1] + 'px'; b.style.zIndex = i === 2 ? 2 : 1; MO.dropIn(b, i * 90); st.append(b); } bd.append(st); const sp = el('span', '', `${name} · ${tabs}`); sp.style.setProperty('--c', col); pl.append(sp); }); sh.append(bd, pl); return sh; };
+  v.append(mk([[C.blue, 'user', 3, 'Google', '3 tabs'], [C.orange, 'users', 1, 'Reddit', '1 tab']]), mk([[C.purple, 'laptop', 2, 'GitHub', '2 tabs'], [C.kraft, 'globe', 1, 'Other', '1 tab']]));
+  const m = el('button', 'manage', BB.icons.grid + '<span class="grow">Manage boxes</span>' + BB.icons.chev); m.querySelector('svg:last-child').style.transform = 'rotate(-90deg)'; m.onclick = () => location.href = 'services.html'; v.append(m); pop.append(v);
+}
+document.querySelectorAll('#demo button').forEach((b) => b.onclick = () => { document.querySelectorAll('#demo button').forEach((x) => x.classList.toggle('on', x === b)); state.view = b.dataset.v; render(); MO.popIn(pop, { duration: 650 }); });
+document.getElementById('tb').onclick = () => { const o = pop.classList.toggle('out'); document.getElementById('tb').classList.toggle('open', !o); if (o) MO.A(pop, [{ transform: 'none', opacity: 1 }, { transform: 'scale(.6) translateY(-24px)', opacity: 0 }], { duration: 220, easing: 'ease-in' }); else MO.popIn(pop, { duration: 650 }); };
+document.getElementById('tb').classList.add('open');
+render(); MO.popIn(pop, { duration: 650 }); BB.chrome('popup.html');
+</script></body></html>

@@ -1,0 +1,52 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BoxBox in the page</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+ body { min-height: 100vh; display: grid; place-items: center; padding: 18px 24px 64px; }
+ .win { --c: #3b82f6; position: relative; width: min(1240px, 100%); height: min(780px, calc(100vh - 90px)); border-radius: 22px; background: #fff; overflow: hidden; box-shadow: 0 30px 80px rgba(40, 30, 20, .28); display: flex; flex-direction: column; }
+ .frame { position: absolute; inset: 0; border-radius: 22px; pointer-events: none; z-index: 20; box-shadow: inset 0 0 0 4px var(--cb, var(--c)); }
+ .frame::after { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 4px; background: conic-gradient(from -90deg, var(--c) var(--fill), transparent 0); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; }
+ .win.sweep .frame::after { opacity: 1; animation: fillring 1s cubic-bezier(.55, 0, .2, 1) both; }
+ .win.none .frame { box-shadow: inset 0 0 0 0 transparent; }
+ .pill { position: absolute; z-index: 21; left: 50%; top: 0; transform: translate(-50%, 0); display: flex; align-items: center; gap: 8px; padding: 7px 18px 8px 12px; border-radius: 0 0 18px 18px; background: #fff; box-shadow: 0 8px 22px rgba(0, 0, 0, .16), 0 0 0 1px rgba(0, 0, 0, .04); font-weight: 800; color: var(--c); transition: transform .55s var(--ease), opacity .3s; } .pill .bx { --s: 28px; margin-right: 4px; } .pill .e { font-size: 15px; }
+ .win.none .pill { transform: translate(-50%, -110%); } .pill.away { transform: translate(-50%, -110%); opacity: 0; }
+ .chromebar { background: #dfe3ea; padding: 10px 12px 0; } .tabs { display: flex; align-items: flex-end; gap: 6px; } .traffic { padding: 0 12px 12px 4px; }
+ .grp { display: flex; align-items: flex-end; border-radius: 12px 12px 0 0; padding-top: 4px; background: var(--c); transition: background .5s; } .grp .gl { align-self: center; padding: 0 10px; font-weight: 800; color: #fff; font-size: 12.5px; white-space: nowrap; display: flex; align-items: center; gap: 5px; max-width: 120px; overflow: hidden; }
+ .tab { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: #f6f7fa; border-radius: 12px 12px 0 0; font-size: 13px; font-weight: 600; min-width: 200px; white-space: nowrap; } .tab .x { margin-left: auto; opacity: .5; } .tab .fav { width: 16px; height: 16px; border-radius: 4px; display: grid; place-items: center; background: #ea4335; color: #fff; font-size: 10px; font-weight: 800; } .tag { padding: 1px 7px; border-radius: 6px; background: var(--c); color: #fff; font-size: 11px; font-weight: 800; transition: background .5s; }
+ .win.none .grp { background: transparent; } .win.none .grp .gl, .win.none .tag { display: none; }
+ .addr { display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: #f6f7fa; } .addr .u { flex: 1; background: #e9ecf2; border-radius: 99px; padding: 9px 18px; font-size: 14px; color: #444; } .tb { position: relative; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; } .tb { width: 40px; height: 40px; } .tb .bx { --s: 30px; }
+ .page { flex: 1; display: grid; grid-template-columns: 230px 1fr; overflow: hidden; background: #f8f9fc; }
+ .side { padding: 22px 16px; display: flex; flex-direction: column; gap: 6px; } .side .comp { padding: 14px 18px; border-radius: 16px; background: #c2e7ff; font-weight: 700; margin-bottom: 12px; } .side div.i { padding: 9px 14px; border-radius: 99px; font-weight: 600; color: #444; font-size: 14px; display: flex; justify-content: space-between; } .side .i.on { background: #d3e3fd; font-weight: 800; color: #0b3a8f; }
+ .mail { padding: 14px 0 0; } .mail .r { display: grid; grid-template-columns: 170px 1fr 70px; gap: 16px; padding: 10px 20px; font-size: 14px; border-bottom: 1px solid #eceef3; background: #fff; transition: background .2s, transform .25s var(--ease); } .mail .r:hover { background: #eef3ff; transform: translateX(4px); } .mail .r b { font-weight: 700; } .mail .r span { color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .dock { position: absolute; z-index: 30; left: 14px; bottom: 22px; display: flex; gap: 10px; padding: 10px 14px; border-radius: 22px; background: rgba(255, 255, 255, .95); box-shadow: 0 12px 30px rgba(0, 0, 0, .22); } .dock button { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 16px; transition: .3s var(--ease); } .dock button:hover { transform: translateY(-8px); } .dock .bx { --s: 38px; } .dock button.on { background: rgba(0, 0, 0, .06); }
+</style></head><body>
+<div class="bg-scene"><div class="shadow"></div><div class="leaf l1"></div><div class="leaf l2"></div></div>
+<div class="win" id="win">
+  <div class="frame"></div><div class="pill" id="pill"></div>
+  <div class="chromebar"><div class="tabs"><div class="traffic"><i></i><i></i><i></i></div><div class="grp"><span class="gl" id="gl"></span><div class="tab"><span class="fav">M</span><span>Inbox (12)</span><span class="tag" id="tag"></span><span class="x">✕</span></div></div><div class="tab" style="min-width:150px;opacity:.7"><span class="fav" style="background:#999">+</span>New Tab</div></div></div>
+  <div class="addr"><span>←</span><span>→</span><div class="u">https://mail.google.com/mail/u/0/#inbox</div><div class="tb" id="tb"></div></div>
+  <div class="page"><div class="side"><div class="comp">✎ Compose</div><div class="i on">Inbox <span>12</span></div><div class="i">Starred</div><div class="i">Sent</div><div class="i">Drafts <span>3</span></div></div><div class="mail" id="mail"></div></div>
+</div>
+<p style="position:fixed;left:0;right:0;bottom:62px;text-align:center;font-size:13px;color:var(--muted);font-weight:600">Prototype: click the name pill, or press 1–4, to switch boxes</p><script src="motion.js"></script><script src="shared.js"></script>
+<script>
+const C = BB.COLORS, E = { briefcase: '💼', user: '👤', home: '🏠', flask: '🧪', cart: '🛒' };
+const BOXES = [{ n: 'No box', k: 1, i: 'home' }, { n: 'Work', c: C.blue, i: 'briefcase' }, { n: 'Personal', c: C.coral, i: 'user' }, { n: 'Research', c: C.green, i: 'flask' }];
+const win = document.getElementById('win'), pill = document.getElementById('pill'), dock = document.getElementById('dock');
+const mails = [['Sarah Chen', 'Product sync: Q2 roadmap — Hey team, here’s the latest…', '10:14'], ['Notion', 'Weekly digest — Here’s what happened this week…', '9:02'], ['Alex Rivera', 'Design review — Sharing the latest mocks for feedback…', '8:47'], ['Stripe', 'Your April invoice is ready — Invoice #4F2938…', '6:21'], ['Lina Park', 'Re: Customer interview notes — Thanks for jumping on this', 'Apr 24'], ['GitHub', '3 new pull requests — box/extension #128, #129, #130', 'Apr 24'], ['Marcus Lee', 'Lunch next week? — Are you free next Tuesday?', 'Apr 23']];
+document.getElementById('mail').innerHTML = mails.map(([a, b, c]) => `<div class="r"><b>${a}</b><span>${b}</span><span style="text-align:right">${c}</span></div>`).join('');
+let curK = 1;
+function pick(k, first) {
+  const bx = BOXES[k]; curK = k; const prevC = win.style.getPropertyValue('--cb') || bx.c; win.classList.toggle('none', !!bx.k);
+  if (!bx.k) {
+    win.style.setProperty('--c', bx.c);
+    const pb = BB.box({ color: bx.c, icon: bx.i, size: 28, hover: false, sticker: false }); pill.replaceChildren(pb); pill.insertAdjacentHTML('beforeend', `<span>${bx.n}</span>`); pill.classList.remove('away');
+    document.getElementById('gl').textContent = `${E[bx.i]} ${bx.n}`; document.getElementById('tag').textContent = bx.n;
+    if (!first) { BB.burstAt(pill, [bx.c, '#fff']); win.classList.remove('sweep'); void win.offsetWidth; win.classList.add('sweep'); setTimeout(() => win.style.setProperty('--cb', bx.c), 950); MO.A(pill, [{ transform: 'translate(-50%, -110%)' }, { transform: 'translate(-50%, 10px)', offset: .55 }, { transform: 'translate(-50%, -3px)', offset: .78 }, { transform: 'translate(-50%, 0)' }], { duration: 750, easing: 'ease-out', fill: 'none' }); MO.spinIn(document.getElementById('gl')); MO.lid(pb, 1).then(() => MO.lid(pb, 0)); }
+    else win.style.setProperty('--cb', bx.c);
+  }
+  const tb = document.getElementById('tb'); const tbx = BB.box(bx.k ? { kraft: true, icon: '', size: 30, hover: false } : { color: bx.c, icon: bx.i, size: 30, hover: false, sticker: false }); tb.replaceChildren(tbx); if (!first) MO.spinIn(tbx);
+}
+pill.style.pointerEvents = 'auto'; pill.style.cursor = 'pointer'; pill.title = 'Click to try another box (demo)'; pill.addEventListener('click', () => pick(curK % 3 + 1));
+addEventListener('keydown', (e) => { if ('1234'.includes(e.key)) pick(+e.key - 1); });
+win.addEventListener('pointermove', (e) => { const r = win.getBoundingClientRect(); const x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top; pill.classList.toggle('away', y < 46 && Math.abs(x) < 120 && !win.classList.contains('none')); }, { passive: true });
+pick(1, true); BB.chrome('browser.html');
+</script></body></html>

@@ -1,0 +1,74 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Open in…</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+ body { min-height: 100vh; display: flex; flex-direction: column; }
+ .browser { width: min(1240px, calc(100% - 40px)); margin: 18px auto 70px; flex: 1; border-radius: 22px; overflow: hidden; background: var(--card-solid); box-shadow: 0 30px 80px rgba(60, 40, 20, .25), 0 0 0 1px var(--line); display: flex; flex-direction: column; min-height: 640px; }
+ .chromebar { background: #dfe3ea; padding: 10px 14px 0; } [data-theme="dark"] .chromebar { background: #2a2736; }
+ .tabs { display: flex; align-items: flex-end; gap: 14px; } .tab { display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: #f6f7fa; border-radius: 12px 12px 0 0; font-size: 13px; font-weight: 600; min-width: 190px; } [data-theme="dark"] .tab { background: #3a3550; }
+ .addr { display: flex; align-items: center; gap: 12px; padding: 10px 6px 12px; background: #f6f7fa; margin: 0 -14px; padding-left: 20px; padding-right: 20px; } [data-theme="dark"] .addr { background: #3a3550; }
+ .addr .u { flex: 1; background: #e9ecf2; border-radius: 99px; padding: 9px 18px; color: #555; font-size: 14px; } [data-theme="dark"] .addr .u { background: #2a2736; color: #bbb; }
+ .page { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px 30px 40px; overflow: hidden; }
+ .gtile { width: 84px; height: 84px; border-radius: 24px; background: #fff; box-shadow: 0 10px 30px rgba(0, 0, 0, .12); display: grid; place-items: center; font-size: 46px; font-weight: 800; background-clip: padding-box; animation: fadeup .7s var(--ease) both; }
+ .gtile span { background: linear-gradient(135deg, #4285f4 25%, #ea4335 25% 50%, #fbbc05 50% 75%, #34a853 75%); -webkit-background-clip: text; color: transparent; }
+ h1 { font-size: clamp(34px, 5vw, 54px); letter-spacing: -.035em; margin: 22px 0 28px; animation: fadeup .7s .08s var(--ease-out) both; }
+ .shelf { position: relative; display: flex; justify-content: center; gap: clamp(10px, 4vw, 60px); padding: 60px 70px 0; } 
+ .shelf::before { content: ''; position: absolute; left: 0; right: 0; bottom: 78px; height: 56px; border-radius: 28px; background: linear-gradient(#fff, #f1e9de); box-shadow: 0 18px 30px rgba(120, 80, 40, .15), inset 0 -4px 0 rgba(0, 0, 0, .04); } [data-theme="dark"] .shelf::before { background: linear-gradient(#3a3550, #2d2940); }
+ .opt { position: relative; width: 200px; display: flex; flex-direction: column; align-items: center; z-index: 1; padding-bottom: 6px; cursor: pointer; border-radius: 24px; }
+ .opt .stage { height: 190px; display: grid; place-items: end center; padding-bottom: 30px; }
+ .opt .bx { --s: 112px; }
+ .opt h3 { margin: 34px 0 6px; font-size: 22px; } .opt p { margin: 0; color: var(--muted); font-size: 15px; font-weight: 500; line-height: 1.4; }
+ .opt.sel h3 { color: var(--c); }
+ .remember { display: inline-flex; align-items: center; gap: 12px; margin-top: 48px; font-size: 17px; font-weight: 600; color: var(--muted); cursor: pointer; animation: fadeup .8s .5s var(--ease-out) both; }
+ .remember i { width: 28px; height: 28px; border-radius: 9px; border: 2px solid #c9bfb2; display: grid; place-items: center; transition: .35s var(--ease); background: transparent; } .remember i svg { width: 17px; stroke-width: 3.4; color: #fff; transform: scale(0); transition: .35s var(--ease); } .remember.on i { background: var(--brand); border-color: var(--brand); transform: scale(1.1); } .remember.on i svg { transform: scale(1); }
+ /* page reveal */
+ .wash, .site { position: absolute; inset: 0; z-index: 10; visibility: hidden; }
+ .site { background: var(--card-solid); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; }
+ .siteframe { position: absolute; inset: 0; box-shadow: inset 0 0 0 5px var(--c); pointer-events: none; } .site.none .siteframe, .site.none .sitepill { display: none; }
+ .sitepill { position: absolute; left: 50%; top: 0; transform: translate(-50%, 0); display: flex; align-items: center; gap: 8px; padding: 8px 18px 9px 12px; border-radius: 0 0 18px 18px; background: #fff; color: var(--c); font-weight: 800; box-shadow: 0 8px 22px rgba(0,0,0,.16); } .sitepill .bx { --s: 24px; }
+ .fakebar { width: min(560px, 70%); height: 54px; border-radius: 99px; background: rgba(120,100,80,.08); box-shadow: inset 0 0 0 1px var(--line); } .sitebtns { display: flex; gap: 12px; } .sitebtns i { width: 120px; height: 38px; border-radius: 12px; background: rgba(120,100,80,.08); }
+ /* (legacy) */
+ .loading { position: absolute; inset: 0; background: var(--card-solid); display: grid; place-items: center; opacity: 0; pointer-events: none; transition: opacity .5s; z-index: 10; } .loading.on { opacity: 1; pointer-events: auto; }
+ .loading .l { display: flex; flex-direction: column; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; } .loading .bx { --s: 130px; } .loading.on .bx { animation: ship 1.5s var(--ease) both; }
+ @keyframes ship { 0% { transform: translateY(80px) scale(.3); opacity: 0; } 40% { transform: translateY(-10px) scale(1.15); opacity: 1; } 60% { transform: translateY(0) scale(.95); } 100% { transform: translateY(-4px) scale(1); } }
+ .loading .dots span { display: inline-block; width: 8px; height: 8px; margin: 0 3px; border-radius: 50%; background: var(--c); animation: dj 1s infinite; } .loading .dots span:nth-child(2) { animation-delay: .15s } .loading .dots span:nth-child(3) { animation-delay: .3s } @keyframes dj { 50% { transform: translateY(-9px); } }
+</style></head><body>
+<div class="bg-scene"><div class="shadow"></div><div class="leaf l1"></div><div class="leaf l2"></div></div>
+<div class="browser">
+  <div class="chromebar"><div class="tabs"><div class="traffic" style="padding:0 10px 12px"><i></i><i></i><i></i></div><div class="tab"><span style="color:#4285f4">●</span> New Tab</div></div></div>
+  <div class="addr"><span>←</span><span>→</span><div class="u" id="u">google.com</div></div>
+  <div class="page" id="page">
+    <div class="gtile" data-letter="G"><span>G</span></div>
+    <h1>Open Google in…</h1>
+    <div class="shelf" id="shelf"></div>
+    <label class="remember" id="rem"><i></i><span>Remember my choice for Google</span></label>
+    <div class="wash" id="wash"></div>
+    <div class="site" id="site"><div class="siteframe"></div><div class="sitepill" id="sitepill"><span id="sitebox"></span><b id="sitename"></b></div><div class="gtile"><span>G</span></div><div class="fakebar"></div><div class="sitebtns"><i></i><i></i></div><button class="btn ghost" id="back">← Back to the picker</button></div>
+  </div>
+</div>
+<script src="motion.js"></script><script src="shared.js"></script>
+<script>
+const opts = [{ n: 'No box', d: 'Use your normal browser session', k: true, i: 'home', c: '#a9714b' }, { n: 'Work', d: 'For your job, teams, and work stuff', c: BB.COLORS.blue, i: 'briefcase' }, { n: 'Personal', d: 'Your personal accounts and everyday browsing', c: BB.COLORS.coral, i: 'user' }, { n: 'Research', d: 'For learning, reading and exploring', c: BB.COLORS.green, i: 'flask' }];
+const shelf = document.getElementById('shelf'); let sel = 1, shipping = false;
+opts.forEach((o, k) => { const d = document.createElement('div'); d.className = 'opt' + (k === sel ? ' sel' : ''); d.style.setProperty('--c', o.c); d.tabIndex = 0;
+  const st = document.createElement('div'); st.className = 'stage'; const b = BB.box(o.k ? { kraft: true, icon: o.i, label: 'default', size: 118, hover: false } : { color: o.c, icon: o.i, label: o.n, size: 118, hover: false, glow: false }); MO.dropIn(b, 150 + k * 110); st.append(b);
+  d.append(st); d.insertAdjacentHTML('beforeend', `<h3>${o.n}</h3><p>${o.d}</p>`); b.classList.toggle('bx-selected', k === sel);
+  d.onclick = () => { if (sel === k) { ship(o, d); return; } sel = k; document.querySelectorAll('.opt').forEach((x, i) => { x.classList.toggle('sel', i === k); x.querySelector('.bx').classList.toggle('bx-selected', i === k); }); BB.burstAt(b, [o.c, '#fff']); };
+  d.ondblclick = () => ship(o, d);
+  shelf.append(d); });
+document.getElementById('rem').onclick = (e) => { e.currentTarget.classList.toggle('on'); BB.burstAt(e.currentTarget.querySelector('i'), ['#a9714b', '#f5c26b']); };
+document.getElementById('rem').querySelector('i').innerHTML = BB.icons.check;
+async function ship(o, d) {
+  if (shipping) return; shipping = true; const b = d.querySelector('.bx');
+  await BB.tabInto(b, document.querySelector('.gtile'), 'google.com', o.c || '#c8a06b'); const r = b.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+  document.querySelectorAll('.opt').forEach((x2) => { if (x2 !== d) MO.A(x2, [{ opacity: 1, transform: 'none' }, { opacity: .25, transform: 'scale(.92) translateY(14px)' }], { duration: 420, easing: 'ease-out' }); });
+  MO.A(b, [{ transform: 'translateY(0)' }, { transform: 'translateY(-40px) scale(1.12)', offset: .5 }, { transform: 'translateY(-14px) scale(1)' }], { duration: 650, easing: 'cubic-bezier(.3,.8,.3,1)' });
+  const wash = document.getElementById('wash'), site = document.getElementById('site'); wash.style.background = o.c; site.style.setProperty('--c', o.c || '#a9714b');
+  document.getElementById('sitebox').replaceChildren(BB.box(o.k ? { kraft: true, icon: o.i, size: 26, hover: false } : { color: o.c, icon: o.i, size: 26, hover: false })); document.getElementById('sitename').textContent = o.k ? '' : o.n; site.classList.toggle('none', !!o.k);
+  setTimeout(() => { wash.style.visibility = 'visible'; MO.reveal(wash, x, y, { duration: 800 }); }, 450);
+  setTimeout(() => { site.style.visibility = 'visible'; MO.reveal(site, x, y, { duration: 900 }); MO.A(document.getElementById('sitepill'), [{ transform: 'translate(-50%, -120%)' }, { transform: 'translate(-50%, 8px)', offset: .6 }, { transform: 'translate(-50%, -2px)', offset: .8 }, { transform: 'translate(-50%, 0)' }], { duration: 800, delay: 700, easing: 'ease-out' }); }, 900);
+  setTimeout(() => BB.confetti(innerWidth / 2, innerHeight / 2.4, [o.c || '#c8a06b', '#fff', '#f5c26b'], 14), 1500);
+  document.getElementById('back').onclick = () => { shipping = false; wash.style.visibility = site.style.visibility = 'hidden'; document.querySelectorAll('.opt').forEach((x2) => x2.getAnimations().forEach((a) => a.cancel())); b.getAnimations().forEach((a) => a.cancel()); };
+}
+BB.toast('Click a box to choose it, click it again (or double-click) to open');
+BB.chrome('picker.html');
+</script></body></html>
