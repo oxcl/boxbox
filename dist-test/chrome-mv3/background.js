@@ -1358,9 +1358,12 @@
       const sid = this.serviceOfUrl(target) || this.getTab(tabId).home;
       if (accountId && !this.accounts[accountId]) throw new Error("no such account");
       if (accountId && this.accounts[accountId].serviceId !== sid) throw new Error("account belongs to another service");
-      if (remember && sid) await this.store.update((s) => {
-        s.lastAccount[sid] = accountId || null;
-      });
+      if (remember && sid) {
+        await this.store.update((s) => {
+          s.lastAccount[sid] = accountId || null;
+        });
+        await this.platform.modesChanged?.();
+      }
       this.setTab(tabId, { home: sid, flow: null });
       const newTabId = await this.platform.moveTab(tabId, accountId, { url: target, explicit: true });
       return { tabId: newTabId ?? tabId };
@@ -1422,6 +1425,7 @@
             throw new Error("unknown service op " + op);
         }
       });
+      await this.platform.servicesChanged?.();
       for (const [id, t] of this.tabs) this.tabs.set(id, { ...t, flow: null });
       return { id: a._id };
     }
@@ -1490,6 +1494,7 @@
       await this.store.update((s) => {
         s.lastAccount[p.serviceId] = accountId || null;
       });
+      await this.platform.modesChanged?.();
       this.pickerFor.delete(tabId);
       this.setTab(tabId, { home: p.serviceId, flow: null });
       const id = await this.platform.moveTab(tabId, accountId, { url: p.url, explicit: true, fromPicker: true });
@@ -2822,6 +2827,7 @@ importScripts(${JSON.stringify(abs)});`;
       ext.webNavigation.onBeforeNavigate.addListener((d) => {
         if (d.frameId === 0) this.onBeforeNavigate(d);
       });
+      await this.syncGateRules();
       const stale = await ext.declarativeNetRequest.getSessionRules();
       if (stale.length) await ext.declarativeNetRequest.updateSessionRules({ removeRuleIds: stale.map((r) => r.id) });
       for (const [tabId, st] of this.c.tabs) if (st.accountId) this.accountAssigned(tabId, null, st.accountId, true).catch((e) => console.warn("re-attach", tabId, dbgErr(e)));
@@ -2874,13 +2880,14 @@ importScripts(${JSON.stringify(abs)});`;
       return this.slots.get(tabId);
     }
     async setRules(tabId, on, block = false) {
-      const n = this.slotOf(tabId) * 3;
-      const ids = [n + 1, n + 2, n + 3];
+      const n = this.slotOf(tabId) * 4;
+      const ids = [n + 1, n + 2, n + 3, n + 4];
       const rules = [];
       if (on) {
         rules.push({ id: ids[0], priority: 10, condition: { tabIds: [tabId], resourceTypes: ALL_TYPES }, action: { type: "modifyHeaders", responseHeaders: [{ header: "set-cookie", operation: "remove" }] } });
         rules.push({ id: ids[1], priority: 10, condition: { tabIds: [tabId], resourceTypes: ["websocket"] }, action: { type: "modifyHeaders", requestHeaders: [{ header: "cookie", operation: "remove" }] } });
       }
+      if (on) rules.push({ id: ids[3], priority: 1, condition: { tabIds: [tabId], resourceTypes: ["main_frame"] }, action: { type: "allow" } });
       if (block) rules.push({ id: ids[2], priority: 100, condition: { tabIds: [tabId], resourceTypes: ALL_TYPES }, action: { type: "block" } });
       await ext.declarativeNetRequest.updateSessionRules({ removeRuleIds: ids, addRules: rules });
     }
@@ -3193,8 +3200,111 @@ importScripts(${JSON.stringify(abs)});`;
       }
       return { error: "unknown op" };
     }
-    // ---------------------------------------------------------------- default tabs entering a service (no debugger there)
+    // ---------------------------------------------------------------- entry gate (default tabs entering a service)
+    //
+    // Services that need a decision on entry (Ask, or Remember with a remembered account) get a DNR redirect rule that sends
+    // main-frame navigations to gate.html instead of the network, so *no request leaves the browser* before the decision.
+    // Navigations initiated from within the service itself and tabs that are already in an account (handled via Fetch) are excluded.
+    gatedServices() {
+      const c = this.c, out = [];
+      for (const sid of new Set(Object.values(c.accounts).map((a) => a.serviceId))) {
+        const mode = c.modeFor(sid), last = c.state.lastAccount[sid];
+        if (mode === "ask" || mode === "remember" && last && c.accounts[last]) out.push(sid);
+      }
+      return out;
+    }
+    async syncGateRules() {
+      try {
+        const gate = ext.runtime.getURL("gate.html");
+        const rules = [];
+        let n = 0;
+        this.gated = /* @__PURE__ */ new Set();
+        for (const sid of this.gatedServices()) {
+          const domains = this.c.resolver.domains(sid);
+          if (!domains.length) continue;
+          this.gated.add(sid);
+          rules.push({
+            id: 1e3 + n++,
+            priority: 1,
+            condition: { regexFilter: "^(https?://.*)$", requestDomains: domains, excludedInitiatorDomains: domains, resourceTypes: ["main_frame"] },
+            action: { type: "redirect", redirect: { regexSubstitution: gate + "?u=\\1" } }
+          });
+        }
+        const old = (await ext.declarativeNetRequest.getDynamicRules()).filter((r) => r.id >= 1e3 && r.id < 2e3).map((r) => r.id);
+        await ext.declarativeNetRequest.updateDynamicRules({ removeRuleIds: old, addRules: rules });
+      } catch (e) {
+        console.warn("syncGateRules", dbgErr(e));
+      }
+    }
+    async servicesChanged() {
+      await this.syncGateRules();
+    }
+    async modesChanged() {
+      await this.syncGateRules();
+    }
+    async accountsChanged() {
+      await super.accountsChanged();
+      await this.syncGateRules();
+    }
+    async settingsChanged() {
+      await super.settingsChanged();
+      await this.syncGateRules();
+    }
+    async allowTab(tabId, ms = 6e3) {
+      const id = 1e5 + this.slotOf(tabId);
+      await ext.declarativeNetRequest.updateSessionRules({ removeRuleIds: [id], addRules: [{ id, priority: 1, condition: { tabIds: [tabId], resourceTypes: ["main_frame"] }, action: { type: "allow" } }] });
+      setTimeout(() => ext.declarativeNetRequest.updateSessionRules({ removeRuleIds: [id] }).catch(() => {
+      }), ms);
+    }
+    /** gate.html asks what to do with the navigation it intercepted. */
+    async gate(tabId, url) {
+      const c = this.c;
+      if (!isWebUrl(url)) return { go: url };
+      const hint = this.hints && this.hints.get(tabId);
+      const user = hint && hint.url === url ? await hint.p : true;
+      const dec = c.decideNavigation({ tabId, url, userInitiated: user });
+      if (dec.type === "ask") {
+        c.pickerFor.set(tabId, { url, serviceId: dec.serviceId });
+        return { go: this.pickerUrl(tabId) };
+      }
+      if (dec.type === "move" && dec.accountId) {
+        this.entering.add(tabId);
+        try {
+          await this.moveTab(tabId, dec.accountId, { url });
+        } finally {
+          this.entering.delete(tabId);
+        }
+        return { go: null };
+      }
+      await this.allowTab(tabId);
+      return { go: url };
+    }
+    async handleMessage(msg, sender) {
+      if (msg.type === "gate") return this.gate(sender.tab.id, msg.url);
+      if (msg.type === "restoreIsolation") return this.restoreIsolation(msg.tabId);
+      return super.handleMessage(msg, sender);
+    }
+    /** Remember whether the navigation that is about to be redirected to the gate was user-initiated (the old page is still alive now). */
     async onBeforeNavigate(d) {
+      try {
+        const tabId = d.tabId;
+        if (!isWebUrl(d.url) || this.wipeTabs.has(tabId) || this.sessions.has(tabId) || this.accountOf(tabId) || this.entering.has(tabId)) return;
+        if (!this.gated || !this.gated.has(this.c.serviceOfUrl(d.url))) return;
+        this.hints = this.hints || /* @__PURE__ */ new Map();
+        this.hints.set(tabId, { url: d.url, p: this.computeUser(tabId, d.url) });
+      } catch (e) {
+        console.warn("onBeforeNavigate", dbgErr(e));
+      }
+    }
+    async computeUser(tabId, url) {
+      const rec = await this.waitInitiator(tabId, url);
+      const initiator = rec ? rec.initiator : void 0;
+      let user = !initiator || /^(chrome-extension|chrome|about):/.test(initiator);
+      if (!user) user = await this.queryGesture(tabId) || this.tabMeta.get(tabId)?.opener != null && await this.queryGesture(this.tabMeta.get(tabId).opener);
+      if (user && this.isPopupTab(tabId)) user = false;
+      return user;
+    }
+    async _unusedOnBeforeNavigate(d) {
       try {
         const tabId = d.tabId;
         if (!isWebUrl(d.url) || this.wipeTabs.has(tabId) || this.sessions.has(tabId) || this.accountOf(tabId) || this.entering.has(tabId)) return;
@@ -3229,10 +3339,6 @@ importScripts(${JSON.stringify(abs)});`;
       const prev = this.accountOf(tabId);
       const r = await super.moveTab(tabId, accountId, opts);
       return r;
-    }
-    async handleMessage(msg, sender) {
-      if (msg.type === "restoreIsolation") return this.restoreIsolation(msg.tabId);
-      return super.handleMessage(msg, sender);
     }
     async wipeOrigin(origin, accId, prefix) {
       return super.wipeOrigin(origin, accId, prefix);

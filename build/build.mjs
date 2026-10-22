@@ -25,6 +25,7 @@ const TARGETS = {
 };
 
 const UI_PAGES = ['popup', 'picker', 'settings'];
+const GATE_TARGETS = new Set(['chrome-mv3']);
 const FIXTURE_MATCHES = ['http://*.localhost/*', 'http://*.fixture.test/*'];
 
 function manifest(target) {
@@ -53,6 +54,7 @@ function manifest(target) {
       m.permissions = ['tabs', 'webRequest', 'webNavigation', 'storage', 'proxy', 'debugger', 'declarativeNetRequest', 'declarativeNetRequestWithHostAccess', 'tabGroups', 'privacy', 'webRequestAuthProvider', 'unlimitedStorage'];
       m.host_permissions = ['<all_urls>'];
       m.minimum_chrome_version = '120';
+      m.web_accessible_resources = [{ resources: ['gate.html', 'gate.js'], matches: ['http://*/*', 'https://*/*'] }];
     } else {
       m.background = { scripts: ['background.js'], persistent: true };
       m.permissions = [...perms.filter((p) => p !== 'cookies'), 'webRequestBlocking', 'debugger', 'privacy', 'unlimitedStorage', 'tabGroups'];
@@ -62,7 +64,7 @@ function manifest(target) {
   if (TEST) {
     m.content_scripts.push({ matches: FIXTURE_MATCHES, js: ['bridge.js'], run_at: 'document_start', all_frames: false });
     const war = UI_PAGES.map((p) => `${p}.html`).concat(['ui.css', 'popup.js', 'picker.js', 'settings.js']);
-    if (mv3) m.web_accessible_resources = [{ resources: war, matches: FIXTURE_MATCHES }];
+    if (mv3) m.web_accessible_resources.push({ resources: war, matches: FIXTURE_MATCHES });
     else m.web_accessible_resources = war;
   }
   return m;
@@ -80,11 +82,13 @@ async function build(target) {
   };
   const entries = { background: 'src/background/main.js', content: 'src/content/content.js' };
   for (const p of UI_PAGES) if (fs.existsSync(path.join(root, `src/ui/${p}.js`))) entries[p] = `src/ui/${p}.js`;
+  if (GATE_TARGETS.has(target)) entries.gate = 'src/ui/gate.js';
   if (TEST) entries.bridge = 'src/test/bridge.js';
   if (target !== 'firefox' && fs.existsSync(path.join(root, 'src/chrome/shim.js'))) entries.shim = 'src/chrome/shim.js';
   if (target !== 'firefox' && fs.existsSync(path.join(root, 'src/chrome/wipe-page.js'))) entries['wipe-page'] = 'src/chrome/wipe-page.js';
   await esbuild.build({ ...common, entryPoints: Object.fromEntries(Object.entries(entries).map(([k, v]) => [k, path.join(root, v)])), outdir: out });
   for (const p of UI_PAGES) { const f = path.join(root, `src/ui/${p}.html`); if (fs.existsSync(f)) fs.copyFileSync(f, path.join(out, `${p}.html`)); }
+  if (GATE_TARGETS.has(target)) fs.copyFileSync(path.join(root, 'src/ui/gate.html'), path.join(out, 'gate.html'));
   for (const css of ['ui.css']) { const f = path.join(root, 'src/ui', css); if (fs.existsSync(f)) fs.copyFileSync(f, path.join(out, css)); }
   for (const s of [16, 32, 48, 128]) fs.writeFileSync(path.join(out, 'icons', `${s}.png`), icon(s));
   fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(manifest(target), null, 2));

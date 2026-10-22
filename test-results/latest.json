@@ -1,51 +1,39 @@
 {
   "chrome": [
     {
-      "name": "navigating between domains of one service keeps the account",
+      "name": "mode \"default session\": entering a service never switches account",
       "status": "pass",
-      "ms": 1790,
+      "ms": 417,
       "error": null
     },
     {
-      "name": "user navigation to another service leaves the account",
+      "name": "mode \"remember last\": opens in the account used last, and follows later choices",
       "status": "pass",
-      "ms": 916,
+      "ms": 1419,
       "error": null
     },
     {
-      "name": "page-initiated navigation (no user gesture) stays in the account",
+      "name": "mode \"ask\": picker appears before the page loads; choice opens the account",
       "status": "pass",
-      "ms": 877,
+      "ms": 6855,
       "error": null
     },
     {
-      "name": "OAuth: redirect flow to another service and back stays in the account",
+      "name": "mode \"ask\": choosing \"Default session\" opens the page in the default session",
       "status": "pass",
-      "ms": 719,
+      "ms": 490,
       "error": null
     },
     {
-      "name": "popup (window.open) login stays inside the account",
+      "name": "per-service override beats the global mode",
       "status": "pass",
-      "ms": 1427,
+      "ms": 463,
       "error": null
     },
     {
-      "name": "embedded content (iframes) uses the tab's account",
+      "name": "ask mode with no accounts does not interrupt",
       "status": "pass",
-      "ms": 1282,
-      "error": null
-    },
-    {
-      "name": "link opened in a new tab: same service inherits the account, other service does not",
-      "status": "pass",
-      "ms": 1141,
-      "error": null
-    },
-    {
-      "name": "switching one tab's account never affects other tabs",
-      "status": "pass",
-      "ms": 1775,
+      "ms": 224,
       "error": null
     }
   ]

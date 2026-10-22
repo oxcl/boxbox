@@ -1358,9 +1358,12 @@
       const sid = this.serviceOfUrl(target) || this.getTab(tabId).home;
       if (accountId && !this.accounts[accountId]) throw new Error("no such account");
       if (accountId && this.accounts[accountId].serviceId !== sid) throw new Error("account belongs to another service");
-      if (remember && sid) await this.store.update((s) => {
-        s.lastAccount[sid] = accountId || null;
-      });
+      if (remember && sid) {
+        await this.store.update((s) => {
+          s.lastAccount[sid] = accountId || null;
+        });
+        await this.platform.modesChanged?.();
+      }
       this.setTab(tabId, { home: sid, flow: null });
       const newTabId = await this.platform.moveTab(tabId, accountId, { url: target, explicit: true });
       return { tabId: newTabId ?? tabId };
@@ -1422,6 +1425,7 @@
             throw new Error("unknown service op " + op);
         }
       });
+      await this.platform.servicesChanged?.();
       for (const [id, t] of this.tabs) this.tabs.set(id, { ...t, flow: null });
       return { id: a._id };
     }
@@ -1490,6 +1494,7 @@
       await this.store.update((s) => {
         s.lastAccount[p.serviceId] = accountId || null;
       });
+      await this.platform.modesChanged?.();
       this.pickerFor.delete(tabId);
       this.setTab(tabId, { home: p.serviceId, flow: null });
       const id = await this.platform.moveTab(tabId, accountId, { url: p.url, explicit: true, fromPicker: true });

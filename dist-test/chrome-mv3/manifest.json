@@ -73,6 +73,16 @@
   "web_accessible_resources": [
     {
       "resources": [
+        "gate.html",
+        "gate.js"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    },
+    {
+      "resources": [
         "popup.html",
         "picker.html",
         "settings.html",
