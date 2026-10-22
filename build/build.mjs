@@ -50,14 +50,15 @@ function manifest(target) {
     m.key = KEY;
     if (mv3) {
       m.background = { service_worker: 'background.js' };
-      m.permissions = ['tabs', 'webRequest', 'webNavigation', 'storage', 'cookies', 'proxy', 'debugger', 'declarativeNetRequest', 'declarativeNetRequestWithHostAccess', 'scripting', 'tabGroups', 'privacy', 'offscreen', 'webRequestAuthProvider', 'unlimitedStorage'];
+      m.permissions = ['tabs', 'webRequest', 'webNavigation', 'storage', 'proxy', 'debugger', 'declarativeNetRequest', 'declarativeNetRequestWithHostAccess', 'tabGroups', 'privacy', 'webRequestAuthProvider', 'unlimitedStorage'];
       m.host_permissions = ['<all_urls>'];
       m.minimum_chrome_version = '120';
     } else {
       m.background = { scripts: ['background.js'], persistent: true };
-      m.permissions = [...perms, 'webRequestBlocking', 'debugger', 'privacy', 'unlimitedStorage', 'tabGroups'];
+      m.permissions = [...perms.filter((p) => p !== 'cookies'), 'webRequestBlocking', 'debugger', 'privacy', 'unlimitedStorage', 'tabGroups'];
     }
   }
+  if (TEST && !ff) m.permissions.push('browsingData', 'cookies');
   if (TEST) {
     m.content_scripts.push({ matches: FIXTURE_MATCHES, js: ['bridge.js'], run_at: 'document_start', all_frames: false });
     const war = UI_PAGES.map((p) => `${p}.html`).concat(['ui.css', 'popup.js', 'picker.js', 'settings.js']);

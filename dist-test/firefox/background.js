@@ -4,11 +4,13 @@
   var IS_MV2 = TARGET === "chrome-mv2";
   var g = globalThis;
   var base = typeof g.browser !== "undefined" && g.browser.runtime ? g.browser : g.chrome;
+  var SYNC = /* @__PURE__ */ new Set(["getURL", "getManifest", "connect", "connectNative", "getViews", "getBackgroundPage_sync"]);
   function promisified(obj) {
     return new Proxy(obj, {
       get(t, k) {
         const v = t[k];
         if (typeof k !== "string") return v;
+        if (typeof v === "function" && SYNC.has(k)) return v.bind(t);
         if (typeof v === "function") {
           return (...args) => {
             if (typeof args[args.length - 1] === "function") return v.apply(t, args);
@@ -1249,7 +1251,8 @@
         account: acc ? { id: acc.id, name: acc.name, color: acc.color, icon: acc.icon, proxy: !!acc.proxy } : null,
         settings: { border: st.border, badge: st.badge },
         status: this.platform.status ? this.platform.status(tabId, tab) : { level: "ok", messages: [] },
-        target: TARGET
+        target: TARGET,
+        restorable: !!this.platform.restoredTabs?.has(tabId)
       };
     }
     async tabInfo(tabId) {

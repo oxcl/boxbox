@@ -3,10 +3,42 @@
 //  * (top frame) draw the account border + label, and badge the favicon
 //  * (Chrome) perform storage wipes for deleted accounts
 import { ext, IS_CHROME } from '../core/ext.js';
+import { shim } from '../chrome/shim.js';
 
 const isTop = window.top === window;
-let lastGesture = 0;
-const mark = (e) => { if (e.isTrusted) lastGesture = performance.now(); };
+let lastGesture = 0, lastPing = -Infinity;
+
+// MV2 (blocking webRequest) cannot ask this page anything asynchronously, so trusted gestures are reported
+// through the same synchronous channel the shim uses. Other builds query `gesture?` on demand.
+function syncCall(op, args) {
+  try {
+    if (!/^https?:/.test(location.protocol) && !/^https?:/.test(self.origin)) return null;
+    const x = new XMLHttpRequest();
+    x.open('GET', (self.origin || location.origin) + '/__box_sync?q=' + encodeURIComponent(JSON.stringify({ op, ...args })), false);
+    x.send();
+    return x.status === 200 ? JSON.parse(x.responseText) : null;
+  } catch { return null; }
+}
+const PING_EVENTS = new Set(['click', 'auxclick', 'keydown', 'submit', 'contextmenu', 'mousedown']);
+const mark = (e) => {
+  if (!e.isTrusted) return;
+  lastGesture = performance.now();
+  if (__TARGET__ === 'chrome-mv2' && PING_EVENTS.has(e.type) && lastGesture - lastPing > 250) { lastPing = lastGesture; syncCall('gesture', {}); }
+};
+
+// MV2: the shim is injected as an inline script (the background adds a nonce to the page's CSP for account tabs).
+if (__TARGET__ === 'chrome-mv2') {
+  const cfg = syncCall('hello', {});
+  if (cfg && cfg.acct) {
+    const src = shim.toString();
+    const full = { ...cfg, src, wrapWorkers: true };
+    const s = document.createElement('script');
+    if (cfg.nonce) s.setAttribute('nonce', cfg.nonce);
+    s.textContent = `(${src})(${JSON.stringify(full)});`;
+    (document.documentElement || document.head || document).prepend(s);
+    s.remove();
+  }
+}
 for (const t of ['mousedown', 'pointerdown', 'click', 'auxclick', 'keydown', 'submit', 'contextmenu', 'touchstart'])
   window.addEventListener(t, mark, { capture: true, passive: true });
 
@@ -33,6 +65,9 @@ async function refreshIdentity() {
 
 function applyIdentity(id) {
   identity = id;
+  if (isTop && IS_CHROME && id && !id.account) {
+    try { const m = sessionStorage.getItem('__box_acct'); if (m) { sessionStorage.removeItem('__box_acct'); if (id.restorable) ext.runtime.sendMessage({ type: 'adopt', accountId: m }).catch(() => {}); } } catch { /* ignore */ }
+  }
   if (!isTop) return;
   const acct = id && id.account;
   if (acct && id.settings.border) showBorder(acct, id.status); else removeBorder();

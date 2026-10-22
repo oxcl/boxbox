@@ -104,7 +104,7 @@ export class Controller {
       account: acc ? { id: acc.id, name: acc.name, color: acc.color, icon: acc.icon, proxy: !!acc.proxy } : null,
       settings: { border: st.border, badge: st.badge },
       status: this.platform.status ? this.platform.status(tabId, tab) : { level: 'ok', messages: [] },
-      target: TARGET,
+      target: TARGET, restorable: !!this.platform.restoredTabs?.has(tabId),
     };
   }
 

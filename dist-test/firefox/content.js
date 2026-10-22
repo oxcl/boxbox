@@ -6,11 +6,13 @@
   var IS_MV2 = TARGET === "chrome-mv2";
   var g = globalThis;
   var base = typeof g.browser !== "undefined" && g.browser.runtime ? g.browser : g.chrome;
+  var SYNC = /* @__PURE__ */ new Set(["getURL", "getManifest", "connect", "connectNative", "getViews", "getBackgroundPage_sync"]);
   function promisified(obj) {
     return new Proxy(obj, {
       get(t, k) {
         const v = t[k];
         if (typeof k !== "string") return v;
+        if (typeof v === "function" && SYNC.has(k)) return v.bind(t);
         if (typeof v === "function") {
           return (...args) => {
             if (typeof args[args.length - 1] === "function") return v.apply(t, args);
@@ -38,8 +40,25 @@
   var isTop = window.top === window;
   var lastGesture = 0;
   var mark = (e) => {
-    if (e.isTrusted) lastGesture = performance.now();
+    if (!e.isTrusted) return;
+    lastGesture = performance.now();
+    if (false) {
+      lastPing = lastGesture;
+      syncCall("gesture", {});
+    }
   };
+  if (false) {
+    const cfg = syncCall("hello", {});
+    if (cfg && cfg.acct) {
+      const src = shim.toString();
+      const full = { ...cfg, src, wrapWorkers: true };
+      const s = document.createElement("script");
+      if (cfg.nonce) s.setAttribute("nonce", cfg.nonce);
+      s.textContent = `(${src})(${JSON.stringify(full)});`;
+      (document.documentElement || document.head || document).prepend(s);
+      s.remove();
+    }
+  }
   for (const t of ["mousedown", "pointerdown", "click", "auxclick", "keydown", "submit", "contextmenu", "touchstart"])
     window.addEventListener(t, mark, { capture: true, passive: true });
   var identity = null;
@@ -67,6 +86,17 @@
   }
   function applyIdentity(id) {
     identity = id;
+    if (isTop && IS_CHROME && id && !id.account) {
+      try {
+        const m = sessionStorage.getItem("__box_acct");
+        if (m) {
+          sessionStorage.removeItem("__box_acct");
+          if (id.restorable) ext.runtime.sendMessage({ type: "adopt", accountId: m }).catch(() => {
+          });
+        }
+      } catch {
+      }
+    }
     if (!isTop) return;
     const acct = id && id.account;
     if (acct && id.settings.border) showBorder(acct, id.status);

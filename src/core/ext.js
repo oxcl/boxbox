@@ -12,11 +12,13 @@ const base = typeof g.browser !== 'undefined' && g.browser.runtime ? g.browser :
 
 // Chrome MV2 exposes callback APIs only; wrap them lazily. Events (`onXxx`) and
 // non-function members are returned untouched.
+const SYNC = new Set(['getURL', 'getManifest', 'connect', 'connectNative', 'getViews', 'getBackgroundPage_sync']);
 function promisified(obj) {
   return new Proxy(obj, {
     get(t, k) {
       const v = t[k];
       if (typeof k !== 'string') return v;
+      if (typeof v === 'function' && SYNC.has(k)) return v.bind(t);
       if (typeof v === 'function') {
         return (...args) => {
           if (typeof args[args.length - 1] === 'function') return v.apply(t, args);

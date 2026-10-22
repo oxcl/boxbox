@@ -1,0 +1,90 @@
+{
+  "manifest_version": 3,
+  "name": "Box",
+  "version": "0.1.0",
+  "description": "Isolated accounts per tab: log in to the same site with different accounts at the same time.",
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
+    },
+    {
+      "matches": [
+        "http://*.localhost/*",
+        "http://*.fixture.test/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "options_ui": {
+    "page": "settings.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Box",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png"
+    }
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj/FE2oJwb0DfzqX9dMrK1TJ1WRuCsyS0oTlLHC+EHDdrFT837ZL0ClXK7buz5eTbgHBjxEkspPan+NCBXGXNhH9ajaYtIIsFcgph33nKFyQd/4tHSdN44SG2gGSKN+izLIfnZ3W8Gpc05VGjTqvLe0FoK49+GTXFGeVxDK9apwxSYqppFKR8kbV3LQRhjwymNC4TnVWgyIpl1OkFMSqUn7IjhS7863+ZBMWnS4gN7JPGY/0NA2tuaAcXg7kp7hV8QGh/8vg317yY0gGjOR9Mku7REAhuZo/dUsOql/eeqlEjgv+ZqL1cQF3SgqU31LhaUoPN8kPMo0UzM1yo2nPkwQIDAQAB",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "tabs",
+    "webRequest",
+    "webNavigation",
+    "storage",
+    "proxy",
+    "debugger",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "tabGroups",
+    "privacy",
+    "webRequestAuthProvider",
+    "unlimitedStorage",
+    "browsingData",
+    "cookies"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "minimum_chrome_version": "120",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup.html",
+        "picker.html",
+        "settings.html",
+        "ui.css",
+        "popup.js",
+        "picker.js",
+        "settings.js"
+      ],
+      "matches": [
+        "http://*.localhost/*",
+        "http://*.fixture.test/*"
+      ]
+    }
+  ]
+}

@@ -87,7 +87,7 @@ ${body}
   async function readState(){
     const s = {host: location.host};
     try { s.server = (await (await fetch('/api/state',{credentials:'include'})).json()); } catch(e){ s.server = {error:String(e)}; }
-    s.cookie = (document.cookie.match(/(?:^|; )jsc=([^;]*)/)||[])[1]; if(s.cookie) s.cookie=decodeURIComponent(s.cookie);
+    s.cookie = (document.cookie.match(/(?:^|; )jsc=([^;]*)/)||[])[1]; s.cookie = s.cookie ? decodeURIComponent(s.cookie) : null;
     s.ls = localStorage.getItem('fx_user');
     s.ss = sessionStorage.getItem('fx_user');
     try { s.idb = (await idbGet('user')) ?? null; } catch(e){ s.idb = 'ERR '+e; }
@@ -245,7 +245,7 @@ self.addEventListener('fetch', e => {
     if (p === '/embed') {
       const set = url.searchParams.get('set');
       const headers = {};
-      if (set) headers['set-cookie'] = [`embedid=${encodeURIComponent(set)}; Path=/`];
+      if (set) headers['set-cookie'] = [`embedid=${encodeURIComponent(set)}; Path=/; SameSite=None; Secure`];
       const who = set || cookies.embedid || 'anonymous';
       return html(res, `<!doctype html><body><div id="embed-who">embed:${who}</div></body>`, headers);
     }
