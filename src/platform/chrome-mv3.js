@@ -120,22 +120,28 @@ export class ChromeMv3Platform extends ChromeBase {
   async setupTarget(target, s, type) {
     const send = (m, p) => ext.debugger.sendCommand(target, m, p);
     const key = target.sessionId || 'page';
+    const soft = async (m, p) => { try { return await send(m, p); } catch (e) { return null; } };
     try {
-      await send('Network.enable');
-      await send('Network.setBypassServiceWorker', { bypass: true }).catch(() => {});
-      await send('Network.setCacheDisabled', { cacheDisabled: true }).catch(() => {});
-      await send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
       const cfg = this.cfgFor(s.accId);
       const source = `(${this.shimSrc})(${JSON.stringify(cfg)});`;
       if (type === 'worker' || type === 'shared_worker') {
+        // Workers have no Page/Fetch domains: run the shim in the worker global before its script starts (it is paused for us).
+        // Their network requests are attributed to the owning tab and handled by the page-level Fetch/DNR rules.
+        await soft('Runtime.enable');
         await send('Runtime.evaluate', { expression: source });
+        await soft('Network.enable');
+        await soft('Network.setBypassServiceWorker', { bypass: true });
       } else {
+        await send('Network.enable');
+        await soft('Network.setBypassServiceWorker', { bypass: true });
+        await soft('Network.setCacheDisabled', { cacheDisabled: true });
+        await send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
         await send('Page.enable');
         const r = await send('Page.addScriptToEvaluateOnNewDocument', { source, runImmediately: true });
         s.scripts.set(key, r.identifier);
         if (!target.sessionId) { const t = await send('Page.getFrameTree'); s.mainFrame = t.frameTree.frame.id; }
       }
-      await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: true, flatten: true });
+      await soft('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: true, flatten: true });
     } catch (e) { console.warn('setupTarget', type, dbgErr(e)); }
   }
 
@@ -390,6 +396,16 @@ export class ChromeMv3Platform extends ChromeBase {
     await this.allowTab(tabId);
     return { go: url };
   }
+  async testCall(call, args) {
+    if (call === 'detach') {          // what happens when the user clicks "Cancel" on Chrome's "Box started debugging this browser" bar
+      try { await ext.debugger.detach({ tabId: args.tabId }); } catch { /* ignore */ }
+      this.onDetach({ tabId: args.tabId }, 'canceled_by_user');
+      return true;
+    }
+    if (call === 'sessions') return [...this.sessions.keys()];
+    return super.testCall(call, args);
+  }
+
   async handleMessage(msg, sender) {
     if (msg.type === 'gate') return this.gate(sender.tab.id, msg.url);
     if (msg.type === 'restoreIsolation') return this.restoreIsolation(msg.tabId);

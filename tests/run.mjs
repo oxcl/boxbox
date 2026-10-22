@@ -12,7 +12,7 @@ const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf('--' + n); return i >= 0 ? args[i + 1] : d; };
 const browsers = opt('browser', 'firefox,chrome,helium').split(',');
 const filter = opt('filter');
-const suiteNames = opt('suite', 'isolation,navigation,modes,services,identity,deletion,proxy').split(',');
+const suiteNames = opt('suite', 'isolation,navigation,modes,services,identity,deletion,ui,hardening,proxy').split(',');
 const keepOpen = args.includes('--keep');
 
 const build = spawnSync('node', ['build/build.mjs'], { cwd: root, env: { ...process.env, BOX_TEST: '1' }, stdio: 'inherit' });

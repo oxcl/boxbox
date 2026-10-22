@@ -80,13 +80,13 @@
   });
   async function refreshIdentity() {
     try {
-      applyIdentity(await ext.runtime.sendMessage({ box: true, type: "identity" }));
+      applyIdentity(await ext.runtime.sendMessage({ box: true, type: "identity" }), true);
     } catch {
     }
   }
-  function applyIdentity(id) {
+  function applyIdentity(id, initial = false) {
     identity = id;
-    if (isTop && IS_CHROME && id && !id.account) {
+    if (initial && isTop && IS_CHROME && id && !id.account) {
       try {
         const m = sessionStorage.getItem("__box_acct");
         if (m) {

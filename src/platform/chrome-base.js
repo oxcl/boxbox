@@ -290,6 +290,12 @@ export class ChromeBase {
       await ext.browsingData.remove({ since: 0 }, { cookies: true, localStorage: true, indexedDB: true, cache: true, cacheStorage: true, serviceWorkers: true, fileSystems: true });
       return true;
     }
+    if (call === 'forget') {        // emulate a browser restart for this tab: Box loses its mapping, the tab (and its sessionStorage marker) survives
+      await this.accountUnassigned(args.tabId, null).catch(() => {});
+      this.c.setTab(args.tabId, { accountId: null, home: null, flow: null });
+      this.restoredTabs.add(args.tabId);
+      return true;
+    }
     if (call === 'proxy') return this.proxy.debug();
     if (call === 'badge') return (ext.action || ext.browserAction).getBadgeText({ tabId: args.tabId });
     if (call === 'raw-cookies') return ext.cookies.getAll({});

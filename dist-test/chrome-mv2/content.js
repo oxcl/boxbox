@@ -241,12 +241,17 @@
       });
       return proxy;
     };
+    const realStores = {};
     const wrapStorageGlobal = (name, kind) => {
       if (!(name in g2)) return;
       const host = Object.getOwnPropertyDescriptor(g2, name) ? g2 : Object.getPrototypeOf(g2);
       const d = Object.getOwnPropertyDescriptor(host, name);
       if (!d || !d.get) return;
       let cached, realRef;
+      try {
+        realStores[kind] = d.get.call(g2);
+      } catch {
+      }
       const get = function() {
         const real = d.get.call(this);
         if (!cached || realRef !== real) {
@@ -262,12 +267,15 @@
       }
     };
     if (typeof Storage !== "undefined" && !isWorker) {
-      wrapStorageGlobal("localStorage", "local");
-      wrapStorageGlobal("sessionStorage", "session");
       try {
-        if (g2.top === g2) Object.getOwnPropertyDescriptor(Storage.prototype, "setItem").value.call(Object.getOwnPropertyDescriptor(g2, "sessionStorage").get.call(g2), "__box_acct", cfg.acct);
+        if (g2.top === g2) {
+          const host = Object.getOwnPropertyDescriptor(g2, "sessionStorage") ? g2 : Object.getPrototypeOf(g2);
+          Object.getOwnPropertyDescriptor(host, "sessionStorage").get.call(g2).setItem("__box_acct", cfg.acct);
+        }
       } catch {
       }
+      wrapStorageGlobal("localStorage", "local");
+      wrapStorageGlobal("sessionStorage", "session");
       g2.addEventListener("storage", (e) => {
         if (e.__box) return;
         const k = e.key;
@@ -277,8 +285,9 @@
         }
         if (k === null) return;
         e.stopImmediatePropagation();
-        const area = e.storageArea === Object.getOwnPropertyDescriptor(g2, "localStorage")?.get?.call(g2) ? g2.localStorage : g2.sessionStorage;
-        const ev = new StorageEvent("storage", { key: k.slice(pfx.length), oldValue: e.oldValue, newValue: e.newValue, url: e.url, storageArea: area });
+        const area = e.storageArea === realStores.local ? g2.localStorage : g2.sessionStorage;
+        const ev = new StorageEvent("storage", { key: k.slice(pfx.length), oldValue: e.oldValue, newValue: e.newValue, url: e.url });
+        Object.defineProperty(ev, "storageArea", { get: () => area });
         Object.defineProperty(ev, "__box", { value: true });
         g2.dispatchEvent(ev);
       }, true);
@@ -299,21 +308,22 @@
         return typeof n === "string" && n.startsWith(pfx) ? n.slice(pfx.length) : n;
       });
     }
-    if (typeof CacheStorage !== "undefined") {
-      redefine(CacheStorage.prototype, "open", (o) => function open(n) {
+    const CSP = typeof CacheStorage !== "undefined" ? CacheStorage.prototype : g2.caches ? Object.getPrototypeOf(g2.caches) : null;
+    if (CSP) {
+      redefine(CSP, "open", (o) => function open(n) {
         touch();
         return o.call(this, pfx + String(n));
       });
-      redefine(CacheStorage.prototype, "has", (o) => function has(n) {
+      redefine(CSP, "has", (o) => function has(n) {
         return o.call(this, pfx + String(n));
       });
-      redefine(CacheStorage.prototype, "delete", (o) => function del(n) {
+      redefine(CSP, "delete", (o) => function del(n) {
         return o.call(this, pfx + String(n));
       });
-      redefine(CacheStorage.prototype, "keys", (o) => function keys() {
+      redefine(CSP, "keys", (o) => function keys() {
         return o.call(this).then((l) => l.filter((k) => k.startsWith(pfx)).map((k) => k.slice(pfx.length)));
       });
-      redefine(CacheStorage.prototype, "match", (o) => function match(req, opts) {
+      redefine(CSP, "match", (o) => function match(req, opts) {
         if (opts && opts.cacheName) return o.call(this, req, { ...opts, cacheName: pfx + opts.cacheName });
         const self2 = this;
         return (async () => {
@@ -421,11 +431,11 @@
     if (cfg.wrapWorkers && !isWorker && typeof Worker !== "undefined") {
       const blobs = /* @__PURE__ */ new Map();
       const wrapUrl = (url, type) => {
-        const abs = new URL(String(url), g2.location.href).href;
+        const abs = new URL(String(url), g2.__BOX_BASE || g2.location.href).href;
         const key = abs + "|" + type;
         let b = blobs.get(key);
         if (!b) {
-          const prelude = `self.__BOX_BASE=${JSON.stringify(abs)};(${SRC})(${JSON.stringify({ ...cfg, wrapWorkers: true, src: SRC, inWorker: true })});(function(){var B=self.__BOX_BASE,R=function(u){try{return new URL(String(u),B).href}catch(e){return u}};var f=self.fetch;if(f)self.fetch=function(i,o){return f.call(self,typeof i==='string'||i instanceof URL?R(i):i,o)};var xo=self.XMLHttpRequest&&XMLHttpRequest.prototype.open;if(xo)XMLHttpRequest.prototype.open=function(m,u){arguments[1]=R(u);return xo.apply(this,arguments)};var is=self.importScripts;if(is)self.importScripts=function(){return is.apply(self,[].map.call(arguments,R))};})();`;
+          const prelude = `self.__BOX_BASE=${JSON.stringify(abs)};(${SRC})(${JSON.stringify({ ...cfg, wrapWorkers: true, src: SRC, inWorker: true })});(function(){var B=self.__BOX_BASE,R=function(u){try{return new URL(String(u),B).href}catch(e){return u}};var f=self.fetch;if(f)self.fetch=function(i,o){return f.call(self,typeof i==='string'||i instanceof URL?R(i):i,o)};var xo=self.XMLHttpRequest&&XMLHttpRequest.prototype.open;if(xo)XMLHttpRequest.prototype.open=function(m,u){arguments[1]=R(u);return xo.apply(this,arguments)};var is=self.importScripts;if(is)self.importScripts=function(){return is.apply(self,[].map.call(arguments,R))};var RQ=self.Request;if(RQ){var NRQ=function Request(i,o){return new RQ(typeof i==='string'?R(i):i,o)};NRQ.prototype=RQ.prototype;self.Request=NRQ;}if(self.Cache){['match','put','add','delete'].forEach(function(k){var f=Cache.prototype[k];if(f)Cache.prototype[k]=function(a){if(typeof a==='string'){arguments[0]=R(a)}return f.apply(this,arguments)}});}if(self.WebSocket){var WS=self.WebSocket;var NWS=function WebSocket(u,p){return p===undefined?new WS(R(u)):new WS(R(u),p)};NWS.prototype=WS.prototype;self.WebSocket=NWS;}if(self.EventSource){var ES=self.EventSource;var NES=function EventSource(u,o){return new ES(R(u),o)};NES.prototype=ES.prototype;self.EventSource=NES;}})();`;
           const code = type === "module" ? `${prelude}
 await import(${JSON.stringify(abs)});` : `${prelude}
 importScripts(${JSON.stringify(abs)});`;
@@ -606,13 +616,13 @@ importScripts(${JSON.stringify(abs)});`;
   });
   async function refreshIdentity() {
     try {
-      applyIdentity(await ext.runtime.sendMessage({ box: true, type: "identity" }));
+      applyIdentity(await ext.runtime.sendMessage({ box: true, type: "identity" }), true);
     } catch {
     }
   }
-  function applyIdentity(id) {
+  function applyIdentity(id, initial = false) {
     identity = id;
-    if (isTop && IS_CHROME && id && !id.account) {
+    if (initial && isTop && IS_CHROME && id && !id.account) {
       try {
         const m = sessionStorage.getItem("__box_acct");
         if (m) {

@@ -2288,6 +2288,13 @@
         await ext.browsingData.remove({ since: 0 }, { cookies: true, localStorage: true, indexedDB: true, cache: true, cacheStorage: true, serviceWorkers: true, fileSystems: true });
         return true;
       }
+      if (call === "forget") {
+        await this.accountUnassigned(args.tabId, null).catch(() => {
+        });
+        this.c.setTab(args.tabId, { accountId: null, home: null, flow: null });
+        this.restoredTabs.add(args.tabId);
+        return true;
+      }
       if (call === "proxy") return this.proxy.debug();
       if (call === "badge") return (ext.action || ext.browserAction).getBadgeText({ tabId: args.tabId });
       if (call === "raw-cookies") return ext.cookies.getAll({});
@@ -2475,21 +2482,27 @@
     return value.split(",").map((policy) => {
       const dirs = policy.split(";").map((s) => s.trim()).filter(Boolean);
       const out = [];
-      let hasScript = false, defaultSrc = null;
+      let hasScript = false, hasConnect = false, defaultSrc = null;
       for (let dir of dirs) {
         const [name, ...vals] = dir.split(/\s+/);
         const n = name.toLowerCase();
         if (n === "require-trusted-types-for") continue;
         if (n === "script-src" || n === "script-src-elem") {
           hasScript = true;
-          if (!vals.includes("'none'")) dir += ` 'nonce-${nonce}'`;
-          else dir = `${name} 'nonce-${nonce}'`;
+          dir = vals.includes("'none'") ? `${name} 'nonce-${nonce}'` : `${dir} 'nonce-${nonce}'`;
         }
         if (n === "default-src") defaultSrc = vals;
-        if (n === "connect-src" && !vals.includes("'self'") && !vals.includes("*")) dir += " 'self'";
+        if (n === "connect-src") {
+          hasConnect = true;
+          if (!vals.includes("*")) {
+            if (!vals.includes("'self'")) dir += " 'self'";
+            if (!vals.includes("data:")) dir += " data:";
+          }
+        }
         out.push(dir);
       }
       if (!hasScript && defaultSrc) out.push(`script-src ${defaultSrc.filter((v) => v !== "'none'").join(" ")} 'nonce-${nonce}'`);
+      if (!hasConnect && defaultSrc && !defaultSrc.includes("*")) out.push(`connect-src ${defaultSrc.filter((v) => v !== "'none'").join(" ")} 'self' data:`);
       return out.join("; ");
     }).join(", ");
   }

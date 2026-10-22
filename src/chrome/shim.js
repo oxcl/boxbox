@@ -118,20 +118,23 @@ export function shim(cfg) {
     });
     return proxy;
   };
+  const realStores = {};
   const wrapStorageGlobal = (name, kind) => {
     if (!(name in g)) return;
     const host = Object.getOwnPropertyDescriptor(g, name) ? g : Object.getPrototypeOf(g);
     const d = Object.getOwnPropertyDescriptor(host, name);
     if (!d || !d.get) return;
     let cached, realRef;
+    try { realStores[kind] = d.get.call(g); } catch { /* opaque origin */ }
     const get = function () { const real = d.get.call(this); if (!cached || realRef !== real) { realRef = real; cached = makeStorage(real, kind); } return cached; };
     mark(get, d.get);
     try { Object.defineProperty(host, name, { ...d, get }); } catch { /* ignore */ }
   };
   if (typeof Storage !== 'undefined' && !isWorker) {
+    // marker for session restore: Chrome restores sessionStorage with the tab, so a restored tab can tell Box which account it was in
+    try { if (g.top === g) { const host = Object.getOwnPropertyDescriptor(g, 'sessionStorage') ? g : Object.getPrototypeOf(g); Object.getOwnPropertyDescriptor(host, 'sessionStorage').get.call(g).setItem('__box_acct', cfg.acct); } } catch { /* ignore */ }
     wrapStorageGlobal('localStorage', 'local');
     wrapStorageGlobal('sessionStorage', 'session');
-    try { if (g.top === g) Object.getOwnPropertyDescriptor(Storage.prototype, 'setItem').value.call(Object.getOwnPropertyDescriptor(g, 'sessionStorage').get.call(g), '__box_acct', cfg.acct); } catch { /* ignore */ }
     // Storage events from other tabs carry prefixed keys: hide foreign ones, translate ours.
     g.addEventListener('storage', (e) => {
       if (e.__box) return;
@@ -139,8 +142,9 @@ export function shim(cfg) {
       if (k !== null && !k.startsWith(pfx)) { e.stopImmediatePropagation(); return; }
       if (k === null) return;
       e.stopImmediatePropagation();
-      const area = e.storageArea === Object.getOwnPropertyDescriptor(g, 'localStorage')?.get?.call(g) ? g.localStorage : g.sessionStorage;
-      const ev = new StorageEvent('storage', { key: k.slice(pfx.length), oldValue: e.oldValue, newValue: e.newValue, url: e.url, storageArea: area });
+      const area = e.storageArea === realStores.local ? g.localStorage : g.sessionStorage;
+      const ev = new StorageEvent('storage', { key: k.slice(pfx.length), oldValue: e.oldValue, newValue: e.newValue, url: e.url });
+      Object.defineProperty(ev, 'storageArea', { get: () => area });     // the page compares it with its (shimmed) localStorage
       Object.defineProperty(ev, '__box', { value: true });
       g.dispatchEvent(ev);
     }, true);
@@ -155,12 +159,14 @@ export function shim(cfg) {
   }
 
   // -------------------------------------------------------------- Cache Storage
-  if (typeof CacheStorage !== 'undefined') {
-    redefine(CacheStorage.prototype, 'open', (o) => function open(n) { touch(); return o.call(this, pfx + String(n)); });
-    redefine(CacheStorage.prototype, 'has', (o) => function has(n) { return o.call(this, pfx + String(n)); });
-    redefine(CacheStorage.prototype, 'delete', (o) => function del(n) { return o.call(this, pfx + String(n)); });
-    redefine(CacheStorage.prototype, 'keys', (o) => function keys() { return o.call(this).then((l) => l.filter((k) => k.startsWith(pfx)).map((k) => k.slice(pfx.length))); });
-    redefine(CacheStorage.prototype, 'match', (o) => function match(req, opts) {
+  // In dedicated workers `CacheStorage` is exposed lazily (undefined until `caches` is touched), so reach it through the instance.
+  const CSP = typeof CacheStorage !== 'undefined' ? CacheStorage.prototype : (g.caches ? Object.getPrototypeOf(g.caches) : null);
+  if (CSP) {
+    redefine(CSP, 'open', (o) => function open(n) { touch(); return o.call(this, pfx + String(n)); });
+    redefine(CSP, 'has', (o) => function has(n) { return o.call(this, pfx + String(n)); });
+    redefine(CSP, 'delete', (o) => function del(n) { return o.call(this, pfx + String(n)); });
+    redefine(CSP, 'keys', (o) => function keys() { return o.call(this).then((l) => l.filter((k) => k.startsWith(pfx)).map((k) => k.slice(pfx.length))); });
+    redefine(CSP, 'match', (o) => function match(req, opts) {
       if (opts && opts.cacheName) return o.call(this, req, { ...opts, cacheName: pfx + opts.cacheName });
       const self = this;
       return (async () => {
@@ -217,7 +223,7 @@ export function shim(cfg) {
   if (cfg.wrapWorkers && !isWorker && typeof Worker !== 'undefined') {
     const blobs = new Map();
     const wrapUrl = (url, type) => {
-      const abs = new URL(String(url), g.location.href).href;
+      const abs = new URL(String(url), g.__BOX_BASE || g.location.href).href;
       const key = abs + '|' + type;
       let b = blobs.get(key);
       if (!b) {
@@ -225,7 +231,11 @@ export function shim(cfg) {
           `(function(){var B=self.__BOX_BASE,R=function(u){try{return new URL(String(u),B).href}catch(e){return u}};` +
           `var f=self.fetch;if(f)self.fetch=function(i,o){return f.call(self,typeof i==='string'||i instanceof URL?R(i):i,o)};` +
           `var xo=self.XMLHttpRequest&&XMLHttpRequest.prototype.open;if(xo)XMLHttpRequest.prototype.open=function(m,u){arguments[1]=R(u);return xo.apply(this,arguments)};` +
-          `var is=self.importScripts;if(is)self.importScripts=function(){return is.apply(self,[].map.call(arguments,R))};})();`;
+          `var is=self.importScripts;if(is)self.importScripts=function(){return is.apply(self,[].map.call(arguments,R))};` +
+          `var RQ=self.Request;if(RQ){var NRQ=function Request(i,o){return new RQ(typeof i==='string'?R(i):i,o)};NRQ.prototype=RQ.prototype;self.Request=NRQ;}` +
+          `if(self.Cache){['match','put','add','delete'].forEach(function(k){var f=Cache.prototype[k];if(f)Cache.prototype[k]=function(a){if(typeof a==='string'){arguments[0]=R(a)}return f.apply(this,arguments)}});}` +
+          `if(self.WebSocket){var WS=self.WebSocket;var NWS=function WebSocket(u,p){return p===undefined?new WS(R(u)):new WS(R(u),p)};NWS.prototype=WS.prototype;self.WebSocket=NWS;}` +
+          `if(self.EventSource){var ES=self.EventSource;var NES=function EventSource(u,o){return new ES(R(u),o)};NES.prototype=ES.prototype;self.EventSource=NES;}})();`;
         const code = type === 'module' ? `${prelude}\nawait import(${JSON.stringify(abs)});` : `${prelude}\nimportScripts(${JSON.stringify(abs)});`;
         b = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
         blobs.set(key, b);

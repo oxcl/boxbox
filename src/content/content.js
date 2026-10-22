@@ -60,12 +60,13 @@ ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 // ---------------------------------------------------------------------------- identity
 async function refreshIdentity() {
-  try { applyIdentity(await ext.runtime.sendMessage({ box: true, type: 'identity' })); } catch { /* background asleep / page gone */ }
+  try { applyIdentity(await ext.runtime.sendMessage({ box: true, type: 'identity' }), true); } catch { /* background asleep / page gone */ }
 }
 
-function applyIdentity(id) {
+function applyIdentity(id, initial = false) {
   identity = id;
-  if (isTop && IS_CHROME && id && !id.account) {
+  // session-restore marker: only judged on the page's own initial identity, never on later pushes
+  if (initial && isTop && IS_CHROME && id && !id.account) {
     try { const m = sessionStorage.getItem('__box_acct'); if (m) { sessionStorage.removeItem('__box_acct'); if (id.restorable) ext.runtime.sendMessage({ type: 'adopt', accountId: m }).catch(() => {}); } } catch { /* ignore */ }
   }
   if (!isTop) return;

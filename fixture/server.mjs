@@ -147,6 +147,15 @@ self.addEventListener('fetch', e => {
 
     // ---- shared assets
     if (p === '/fx.js') return send(res, 200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }, FX_JS);
+    if (p === '/worker.js') return send(res, 200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }, `
+self.onmessage = async () => {
+  const idb = await new Promise((res) => { const r = indexedDB.open('fx', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => { try { const g = r.result.transaction('kv').objectStore('kv').get('user'); g.onsuccess = () => { r.result.close(); res(g.result === undefined ? null : g.result); }; } catch (e) { res('ERR ' + e); } }; r.onerror = () => res('ERR'); });
+  let caches_ = null; try { const c = await caches.open('fx'); const m = await c.match('/cache-user'); caches_ = m ? await m.text() : null; } catch (e) { caches_ = 'ERR ' + e; }
+  let server = null; try { server = await (await fetch('/api/state')).json(); } catch (e) { server = { error: String(e) }; }
+  let names = null; try { names = await caches.keys(); } catch (e) { names = 'ERR ' + e; }
+  postMessage({ idb, cache: caches_, server: server.user, cookieNames: server.cookieNames, shim: !!self.__boxShimmed, cacheNames: names, tCS: typeof CacheStorage, keysSrc: typeof CacheStorage !== 'undefined' ? CacheStorage.prototype.keys.toString().slice(0, 80) : null, ctor: Object.getPrototypeOf(caches) === CacheStorage.prototype, own: Object.getOwnPropertyNames(caches) });
+};`);
     if (p === '/sw.js') return send(res, 200, { 'content-type': 'text/javascript', 'cache-control': 'no-store', 'service-worker-allowed': '/' }, SW_JS);
     if (p === '/favicon.svg' || p === '/favicon.ico') return send(res, 200, { 'content-type': 'image/svg+xml', 'cache-control': 'max-age=60' }, FAVICON);
     if (p === '/__wipe') return html(res, '<!doctype html><title>wipe</title>wipe');

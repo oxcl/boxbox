@@ -143,21 +143,29 @@ export class ChromeMv2Platform extends ChromeBase {
   afterCommit(d) { this.swFixed.delete(d.tabId); }
 }
 
-/** Add a nonce to script-src(-elem) (or default-src), 'self' to connect-src, drop Trusted Types enforcement. */
+/**
+ * Make a page's CSP compatible with Box's shim in an account tab: add a nonce to script-src(-elem) (or default-src) so the
+ * inline shim runs, allow 'self' and data: in connect-src (the synchronous channel is answered with a data: redirect),
+ * and drop Trusted Types enforcement (which would reject the inline script).
+ */
 export function patchCsp(value, nonce) {
   return value.split(',').map((policy) => {
     const dirs = policy.split(';').map((s) => s.trim()).filter(Boolean);
-    const out = []; let hasScript = false, defaultSrc = null;
+    const out = []; let hasScript = false, hasConnect = false, defaultSrc = null;
     for (let dir of dirs) {
       const [name, ...vals] = dir.split(/\s+/);
       const n = name.toLowerCase();
       if (n === 'require-trusted-types-for') continue;
-      if (n === 'script-src' || n === 'script-src-elem') { hasScript = true; if (!vals.includes("'none'")) dir += ` 'nonce-${nonce}'`; else dir = `${name} 'nonce-${nonce}'`; }
+      if (n === 'script-src' || n === 'script-src-elem') { hasScript = true; dir = vals.includes("'none'") ? `${name} 'nonce-${nonce}'` : `${dir} 'nonce-${nonce}'`; }
       if (n === 'default-src') defaultSrc = vals;
-      if (n === 'connect-src' && !vals.includes("'self'") && !vals.includes('*')) dir += " 'self'";
+      if (n === 'connect-src') {
+        hasConnect = true;
+        if (!vals.includes('*')) { if (!vals.includes("'self'")) dir += " 'self'"; if (!vals.includes('data:')) dir += ' data:'; }
+      }
       out.push(dir);
     }
     if (!hasScript && defaultSrc) out.push(`script-src ${defaultSrc.filter((v) => v !== "'none'").join(' ')} 'nonce-${nonce}'`);
+    if (!hasConnect && defaultSrc && !defaultSrc.includes('*')) out.push(`connect-src ${defaultSrc.filter((v) => v !== "'none'").join(' ')} 'self' data:`);
     return out.join('; ');
   }).join(', ');
 }

@@ -74,6 +74,7 @@ export class FirefoxDriver {
   async newTab(url = 'about:blank') {
     const before = new Set(await this.handles());
     const h = await this.lock(async () => {
+      await this.d.switchTo().window(this.control.handle);
       await this.d.switchTo().newWindow('tab');
       return this.d.getWindowHandle();
     });
