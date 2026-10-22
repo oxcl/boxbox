@@ -23,7 +23,7 @@ export class ChromeBase {
     this.readyP = new Promise((r) => { this.markReady = r; });
     // MV3: events that wake the service worker are only delivered to listeners registered synchronously at start-up, so the
     // MV3 build binds everything in its constructor and gates each handler on `readyP` (resolved when init() has finished).
-    this.gate = (fn) => (...a) => this.readyP.then(() => fn.apply(this, a)).catch((e) => console.error('event handler', e));
+    this.gateEvents = (fn) => (...a) => this.readyP.then(() => fn.apply(this, a)).catch((e) => console.error('event handler', e));
   }
 
   bindEvents(wrap = (f) => f) {

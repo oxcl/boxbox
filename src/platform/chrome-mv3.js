@@ -23,7 +23,7 @@ export class ChromeMv3Platform extends ChromeBase {
     this.entering = new Set();      // tabIds currently being moved by onBeforeNavigate
     this.shimSrc = shim.toString();
     // synchronous registration (see ChromeBase): these are the events that must be able to wake a sleeping service worker
-    const g = this.gate, f = { urls: NET_URLS };
+    const g = this.gateEvents, f = { urls: NET_URLS };
     this.bindEvents(g);
     ext.webRequest.onHeadersReceived.addListener(g((d) => this.onHeadersReceived(d)), f, ['responseHeaders', 'extraHeaders']);
     ext.webRequest.onBeforeRequest.addListener(g((d) => this.onBeforeRequestObserve(d)), f);

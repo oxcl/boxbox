@@ -1941,7 +1941,7 @@
       this.readyP = new Promise((r) => {
         this.markReady = r;
       });
-      this.gate = (fn) => (...a) => this.readyP.then(() => fn.apply(this, a)).catch((e) => console.error("event handler", e));
+      this.gateEvents = (fn) => (...a) => this.readyP.then(() => fn.apply(this, a)).catch((e) => console.error("event handler", e));
     }
     bindEvents(wrap = (f) => f) {
       this.eventsBound = true;

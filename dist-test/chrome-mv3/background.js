@@ -1942,7 +1942,7 @@
       this.readyP = new Promise((r) => {
         this.markReady = r;
       });
-      this.gate = (fn) => (...a) => this.readyP.then(() => fn.apply(this, a)).catch((e) => console.error("event handler", e));
+      this.gateEvents = (fn) => (...a) => this.readyP.then(() => fn.apply(this, a)).catch((e) => console.error("event handler", e));
     }
     bindEvents(wrap = (f) => f) {
       this.eventsBound = true;
@@ -2871,7 +2871,7 @@ importScripts(${JSON.stringify(abs)});`;
       this.initiators = /* @__PURE__ */ new Map();
       this.entering = /* @__PURE__ */ new Set();
       this.shimSrc = shim.toString();
-      const g2 = this.gate, f = { urls: NET_URLS };
+      const g2 = this.gateEvents, f = { urls: NET_URLS };
       this.bindEvents(g2);
       ext.webRequest.onHeadersReceived.addListener(g2((d) => this.onHeadersReceived(d)), f, ["responseHeaders", "extraHeaders"]);
       ext.webRequest.onBeforeRequest.addListener(g2((d) => this.onBeforeRequestObserve(d)), f);
