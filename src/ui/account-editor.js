@@ -1,11 +1,11 @@
 import { h, icon, avatar, api, sheet, toast, COLORS, iconNames } from './lib.js';
 
 /** Create/edit sheet. opts: {account?, serviceId, serviceName, target, onDone(kind, account?)} */
-export function openAccountEditor({ account, serviceId, serviceName, target, onDone, host }) {
+export function openAccountEditor({ account, serviceId, serviceName, target, onDone, host, withProxy = false }) {
   const editing = !!account;
   const st = {
     name: account?.name || '', color: account?.color || COLORS[Math.floor(Math.random() * COLORS.length)], icon: account?.icon || iconNames[Math.floor(Math.random() * iconNames.length)],
-    proxyOn: !!account?.proxy, proxy: { type: 'http', host: '', port: '', username: '', password: '', ...(account?.proxy || {}) },
+    proxyOn: !!account?.proxy || withProxy, proxy: { type: 'http', host: '', port: '', username: '', password: '', ...(account?.proxy || {}) },
   };
   return sheet((close) => {
     const preview = h('div', { class: 'row' });

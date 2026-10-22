@@ -51,6 +51,22 @@ export default function (R, h, drv) {
     });
   });
 
+  R.test('proxy: WebRTC cannot reveal the real address around a proxied account', async (ctx, a) => {
+    await withProxies(async ({ http }) => {
+      const before = await h.box({ type: 'test:platform', call: 'webrtc' });
+      const px = (await mk('HTTP', { type: 'http', host: '127.0.0.1', port: http.port })).id;
+      const t = await h.openIn(px, echo());
+      await waitFor(async () => (await h.box({ type: 'test:platform', call: 'webrtc' })) === 'disable_non_proxied_udp', { message: 'browser WebRTC policy restricted while a proxied account is open' });
+      if (ctx.name !== 'firefox') {
+        a.eq(await t.eval(() => new RTCPeerConnection({ iceServers: [] }).getConfiguration().iceTransportPolicy), 'relay', 'RTCPeerConnection is relay-only inside the proxied account (shim)');
+        const def = await h.openIn(null, h.url('ctl.localhost', '/blank'));
+        a.eq(await def.eval(() => new RTCPeerConnection({ iceServers: [] }).getConfiguration().iceTransportPolicy), 'all', 'default session untouched by the shim');
+      }
+      await t.close();
+      await waitFor(async () => (await h.box({ type: 'test:platform', call: 'webrtc' })) === before, { message: 'policy restored when the last proxied tab closes' });
+    });
+  });
+
   const chromeOnly = { skip: (ctx) => ctx.name === 'firefox' && 'Chrome-only: Firefox applies proxies exactly per account' };
   R.test('proxy (Chrome): two proxied accounts on the same service conflict — flagged, not silent', async (ctx, a) => {
     await withProxies(async ({ http, socks }) => {

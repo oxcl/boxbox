@@ -1433,7 +1433,7 @@
       const extra = new Set(Object.values(this.accounts).map((a) => a.serviceId));
       for (const id of Object.keys(this.state.settings.modes)) extra.add(id);
       const list = this.resolver.list([...extra]);
-      return list.map((s) => ({ ...s, accounts: this.accountsOf(s.id).length, mode: this.state.settings.modes[s.id] || null }));
+      return list.map((s) => ({ ...s, accounts: this.accountsOf(s.id).length, mode: this.state.settings.modes[s.id] || null })).sort((a, b) => b.accounts - a.accounts || Object.keys(this.state.settings.modes).includes(b.id) - Object.keys(this.state.settings.modes).includes(a.id) || a.name.localeCompare(b.name));
     }
     // ---- messages -----------------------------------------------------------------
     async handle(msg, sender) {
@@ -2117,8 +2117,7 @@
     }
     /** Open a short-lived background tab on `origin`, let the content script erase the account's namespaced data. */
     async wipeOrigin(origin, accId, prefix) {
-      const tab = await ext.tabs.create({ url: origin + "/__box_wipe", active: false });
-      this.wipeTabs.add(tab.id);
+      const tab = await this.openWipeTab(origin);
       try {
         for (let i = 0; i < 40; i++) {
           await sleep(150);
@@ -2128,7 +2127,7 @@
           } catch {
             return false;
           }
-          if (t.status === "complete") {
+          if (t.status === "complete" && t.url && t.url.startsWith(origin)) {
             try {
               const r = await ext.tabs.sendMessage(tab.id, { box: true, type: "wipe", accountId: accId, prefix });
               if (r && !r.error) return true;
@@ -2144,6 +2143,13 @@
         } catch {
         }
       }
+    }
+    /** MV2: the request reaches the site (with its cookies stripped by the blocking handler). MV3 overrides this to serve the page locally. */
+    async openWipeTab(origin) {
+      const tab = await ext.tabs.create({ url: "about:blank", active: false });
+      this.wipeTabs.add(tab.id);
+      await ext.tabs.update(tab.id, { url: origin + "/__box_wipe" });
+      return tab;
     }
     async handleMessage(msg, sender) {
       switch (msg.type) {
@@ -2204,12 +2210,14 @@
     }
     status(tabId, tab) {
       const msgs = [], level = [];
+      let action = null;
       const acc = tab.accountId ? this.c.accounts[tab.accountId] : null;
       if (!acc) return { level: "ok", messages: [] };
       const iso = this.isolationStatus?.(tabId);
       if (iso) {
         level.push(iso.level);
         msgs.push(...iso.messages);
+        if (iso.action) action = iso.action;
       }
       const px = this.proxy.statusFor(tabId, acc);
       if (px) {
@@ -2217,7 +2225,7 @@
         msgs.push(...px.messages);
       }
       const rank = { ok: 0, warn: 1, fail: 2 };
-      return { level: level.reduce((a, b) => rank[b] > rank[a] ? b : a, "ok"), messages: msgs };
+      return { level: level.reduce((a, b) => rank[b] > rank[a] ? b : a, "ok"), messages: msgs, action };
     }
     async updateGroups() {
       if (!ext.tabs.group || !ext.tabGroups || !this.c.state.settings.tabGroups) return;
@@ -2294,6 +2302,10 @@
         this.c.setTab(args.tabId, { accountId: null, home: null, flow: null });
         this.restoredTabs.add(args.tabId);
         return true;
+      }
+      if (call === "webrtc") {
+        const r = await ext.privacy.network.webRTCIPHandlingPolicy.get({});
+        return r.value;
       }
       if (call === "proxy") return this.proxy.debug();
       if (call === "badge") return (ext.action || ext.browserAction).getBadgeText({ tabId: args.tabId });

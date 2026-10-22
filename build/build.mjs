@@ -41,7 +41,7 @@ function manifest(target) {
   };
   const action = { default_popup: 'popup.html', default_title: 'Box', default_icon: { 16: 'icons/16.png', 32: 'icons/32.png' } };
   if (mv3) m.action = action; else m.browser_action = action;
-  const perms = ['tabs', 'webRequest', 'webNavigation', 'storage', 'cookies', 'proxy', '<all_urls>'];
+  const perms = ['tabs', 'webRequest', 'webNavigation', 'storage', 'proxy', '<all_urls>'];
   if (ff) {
     m.browser_specific_settings = { gecko: { id: 'box@box.local', strict_min_version: '140.0' } };
     m.background = { scripts: ['background.js'], persistent: true };
@@ -57,10 +57,10 @@ function manifest(target) {
       m.web_accessible_resources = [{ resources: ['gate.html', 'gate.js'], matches: ['http://*/*', 'https://*/*'] }];
     } else {
       m.background = { scripts: ['background.js'], persistent: true };
-      m.permissions = [...perms.filter((p) => p !== 'cookies'), 'webRequestBlocking', 'debugger', 'privacy', 'unlimitedStorage', 'tabGroups'];
+      m.permissions = [...perms, 'webRequestBlocking', 'debugger', 'privacy', 'unlimitedStorage', 'tabGroups'];
     }
   }
-  if (TEST && !ff) m.permissions.push('browsingData', 'cookies');
+  if (TEST) m.permissions.push('cookies', ...(ff ? [] : ['browsingData']));
   if (TEST) {
     m.content_scripts.push({ matches: FIXTURE_MATCHES, js: ['bridge.js'], run_at: 'document_start', all_frames: false });
     const war = UI_PAGES.map((p) => `${p}.html`).concat(['ui.css', 'popup.js', 'picker.js', 'settings.js']);
@@ -84,15 +84,13 @@ async function build(target) {
   for (const p of UI_PAGES) if (fs.existsSync(path.join(root, `src/ui/${p}.js`))) entries[p] = `src/ui/${p}.js`;
   if (GATE_TARGETS.has(target)) entries.gate = 'src/ui/gate.js';
   if (TEST) entries.bridge = 'src/test/bridge.js';
-  if (target !== 'firefox' && fs.existsSync(path.join(root, 'src/chrome/shim.js'))) entries.shim = 'src/chrome/shim.js';
-  if (target !== 'firefox' && fs.existsSync(path.join(root, 'src/chrome/wipe-page.js'))) entries['wipe-page'] = 'src/chrome/wipe-page.js';
   await esbuild.build({ ...common, entryPoints: Object.fromEntries(Object.entries(entries).map(([k, v]) => [k, path.join(root, v)])), outdir: out });
   for (const p of UI_PAGES) { const f = path.join(root, `src/ui/${p}.html`); if (fs.existsSync(f)) fs.copyFileSync(f, path.join(out, `${p}.html`)); }
   if (GATE_TARGETS.has(target)) fs.copyFileSync(path.join(root, 'src/ui/gate.html'), path.join(out, 'gate.html'));
   for (const css of ['ui.css']) { const f = path.join(root, 'src/ui', css); if (fs.existsSync(f)) fs.copyFileSync(f, path.join(out, css)); }
   for (const s of [16, 32, 48, 128]) fs.writeFileSync(path.join(out, 'icons', `${s}.png`), icon(s));
   fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(manifest(target), null, 2));
-  if (target !== 'firefox') fs.writeFileSync(path.join(out, '.extension-id'), chromeExtensionId());
+  if (TEST && target !== 'firefox') fs.writeFileSync(path.join(out, '.extension-id'), chromeExtensionId());
   console.log(`built ${path.relative(root, out)}`);
 }
 

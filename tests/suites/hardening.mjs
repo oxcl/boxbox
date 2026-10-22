@@ -145,7 +145,33 @@ export default function (R, h, drv) {
     await t.goto(url('/blocked-check'));                            // must not reach the server with default cookies / unisolated
     await sleep(500);
     a.ok(!(await h.fxLog()).some((l) => l.path.startsWith('/blocked-check')), 'nothing was sent while isolation was lost');
-    await h.box({ type: 'restoreIsolation', tabId: id });
+    // the popup shows the failure with a working "Restore isolation" button
+    await drv.control.eval((q) => window.postMessage({ __boxFrame: 'popup.html?tab=' + q, w: 380, h: 640 }, '*'), id);
+    await waitFor(async () => drv.control.frameEval('popup.html', () => !!document.getElementById('restore-isolation')), { message: 'restore button in the popup' });
+    await drv.control.frameEval('popup.html', () => document.getElementById('restore-isolation').click());
     await waitFor(async () => (await h.readState(t)).server.user === 'barred', { message: 'account session restored', timeout: 15000 });
+    a.eq((await h.box({ type: 'tabInfo', tabId: id })).status.level, 'ok');
+  }, mv3Only);
+
+  R.test('MV3: WebSockets from account tabs are flagged (Chrome gives extensions no handshake hook)', async (ctx, a) => {
+    const acc = (await h.createAccount(A, 'Ws')).id;
+    const t = await h.openIn(acc, url());
+    await t.eval((u) => { try { window.__ws = new WebSocket(u); window.__ws.onerror = () => {}; } catch (e) { /* ignore */ } }, 'ws://alpha.localhost:' + h.fx.port + '/ws');
+    await waitFor(async () => /WebSocket/.test((await h.box({ type: 'tabInfo', tabId: await t.boxId() })).status.messages.join(' ')), { message: 'WebSocket limitation surfaced to the user' });
+    a.eq((await h.box({ type: 'tabInfo', tabId: await t.boxId() })).status.level, 'warn');
+  }, mv3Only);
+
+  R.test('MV3: isolation survives the extension service worker being terminated and restarted', async (ctx, a) => {
+    const acc = (await h.createAccount(A, 'Survivor')).id;
+    const t = await h.openIn(acc, url()); await h.login(t, 'sw-survivor');
+    const def = await h.openIn(null, url());
+    await ctx.drv.killExtensionWorker();
+    // the page keeps working: its requests wake the worker, which re-establishes the debugger session + rules + jar
+    await waitFor(async () => (await h.readState(t)).server.user === 'sw-survivor', { message: 'account session intact after worker restart', timeout: 20000 });
+    a.eq((await h.readState(def)).server.user, null, 'default session untouched');
+    a.eq((await h.tabAccount(t))?.accountId, acc, 'tab mapping restored from storage.session');
+    await t.eval(() => { document.cookie = 'after=restart; path=/'; });
+    a.eq(await t.eval(() => document.cookie.includes('after=restart')), true, 'JS cookies still virtualised');
+    a.eq((await h.readState(def)).documentCookie, '', 'and not leaking into the real jar');
   }, mv3Only);
 }

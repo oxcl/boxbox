@@ -1433,7 +1433,7 @@
       const extra = new Set(Object.values(this.accounts).map((a) => a.serviceId));
       for (const id of Object.keys(this.state.settings.modes)) extra.add(id);
       const list = this.resolver.list([...extra]);
-      return list.map((s) => ({ ...s, accounts: this.accountsOf(s.id).length, mode: this.state.settings.modes[s.id] || null }));
+      return list.map((s) => ({ ...s, accounts: this.accountsOf(s.id).length, mode: this.state.settings.modes[s.id] || null })).sort((a, b) => b.accounts - a.accounts || Object.keys(this.state.settings.modes).includes(b.id) - Object.keys(this.state.settings.modes).includes(a.id) || a.name.localeCompare(b.name));
     }
     // ---- messages -----------------------------------------------------------------
     async handle(msg, sender) {
@@ -2118,8 +2118,7 @@
     }
     /** Open a short-lived background tab on `origin`, let the content script erase the account's namespaced data. */
     async wipeOrigin(origin, accId, prefix) {
-      const tab = await ext.tabs.create({ url: origin + "/__box_wipe", active: false });
-      this.wipeTabs.add(tab.id);
+      const tab = await this.openWipeTab(origin);
       try {
         for (let i = 0; i < 40; i++) {
           await sleep(150);
@@ -2129,7 +2128,7 @@
           } catch {
             return false;
           }
-          if (t.status === "complete") {
+          if (t.status === "complete" && t.url && t.url.startsWith(origin)) {
             try {
               const r = await ext.tabs.sendMessage(tab.id, { box: true, type: "wipe", accountId: accId, prefix });
               if (r && !r.error) return true;
@@ -2145,6 +2144,13 @@
         } catch {
         }
       }
+    }
+    /** MV2: the request reaches the site (with its cookies stripped by the blocking handler). MV3 overrides this to serve the page locally. */
+    async openWipeTab(origin) {
+      const tab = await ext.tabs.create({ url: "about:blank", active: false });
+      this.wipeTabs.add(tab.id);
+      await ext.tabs.update(tab.id, { url: origin + "/__box_wipe" });
+      return tab;
     }
     async handleMessage(msg, sender) {
       switch (msg.type) {
@@ -2205,12 +2211,14 @@
     }
     status(tabId, tab) {
       const msgs = [], level = [];
+      let action = null;
       const acc = tab.accountId ? this.c.accounts[tab.accountId] : null;
       if (!acc) return { level: "ok", messages: [] };
       const iso = this.isolationStatus?.(tabId);
       if (iso) {
         level.push(iso.level);
         msgs.push(...iso.messages);
+        if (iso.action) action = iso.action;
       }
       const px = this.proxy.statusFor(tabId, acc);
       if (px) {
@@ -2218,7 +2226,7 @@
         msgs.push(...px.messages);
       }
       const rank = { ok: 0, warn: 1, fail: 2 };
-      return { level: level.reduce((a, b) => rank[b] > rank[a] ? b : a, "ok"), messages: msgs };
+      return { level: level.reduce((a, b) => rank[b] > rank[a] ? b : a, "ok"), messages: msgs, action };
     }
     async updateGroups() {
       if (!ext.tabs.group || !ext.tabGroups || !this.c.state.settings.tabGroups) return;
@@ -2295,6 +2303,10 @@
         this.c.setTab(args.tabId, { accountId: null, home: null, flow: null });
         this.restoredTabs.add(args.tabId);
         return true;
+      }
+      if (call === "webrtc") {
+        const r = await ext.privacy.network.webRTCIPHandlingPolicy.get({});
+        return r.value;
       }
       if (call === "proxy") return this.proxy.debug();
       if (call === "badge") return (ext.action || ext.browserAction).getBadgeText({ tabId: args.tabId });
@@ -2868,7 +2880,16 @@ importScripts(${JSON.stringify(abs)});`;
         }
       }
       const acc = this.accountOf(d.tabId);
-      if (acc) this.proxy.observe(acc, d.tabId, new URL(d.url).hostname);
+      if (acc) {
+        this.proxy.observe(acc, d.tabId, new URL(d.url).hostname);
+        if (d.type === "websocket") {
+          this.wsTabs = this.wsTabs || /* @__PURE__ */ new Set();
+          if (!this.wsTabs.has(d.tabId)) {
+            this.wsTabs.add(d.tabId);
+            this.pushIdentity(d.tabId);
+          }
+        }
+      }
     }
     onHeadersReceived(d) {
       try {
@@ -2893,6 +2914,8 @@ importScripts(${JSON.stringify(abs)});`;
       await this.proxy.recompute(true);
     }
     async accountUnassigned(tabId) {
+      this.wsTabs?.delete(tabId);
+      this.exposedFirst?.delete(tabId);
       await this.detachSession(tabId);
       await this.setRules(tabId, false);
       this.lost.delete(tabId);
@@ -3052,8 +3075,11 @@ importScripts(${JSON.stringify(abs)});`;
       }
     }
     isolationStatus(tabId) {
-      if (this.lost.has(tabId)) return { level: "fail", messages: ["Isolation is paused for this tab because the debugging bar was closed. The tab is blocked so nothing is sent outside its account \u2014 use \u201CRestore isolation\u201D in the Box popup."] };
-      return null;
+      if (this.lost.has(tabId)) return { level: "fail", action: "restoreIsolation", messages: ["Isolation is paused for this tab because the debugging bar was closed. The tab is blocked so nothing is sent outside its account \u2014 use \u201CRestore isolation\u201D below."] };
+      const notes = [];
+      if (this.wsTabs && this.wsTabs.has(tabId)) notes.push("This page opened a WebSocket. Chrome gives extensions no way to intercept WebSocket handshakes, so Box sends them without cookies (nothing from other sessions is exposed, but cookie-authenticated sockets will not log in).");
+      if (this.exposedFirst && this.exposedFirst.has(tabId)) notes.push("This tab was opened by the browser (for example \u201COpen link in new tab\u201D from the context menu) before Box could attach, so its very first request was sent in the default session and then repeated inside the account.");
+      return notes.length ? { level: "warn", messages: notes } : null;
     }
     async restoreIsolation(tabId) {
       const acc = this.accountOf(tabId);
@@ -3081,6 +3107,11 @@ importScripts(${JSON.stringify(abs)});`;
           u = new URL(req.url);
         } catch {
           await cont();
+          return;
+        }
+        if (this.wipeTabs.has(tabId)) {
+          if (u.pathname === "/__box_wipe") await send("Fetch.fulfillRequest", { requestId: p.requestId, responseCode: 200, responseHeaders: [{ name: "Content-Type", value: "text/html" }, { name: "Cache-Control", value: "no-store" }], body: b642("<!doctype html><title>Box</title>") });
+          else await send("Fetch.failRequest", { requestId: p.requestId, errorReason: "BlockedByClient" });
           return;
         }
         const s = this.sessions.get(tabId);
@@ -3115,10 +3146,6 @@ importScripts(${JSON.stringify(abs)});`;
             await cont();
             return;
           }
-        }
-        if (this.wipeTabs.has(tabId)) {
-          await cont([...Object.entries(req.headers).filter(([k]) => k.toLowerCase() !== "cookie").map(([name, value]) => ({ name, value })), { name: "Cookie", value: "" }]);
-          return;
         }
         if (!isMain) initiator = req.headers.Origin || req.headers.Referer || void 0;
         const hdrs = Object.entries(req.headers).filter(([k]) => k.toLowerCase() !== "cookie").map(([name, value]) => ({ name, value }));
@@ -3204,6 +3231,8 @@ importScripts(${JSON.stringify(abs)});`;
       this.c.setTab(d.tabId, { accountId: src.accountId, home: src.home, flow: null });
       await this.accountAssigned(d.tabId, null, src.accountId);
       if (isWebUrl(d.url)) {
+        this.exposedFirst = this.exposedFirst || /* @__PURE__ */ new Set();
+        this.exposedFirst.add(d.tabId);
         this.replay = this.replay || /* @__PURE__ */ new Map();
         this.replay.set(d.tabId, { url: d.url, user });
         await ext.tabs.update(d.tabId, { url: d.url }).catch(() => {
@@ -3389,8 +3418,14 @@ importScripts(${JSON.stringify(abs)});`;
       const r = await super.moveTab(tabId, accountId, opts);
       return r;
     }
-    async wipeOrigin(origin, accId, prefix) {
-      return super.wipeOrigin(origin, accId, prefix);
+    /** The wipe page is answered locally by the debugger: deleting an account makes no network request at all. */
+    async openWipeTab(origin) {
+      const tab = await ext.tabs.create({ url: "about:blank", active: false });
+      this.wipeTabs.add(tab.id);
+      await ext.debugger.attach({ tabId: tab.id }, "1.3");
+      await ext.debugger.sendCommand({ tabId: tab.id }, "Fetch.enable", { patterns: [{ urlPattern: "*" }] });
+      await ext.tabs.update(tab.id, { url: origin + "/__box_wipe" });
+      return tab;
     }
   };
 

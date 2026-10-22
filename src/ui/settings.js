@@ -137,8 +137,8 @@ function accounts() {
         h('button', { class: 'btn sm', 'data-edit': a.id, onclick: () => edit(a, sid) }, icon('edit'), 'Edit'))))) :
       h('div', { class: 'panel', style: { textAlign: 'center', padding: '40px' } }, h('div', { class: 'muted' }, 'No accounts yet. Open a website and create one from the Box popup, or use the menu above.')));
 }
-function edit(acc, sid) {
-  openAccountEditor({ account: acc, serviceId: sid, serviceName: serviceName(sid), target: st.target, onDone: async () => { await refresh(); } });
+function edit(acc, sid, withProxy = false) {
+  openAccountEditor({ withProxy, account: acc, serviceId: sid, serviceName: serviceName(sid), target: st.target, onDone: async () => { await refresh(); } });
 }
 
 // ------------------------------------------------------------------ Proxy
@@ -151,6 +151,8 @@ function proxy() {
       ff ? h('p', { class: 'muted', style: { margin: 0 } }, 'Firefox decides the proxy per request from the container of the requesting tab, so a proxy applies exactly and only to that account’s tabs. DNS is resolved by the proxy, WebRTC is forced through relays, and a failing proxy blocks the request instead of falling back to your own IP.')
         : h('div', { class: 'banner warn' }, icon('warn'), h('div', {}, 'Chrome has a single, browser-wide proxy setting. Box generates a proxy auto-config script that sends the hosts used by proxied accounts through their proxy. This is shared with any other tab (including your default session) that visits those hosts, and a host first contacted before Box learns it may connect directly. Whenever that can happen the popup, the page label and the extension badge show a warning — Box never fails silently.'))),
     h('div', { class: 'panel' }, h('h2', {}, 'Accounts with a proxy'),
+      h('select', { class: 'input', id: 'proxy-add-account', style: { maxWidth: '340px' }, onchange: (e) => { const a = st.accounts.find((x) => x.id === e.target.value); e.target.value = ''; if (a) edit(a, a.serviceId, true); } },
+        h('option', { value: '' }, 'Configure a proxy for…'), st.accounts.filter((a) => !a.proxy).map((a) => h('option', { value: a.id }, `${a.name} — ${serviceName(a.serviceId)}`))),
       withProxy.length ? withProxy.map((a) => h('div', { class: 'card', style: { '--c': a.color, cursor: 'default' } }, avatar(a), h('div', { class: 'grow' }, h('div', { class: 'title' }, a.name), h('div', { class: 'sub' }, `${serviceName(a.serviceId)} · ${proxyLabel(a.proxy)}`)), h('button', { class: 'btn sm', onclick: () => edit(a, a.serviceId) }, icon('edit'), 'Edit'))) : h('p', { class: 'muted', style: { margin: 0 } }, 'None yet. Open an account’s settings and switch on “Proxy”.')));
 }
 

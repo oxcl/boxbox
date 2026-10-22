@@ -1433,7 +1433,7 @@
       const extra = new Set(Object.values(this.accounts).map((a) => a.serviceId));
       for (const id of Object.keys(this.state.settings.modes)) extra.add(id);
       const list = this.resolver.list([...extra]);
-      return list.map((s) => ({ ...s, accounts: this.accountsOf(s.id).length, mode: this.state.settings.modes[s.id] || null }));
+      return list.map((s) => ({ ...s, accounts: this.accountsOf(s.id).length, mode: this.state.settings.modes[s.id] || null })).sort((a, b) => b.accounts - a.accounts || Object.keys(this.state.settings.modes).includes(b.id) - Object.keys(this.state.settings.modes).includes(a.id) || a.name.localeCompare(b.name));
     }
     // ---- messages -----------------------------------------------------------------
     async handle(msg, sender) {

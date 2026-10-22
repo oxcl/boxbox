@@ -22,7 +22,9 @@ function statusBanner() {
   const s = info.status;
   if (!s || !s.messages || !s.messages.length) return null;
   if (s.level === 'ok') return null;
-  return h('div', { class: 'banner ' + (s.level === 'fail' ? 'fail' : 'warn'), style: { margin: '0 14px 6px' }, role: 'alert' }, icon('warn'), h('div', {}, s.messages.map((m) => h('div', {}, m))));
+  return h('div', { class: 'banner ' + (s.level === 'fail' ? 'fail' : 'warn'), style: { margin: '0 14px 6px' }, role: 'alert' }, icon('warn'),
+    h('div', { class: 'grow' }, s.messages.map((m) => h('div', { style: { marginBottom: '4px' } }, m)),
+      s.action === 'restoreIsolation' ? h('button', { class: 'btn sm primary', id: 'restore-isolation', style: { marginTop: '6px' }, onclick: async () => { try { await api('restoreIsolation', { tabId }); toast('Isolation restored'); await load(); } catch (e) { toast(e.message); } } }, 'Restore isolation') : null));
 }
 
 function render() {

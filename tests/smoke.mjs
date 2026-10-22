@@ -111,6 +111,24 @@ const sites = {
   },
 };
 
+// Does the shim break big, JS-heavy pages? Each loads in an account tab and must render its key element.
+sites.popularSites = async (h, drv, a) => {
+  const targets = [
+    ['https://en.wikipedia.org/wiki/Main_Page', () => !!document.querySelector('#searchInput, input[name=search]')],
+    ['https://github.com/login', () => !!document.querySelector('#login_field')],
+    ['https://news.ycombinator.com/', () => !!document.querySelector('.hnname, .titleline')],
+    ['https://www.reddit.com/', () => document.title.length > 0],
+    ['https://stackoverflow.com/users/login', () => document.title.length > 0],
+  ];
+  for (const [u, ok] of targets) {
+    const acc = (await h.createAccount(await SVC(u), 'Load test')).id;
+    const t = await h.openIn(acc, u);
+    await settle(t, async () => t.eval(ok), `${u} renders inside an account`, 25000);
+    a(true, `${u} rendered (title: ${await t.title()})`);
+    await t.close(); await h.box({ type: 'deleteAccount', id: acc });
+  }
+};
+
 const out = {};
 let hardFail = 0;
 for (const name of browsers) {

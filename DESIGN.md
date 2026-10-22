@@ -3,7 +3,8 @@
 Box gives each browser tab its own isolated "account" for a *service* (a group of
 domains sharing one login), inside a single browser profile. This document was
 written before implementation; §10 records what the pre-implementation spikes
-(run on the real browsers in this repo's flake) confirmed and what they changed.
+(run on the real browsers in this repo's flake) confirmed and what they changed, and
+**§12 records every place where the as-built system differs from this first design** and why.
 
 ## 1. Concepts and data model
 
@@ -275,3 +276,55 @@ brief are each a test; Chrome-only proxy tests assert the warning state. Real-si
 6. Firefox container switch loses the tab's back-history.
 7. Browser-restart: Chrome tab ids change; restored tabs recover their account from a
    marker the shim keeps in `sessionStorage` (restored by Chrome).
+
+## 12. As built — differences from the first design
+
+Implementation and testing on the real browsers changed these points. Each is covered by a test (name in brackets).
+
+1. **MV3 must always send an explicit `Cookie` header — even an empty one.** Spike: when the debugger's `Fetch.continueRequest`
+   sets `Cookie`, Chrome sends exactly that and ignores the real jar; but when the account's jar has *nothing* for the URL and no
+   header is set, Chrome attaches the **real** jar's cookies, leaking the default session into the account tab. Box therefore
+   always sets `Cookie` (empty string when the jar is empty), which suppresses the real jar. [`default session is unaffected…` on Chrome]
+2. **MV3 new tabs and popups need a handshake.** `chrome.debugger` cannot attach to a tab before its first request starts, and
+   CDP auto-attach does *not* report popups (spike). A popup login response would otherwise land in the real jar. The shim opens
+   `window.open` targets as `about:blank`, asks the extension *asynchronously* (a synchronous XHR deadlocks: the popup shares the
+   opener's renderer thread, which the debugger needs) and only then navigates; `<a target=_blank>` / ctrl- / middle-click are routed through the
+   background (`tabs.create(about:blank)` → attach → navigate). Tabs opened by other means (context menu) are attached and the
+   navigation is replayed; their first request is the one documented gap. [`popup (window.open) login stays inside the account`]
+3. **`openerTabId` is not an inheritance signal.** Chrome sets it for any tab created next to the active one (including *Ctrl-T*). Account
+   inheritance uses `webNavigation.onCreatedNavigationTarget` (page-initiated) only. [`default session is unaffected…`]
+4. **MV3 entry gate.** *Ask* ("before the page loads") and *Remember* use a dynamic DNR **redirect** rule per service that needs a decision
+   (`requestDomains` = the service's domains, `excludedInitiatorDomains` = the same, main-frame only) to an interstitial `gate.html`,
+   so **no request leaves the browser** before the decision. The gate asks the background (stay / switch account / picker), which
+   adds a one-shot DNR `allow` rule, and the gate continues. Account tabs carry a permanent `allow` rule: they are governed by the debugger.
+   [`mode "ask": picker appears before the page loads` asserts the server saw zero requests]
+5. **Pristine `XMLHttpRequest`.** Real sites (saucedemo's Backtrace SDK) wrap `XMLHttpRequest.prototype.open` and break synchronous mode, which made
+   every `document.cookie` read fail on Chrome. The shim captures native `XMLHttpRequest`/`fetch` before page code runs. [smoke: saucedemo]
+6. **CSP.** The MV2 sync channel answers through a `data:` redirect, which a page's `connect-src` blocks, so the MV2 CSP patch also adds
+   `'self' data:` to `connect-src` (and creates one when only `default-src` exists). [`a strict CSP … does not break an account tab`]
+7. **Workers.** MV3: dedicated/shared workers are auto-attached and the shim is evaluated in their global before their first
+   instruction; MV3 worker sessions have no `Fetch`/`Page` domains, so their requests are attributed to the owning tab and handled by the tab-level rules.
+   `CacheStorage` is *lazily exposed* inside workers (`typeof CacheStorage === 'undefined'` at start) so the shim reaches it through
+   `Object.getPrototypeOf(self.caches)`. MV2 wraps `Worker`/`SharedWorker` in a blob that runs the shim and re-resolves relative URLs
+   (`fetch`, `XMLHttpRequest`, `Request`, `Cache`, `WebSocket`, `EventSource`, `importScripts`). [`dedicated Worker sees the account's…`]
+8. **Service workers.** MV3: `Network.setBypassServiceWorker` on every attached target. MV2: a default-session service worker that
+   controls an account tab is *detected* by the shim (before the stub hides `controller`); Box then attaches the debugger to *that tab only*,
+   enables the bypass and reloads — so Helium shows the debugging bar only where a foreign service worker actually exists.
+   Page-visible `navigator.serviceWorker` is an inert stub (resolving `ready`, a fake *active* worker) so apps that await it do not hang. [`a default-session service worker does not take over an account tab`]
+9. **Fail closed.** If the user closes Chrome's debugging bar (`onDetach: canceled_by_user`), Box adds a DNR `block` rule for that tab, keeps the
+   `Set-Cookie` strip rule, shows a `fail` status and offers *Restore isolation*. [`MV3: closing the debugging bar fails closed`]
+10. **MV3 survives service-worker restarts.** `tabs` state is mirrored to `storage.session`; jars live in `storage.local`; on start the worker clears stale
+    session rules and re-attaches every account tab. [`MV3: isolation survives the extension service worker being terminated`]
+11. **Session restore.** The shim keeps the account id in the tab's (restorable) `sessionStorage`; the content script re-enters the account after a
+    browser restart/extension reload. The marker is judged only on the page's *initial* identity so live updates can't consume it. [`restored tab…`]
+12. **Chrome proxy details.** The PAC is applied *before* the first request of a proxied account (MV3: awaited; MV2: the blocking handler cancels the
+    navigation and replays it once the PAC is live). Because one PAC cannot give one host two proxies, two proxied accounts of the same service at once
+    raise a `warn` naming the conflict; the first claim wins. WebRTC: browser-wide `disable_non_proxied_udp` while any proxied account has a tab, plus a relay-only
+    `RTCPeerConnection` in the shim. On Firefox the WebRTC policy is also browser-wide (Firefox offers nothing finer). [proxy suite]
+13. **Firefox** uses MV2 + persistent background (blocking `webRequest`, `proxy.onRequest`); `proxy.onRequest` ignores the whole answer when an HTTP
+    proxy is returned with `proxyDNS`/`failoverTimeout`, so those fields are only set for SOCKS5. Container deletion is verified by
+    `contextualIdentities.remove` after a best-effort `browsingData.remove({cookieStoreId})`.
+14. **Test hooks** (`BOX_TEST=1` builds only): a `postMessage⇄runtime` bridge content script and `test:*` handlers, because neither WebDriver
+    nor puppeteer-over-BiDi can navigate to or script extension pages, and because Firefox containers are invisible to puppeteer's BiDi.
+    The fixture services are added to the built-in catalog only in these builds.
+

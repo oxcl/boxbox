@@ -243,6 +243,7 @@ export class FirefoxPlatform {
       await ext.browsingData.remove({ since: 0 }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true });
       return true;
     }
+    if (call === 'webrtc') { const r = await ext.privacy.network.webRTCIPHandlingPolicy.get({}); return r.value; }
     if (call === 'groups') return ext.tabGroups ? ext.tabGroups.query({}) : null;
     return null;
   }

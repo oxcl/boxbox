@@ -114,6 +114,19 @@ export class ChromeDriver {
     return tab;
   }
 
+  /** Terminate the extension's service worker (MV3), like Chrome does after ~30s of idleness. */
+  async killExtensionWorker() {
+    const t = this.browser.targets().find((x) => x.type() === 'service_worker' && /^chrome-extension:/.test(x.url()));
+    if (!t) throw new Error('no extension service worker');
+    const s = await this.browser.target().createCDPSession();
+    const { targetInfos } = await s.send('Target.getTargets');
+    const info = targetInfos.find((x) => x.type === 'service_worker' && x.url === t.url());
+    await s.send('Target.closeTarget', { targetId: info.targetId });
+    await s.detach();
+    await sleep(800);
+    return true;
+  }
+
   async quit() { try { await this.browser.close(); } catch { /* ignore */ } }
 }
 

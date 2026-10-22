@@ -65,8 +65,8 @@
     "privacy",
     "unlimitedStorage",
     "tabGroups",
-    "browsingData",
-    "cookies"
+    "cookies",
+    "browsingData"
   ],
   "web_accessible_resources": [
     "popup.html",

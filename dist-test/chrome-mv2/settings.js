@@ -161,13 +161,13 @@
   }
 
   // src/ui/account-editor.js
-  function openAccountEditor({ account, serviceId, serviceName: serviceName2, target, onDone, host }) {
+  function openAccountEditor({ account, serviceId, serviceName: serviceName2, target, onDone, host, withProxy = false }) {
     const editing = !!account;
     const st2 = {
       name: account?.name || "",
       color: account?.color || COLORS[Math.floor(Math.random() * COLORS.length)],
       icon: account?.icon || iconNames[Math.floor(Math.random() * iconNames.length)],
-      proxyOn: !!account?.proxy,
+      proxyOn: !!account?.proxy || withProxy,
       proxy: { type: "http", host: "", port: "", username: "", password: "", ...account?.proxy || {} }
     };
     return sheet((close) => {
@@ -582,8 +582,8 @@
       )) : h("div", { class: "panel", style: { textAlign: "center", padding: "40px" } }, h("div", { class: "muted" }, "No accounts yet. Open a website and create one from the Box popup, or use the menu above."))
     );
   }
-  function edit(acc, sid) {
-    openAccountEditor({ account: acc, serviceId: sid, serviceName: serviceName(sid), target: st.target, onDone: async () => {
+  function edit(acc, sid, withProxy = false) {
+    openAccountEditor({ withProxy, account: acc, serviceId: sid, serviceName: serviceName(sid), target: st.target, onDone: async () => {
       await refresh();
     } });
   }
@@ -604,6 +604,16 @@
         "div",
         { class: "panel" },
         h("h2", {}, "Accounts with a proxy"),
+        h(
+          "select",
+          { class: "input", id: "proxy-add-account", style: { maxWidth: "340px" }, onchange: (e) => {
+            const a = st.accounts.find((x) => x.id === e.target.value);
+            e.target.value = "";
+            if (a) edit(a, a.serviceId, true);
+          } },
+          h("option", { value: "" }, "Configure a proxy for\u2026"),
+          st.accounts.filter((a) => !a.proxy).map((a) => h("option", { value: a.id }, `${a.name} \u2014 ${serviceName(a.serviceId)}`))
+        ),
         withProxy.length ? withProxy.map((a) => h("div", { class: "card", style: { "--c": a.color, cursor: "default" } }, avatar(a), h("div", { class: "grow" }, h("div", { class: "title" }, a.name), h("div", { class: "sub" }, `${serviceName(a.serviceId)} \xB7 ${proxyLabel(a.proxy)}`)), h("button", { class: "btn sm", onclick: () => edit(a, a.serviceId) }, icon("edit"), "Edit"))) : h("p", { class: "muted", style: { margin: 0 } }, "None yet. Open an account\u2019s settings and switch on \u201CProxy\u201D.")
       )
     );

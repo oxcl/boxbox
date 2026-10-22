@@ -46,7 +46,10 @@ export class ChromeMv3Platform extends ChromeBase {
       if (this.initiators.size > 200) for (const [k, v] of this.initiators) if (Date.now() - v.t > 10000) this.initiators.delete(k);
     }
     const acc = this.accountOf(d.tabId);
-    if (acc) this.proxy.observe(acc, d.tabId, new URL(d.url).hostname);
+    if (acc) {
+      this.proxy.observe(acc, d.tabId, new URL(d.url).hostname);
+      if (d.type === 'websocket') { this.wsTabs = this.wsTabs || new Set(); if (!this.wsTabs.has(d.tabId)) { this.wsTabs.add(d.tabId); this.pushIdentity(d.tabId); } }
+    }
   }
 
   onHeadersReceived(d) {
@@ -68,6 +71,7 @@ export class ChromeMv3Platform extends ChromeBase {
     await this.proxy.recompute(true);
   }
   async accountUnassigned(tabId) {
+    this.wsTabs?.delete(tabId); this.exposedFirst?.delete(tabId);
     await this.detachSession(tabId);
     await this.setRules(tabId, false);
     this.lost.delete(tabId);
@@ -197,8 +201,11 @@ export class ChromeMv3Platform extends ChromeBase {
   }
 
   isolationStatus(tabId) {
-    if (this.lost.has(tabId)) return { level: 'fail', messages: ['Isolation is paused for this tab because the debugging bar was closed. The tab is blocked so nothing is sent outside its account — use “Restore isolation” in the Box popup.'] };
-    return null;
+    if (this.lost.has(tabId)) return { level: 'fail', action: 'restoreIsolation', messages: ['Isolation is paused for this tab because the debugging bar was closed. The tab is blocked so nothing is sent outside its account — use “Restore isolation” below.'] };
+    const notes = [];
+    if (this.wsTabs && this.wsTabs.has(tabId)) notes.push('This page opened a WebSocket. Chrome gives extensions no way to intercept WebSocket handshakes, so Box sends them without cookies (nothing from other sessions is exposed, but cookie-authenticated sockets will not log in).');
+    if (this.exposedFirst && this.exposedFirst.has(tabId)) notes.push('This tab was opened by the browser (for example “Open link in new tab” from the context menu) before Box could attach, so its very first request was sent in the default session and then repeated inside the account.');
+    return notes.length ? { level: 'warn', messages: notes } : null;
   }
   async restoreIsolation(tabId) {
     const acc = this.accountOf(tabId);
@@ -220,6 +227,11 @@ export class ChromeMv3Platform extends ChromeBase {
       if (p.responseStatusCode !== undefined || p.responseErrorReason) { await send('Fetch.continueResponse', { requestId: p.requestId }); return; }
       const req = p.request;
       let u; try { u = new URL(req.url); } catch { await cont(); return; }
+      if (this.wipeTabs.has(tabId)) {
+        if (u.pathname === '/__box_wipe') await send('Fetch.fulfillRequest', { requestId: p.requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'text/html' }, { name: 'Cache-Control', value: 'no-store' }], body: b64('<!doctype html><title>Box</title>') });
+        else await send('Fetch.failRequest', { requestId: p.requestId, errorReason: 'BlockedByClient' });
+        return;
+      }
       const s = this.sessions.get(tabId);
       let acc = this.accountOf(tabId);
       if (!acc || !s) { await cont(); return; }
@@ -242,7 +254,6 @@ export class ChromeMv3Platform extends ChromeBase {
         initiator = dec.initiator;
         if (!acc) { await cont(); return; }          // left the account: this request travels in the default session
       }
-      if (this.wipeTabs.has(tabId)) { await cont([...Object.entries(req.headers).filter(([k]) => k.toLowerCase() !== 'cookie').map(([name, value]) => ({ name, value })), { name: 'Cookie', value: '' }]); return; }
       if (!isMain) initiator = req.headers.Origin || req.headers.Referer || undefined;
       const hdrs = Object.entries(req.headers).filter(([k]) => k.toLowerCase() !== 'cookie').map(([name, value]) => ({ name, value }));
       const ck = this.cookieHeaderFor(acc, { url: req.url, tabId, initiator, type, method: req.method });
@@ -307,6 +318,7 @@ export class ChromeMv3Platform extends ChromeBase {
     this.c.setTab(d.tabId, { accountId: src.accountId, home: src.home, flow: null });
     await this.accountAssigned(d.tabId, null, src.accountId);
     if (isWebUrl(d.url)) {          // opened by something other than the shim (e.g. context menu): replay once attached
+      this.exposedFirst = this.exposedFirst || new Set(); this.exposedFirst.add(d.tabId);
       this.replay = this.replay || new Map();
       this.replay.set(d.tabId, { url: d.url, user });
       await ext.tabs.update(d.tabId, { url: d.url }).catch(() => {});
@@ -458,7 +470,13 @@ export class ChromeMv3Platform extends ChromeBase {
     return r;
   }
 
-  async wipeOrigin(origin, accId, prefix) {
-    return super.wipeOrigin(origin, accId, prefix);
+  /** The wipe page is answered locally by the debugger: deleting an account makes no network request at all. */
+  async openWipeTab(origin) {
+    const tab = await ext.tabs.create({ url: 'about:blank', active: false });
+    this.wipeTabs.add(tab.id);
+    await ext.debugger.attach({ tabId: tab.id }, '1.3');
+    await ext.debugger.sendCommand({ tabId: tab.id }, 'Fetch.enable', { patterns: [{ urlPattern: '*' }] });
+    await ext.tabs.update(tab.id, { url: origin + '/__box_wipe' });
+    return tab;
   }
 }
