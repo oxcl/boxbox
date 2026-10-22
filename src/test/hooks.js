@@ -24,7 +24,7 @@ export function installTestHooks(controller, platform) {
           for (const id of Object.keys(controller.accounts)) await controller.deleteAccount(id);
           const d = DEFAULT_STATE();
           await controller.store.update((s) => { s.settings = d.settings; s.user = d.user; s.lastAccount = {}; s.origins = {}; });
-          controller.tabs.clear();
+          controller.tabs.clear(); controller.pickerFor.clear();
           await platform.testCall?.('wipeDefault', { origins: msg.origins });
           return true;
         }

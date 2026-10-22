@@ -248,6 +248,44 @@ export function shim(cfg) {
     }
   }
 
+  // -------------------------------------------------------------- MV3: new tabs/popups must be isolated *before* their first request
+  // The debugger cannot attach to a tab before it starts loading, so pages open it as about:blank, wait for the extension
+  // to attach (an *async* request the extension answers once attached — a synchronous one would deadlock when the popup
+  // shares this renderer thread), then navigate it. window.open keeps its opener relation.
+  if (cfg.guardPopups && !isWorker) {
+    const http = (u) => /^https?:/i.test(u);
+    const asyncOp = (op, args) => g.fetch(ORIGIN() + '/__box_sync?q=' + encodeURIComponent(JSON.stringify({ op, a: cfg.acct, ...args })), { cache: 'no-store', credentials: 'omit' }).then((r) => r.json()).catch(() => null);
+    redefine(Object.getOwnPropertyDescriptor(g, 'open') ? g : Window.prototype, 'open', (o) => function open(url, target, features) {
+      try {
+        const t = target === undefined || target === '' ? '_blank' : String(target);
+        if (url === undefined || url === null || url === '' || /^(_self|_top|_parent)$/i.test(t)) return o.apply(this, arguments);
+        const abs = new URL(String(url), g.location.href).href;
+        if (!http(abs)) return o.apply(this, arguments);
+        if (/noopener|noreferrer/.test(String(features || ''))) { asyncOp('openTab', { url: abs, active: true }); return null; }
+        const w = o.call(this, 'about:blank', target, features);
+        if (!w) return w;
+        asyncOp('popup', {}).then(() => { try { w.location.replace(abs); } catch { try { w.location = abs; } catch { /* ignore */ } } });
+        return w;
+      } catch { return o.apply(this, arguments); }
+    });
+    // <a target=_blank>, ctrl/middle click: same treatment, as a background-created tab (links are noopener by default).
+    const onClick = (e) => {
+      if (!e.isTrusted || e.defaultPrevented) return;
+      const a = e.target && e.target.closest ? e.target.closest('a[href], area[href]') : null;
+      if (!a) return;
+      const modifier = e.ctrlKey || e.metaKey || e.button === 1;
+      if (!(a.target === '_blank' || modifier) || e.altKey) return;
+      if (e.type === 'click' && e.button !== 0) return;
+      if (e.type === 'auxclick' && e.button !== 1) return;
+      const href = a.href;
+      if (!http(href)) return;
+      e.preventDefault();
+      asyncOp('openTab', { url: href, active: !(e.ctrlKey || e.metaKey || e.button === 1) });
+    };
+    g.addEventListener('click', onClick);
+    g.addEventListener('auxclick', onClick);
+  }
+
   // -------------------------------------------------------------- WebRTC: no IP leak around a proxied account
   if (cfg.proxied && typeof RTCPeerConnection !== 'undefined') {
     const R = RTCPeerConnection;
@@ -268,6 +306,6 @@ export function shim(cfg) {
     };
     redefineGetter(HTMLIFrameElement.prototype, 'contentWindow', (o) => function () { const w = o.call(this); ensure(w); return w; });
     redefineGetter(HTMLIFrameElement.prototype, 'contentDocument', (o) => function () { const d = o.call(this); if (d) ensure(d.defaultView); return d; });
-    redefine(Window.prototype, 'open', (o) => function open() { const w = o.apply(this, arguments); ensure(w); return w; });
+    redefine(Object.getOwnPropertyDescriptor(g, 'open') ? g : Window.prototype, 'open', (o) => function open() { const w = o.apply(this, arguments); ensure(w); return w; });
   }
 }

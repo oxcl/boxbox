@@ -2709,6 +2709,52 @@ importScripts(${JSON.stringify(abs)});`;
         }
       }
     }
+    if (cfg.guardPopups && !isWorker) {
+      const http = (u) => /^https?:/i.test(u);
+      const asyncOp = (op, args) => g2.fetch(ORIGIN() + "/__box_sync?q=" + encodeURIComponent(JSON.stringify({ op, a: cfg.acct, ...args })), { cache: "no-store", credentials: "omit" }).then((r) => r.json()).catch(() => null);
+      redefine(Object.getOwnPropertyDescriptor(g2, "open") ? g2 : Window.prototype, "open", (o) => function open(url, target, features) {
+        try {
+          const t = target === void 0 || target === "" ? "_blank" : String(target);
+          if (url === void 0 || url === null || url === "" || /^(_self|_top|_parent)$/i.test(t)) return o.apply(this, arguments);
+          const abs = new URL(String(url), g2.location.href).href;
+          if (!http(abs)) return o.apply(this, arguments);
+          if (/noopener|noreferrer/.test(String(features || ""))) {
+            asyncOp("openTab", { url: abs, active: true });
+            return null;
+          }
+          const w = o.call(this, "about:blank", target, features);
+          if (!w) return w;
+          asyncOp("popup", {}).then(() => {
+            try {
+              w.location.replace(abs);
+            } catch {
+              try {
+                w.location = abs;
+              } catch {
+              }
+            }
+          });
+          return w;
+        } catch {
+          return o.apply(this, arguments);
+        }
+      });
+      const onClick = (e) => {
+        if (!e.isTrusted || e.defaultPrevented) return;
+        const a = e.target && e.target.closest ? e.target.closest("a[href], area[href]") : null;
+        if (!a) return;
+        const modifier = e.ctrlKey || e.metaKey || e.button === 1;
+        if (!(a.target === "_blank" || modifier) || e.altKey) return;
+        if (e.type === "click" && e.button !== 0) return;
+        if (e.type === "auxclick" && e.button !== 1) return;
+        const href = a.href;
+        if (!http(href)) return;
+        e.preventDefault();
+        asyncOp("openTab", { url: href, active: !(e.ctrlKey || e.metaKey || e.button === 1) });
+      };
+      g2.addEventListener("click", onClick);
+      g2.addEventListener("auxclick", onClick);
+    }
     if (cfg.proxied && typeof RTCPeerConnection !== "undefined") {
       const R = RTCPeerConnection;
       const NR = function RTCPeerConnection2(conf, c) {
@@ -2745,7 +2791,7 @@ importScripts(${JSON.stringify(abs)});`;
         if (d) ensure(d.defaultView);
         return d;
       });
-      redefine(Window.prototype, "open", (o) => function open() {
+      redefine(Object.getOwnPropertyDescriptor(g2, "open") ? g2 : Window.prototype, "open", (o) => function open() {
         const w = o.apply(this, arguments);
         ensure(w);
         return w;
@@ -2776,6 +2822,8 @@ importScripts(${JSON.stringify(abs)});`;
       ext.webNavigation.onBeforeNavigate.addListener((d) => {
         if (d.frameId === 0) this.onBeforeNavigate(d);
       });
+      const stale = await ext.declarativeNetRequest.getSessionRules();
+      if (stale.length) await ext.declarativeNetRequest.updateSessionRules({ removeRuleIds: stale.map((r) => r.id) });
       for (const [tabId, st] of this.c.tabs) if (st.accountId) this.accountAssigned(tabId, null, st.accountId, true).catch((e) => console.warn("re-attach", tabId, dbgErr(e)));
     }
     // ---------------------------------------------------------------- observers
@@ -2816,8 +2864,18 @@ importScripts(${JSON.stringify(abs)});`;
       await this.setRules(tabId, false);
       this.lost.delete(tabId);
     }
+    /** DNR rule ids must be small integers; Chrome's tab ids can be ~2^31, so tabs get sequential slots. */
+    slotOf(tabId) {
+      if (!this.slots) {
+        this.slots = /* @__PURE__ */ new Map();
+        this.nextSlot = 1;
+      }
+      if (!this.slots.has(tabId)) this.slots.set(tabId, this.nextSlot++);
+      return this.slots.get(tabId);
+    }
     async setRules(tabId, on, block = false) {
-      const ids = [tabId * 4 + 1, tabId * 4 + 2, tabId * 4 + 3];
+      const n = this.slotOf(tabId) * 3;
+      const ids = [n + 1, n + 2, n + 3];
       const rules = [];
       if (on) {
         rules.push({ id: ids[0], priority: 10, condition: { tabIds: [tabId], resourceTypes: ALL_TYPES }, action: { type: "modifyHeaders", responseHeaders: [{ header: "set-cookie", operation: "remove" }] } });
@@ -2856,7 +2914,7 @@ importScripts(${JSON.stringify(abs)});`;
     }
     cfgFor(accId) {
       const acc = this.c.accounts[accId];
-      return { acct: accId, pfx: prefixFor(accId), proxied: !!(acc && acc.proxy), src: this.shimSrc, wrapWorkers: false };
+      return { acct: accId, pfx: prefixFor(accId), proxied: !!(acc && acc.proxy), src: this.shimSrc, wrapWorkers: false, guardPopups: true };
     }
     async setupTarget(target, s, type) {
       const send = (m, p) => ext.debugger.sendCommand(target, m, p);
@@ -2995,7 +3053,7 @@ importScripts(${JSON.stringify(abs)});`;
             q = JSON.parse(u.searchParams.get("q") || "{}");
           } catch {
           }
-          const body = JSON.stringify(this.syncOp(tabId, 0, q));
+          const body = JSON.stringify(q.op === "popup" || q.op === "openTab" ? await this.asyncOp(tabId, q) : this.syncOp(tabId, 0, q));
           await send("Fetch.fulfillRequest", { requestId: p.requestId, responseCode: 200, responseHeaders: [{ name: "Content-Type", value: "application/json" }, { name: "Cache-Control", value: "no-store" }], body: b642(body) });
           return;
         }
@@ -3017,13 +3075,13 @@ importScripts(${JSON.stringify(abs)});`;
           }
         }
         if (this.wipeTabs.has(tabId)) {
-          await cont(Object.entries(req.headers).filter(([k]) => k.toLowerCase() !== "cookie").map(([name, value]) => ({ name, value })));
+          await cont([...Object.entries(req.headers).filter(([k]) => k.toLowerCase() !== "cookie").map(([name, value]) => ({ name, value })), { name: "Cookie", value: "" }]);
           return;
         }
         if (!isMain) initiator = req.headers.Origin || req.headers.Referer || void 0;
         const hdrs = Object.entries(req.headers).filter(([k]) => k.toLowerCase() !== "cookie").map(([name, value]) => ({ name, value }));
         const ck = this.cookieHeaderFor(acc, { url: req.url, tabId, initiator, type, method: req.method });
-        if (ck) hdrs.push({ name: "Cookie", value: ck });
+        hdrs.push({ name: "Cookie", value: ck });
         await cont(hdrs);
       } catch (e) {
         try {
@@ -3044,7 +3102,11 @@ importScripts(${JSON.stringify(abs)});`;
       const rec = await this.waitInitiator(tabId, req.url);
       const initiator = rec ? rec.initiator : void 0;
       let user = !initiator || /^(chrome-extension|chrome|about):/.test(initiator);
-      if (!user) user = await this.queryGesture(tabId) || this.tabMeta.get(tabId)?.opener != null && await this.queryGesture(this.tabMeta.get(tabId).opener);
+      const rp = this.replay && this.replay.get(tabId);
+      if (rp && rp.url === req.url) {
+        user = rp.user;
+        this.replay.delete(tabId);
+      } else if (!user) user = await this.queryGesture(tabId) || this.tabMeta.get(tabId)?.opener != null && await this.queryGesture(this.tabMeta.get(tabId).opener);
       if (user && this.isPopupTab(tabId)) user = false;
       const dec = c.decideNavigation({ tabId, url: req.url, userInitiated: user });
       if (dec.type === "ask") {
@@ -3075,6 +3137,61 @@ importScripts(${JSON.stringify(abs)});`;
         await sleep(12);
       }
       return null;
+    }
+    /**
+     * Tabs/popups opened by an account page. The debugger cannot be attached before the new tab's first request starts, so the
+     * navigation is replayed inside the isolated session once attached (the unattached first request is discarded).
+     */
+    onNavTarget(d) {
+      const src = this.c.tabs.get(d.sourceTabId);
+      if (!src || !src.accountId || this.c.getTab(d.tabId).accountId) return;
+      const p = this.adoptNavTarget(d, src);
+      this.lastPopup = this.lastPopup || /* @__PURE__ */ new Map();
+      this.popupWait = this.popupWait || /* @__PURE__ */ new Map();
+      this.lastPopup.set(d.sourceTabId, { p, t: Date.now() });
+      const w = this.popupWait.get(d.sourceTabId);
+      if (w) {
+        this.popupWait.delete(d.sourceTabId);
+        p.then(w, w);
+      }
+    }
+    async adoptNavTarget(d, src) {
+      const user = isWebUrl(d.url) ? await this.queryGesture(d.sourceTabId) : false;
+      this.c.setTab(d.tabId, { accountId: src.accountId, home: src.home, flow: null });
+      await this.accountAssigned(d.tabId, null, src.accountId);
+      if (isWebUrl(d.url)) {
+        this.replay = this.replay || /* @__PURE__ */ new Map();
+        this.replay.set(d.tabId, { url: d.url, user });
+        await ext.tabs.update(d.tabId, { url: d.url }).catch(() => {
+        });
+      }
+    }
+    /** Blocking ops of the shim (the page is stuck in a synchronous XHR until we answer). */
+    async asyncOp(tabId, q) {
+      this.lastPopup = this.lastPopup || /* @__PURE__ */ new Map();
+      this.popupWait = this.popupWait || /* @__PURE__ */ new Map();
+      if (q.op === "popup") {
+        const last = this.lastPopup.get(tabId);
+        if (last && Date.now() - last.t < 3e3) await last.p;
+        else await new Promise((res) => {
+          this.popupWait.set(tabId, res);
+          setTimeout(res, 3e3);
+        });
+        return { ok: 1 };
+      }
+      if (q.op === "openTab") {
+        const st = this.c.getTab(tabId);
+        const src = await ext.tabs.get(tabId);
+        const nt = await ext.tabs.create({ url: "about:blank", active: q.active !== false, index: src.index + 1, windowId: src.windowId, openerTabId: tabId });
+        this.c.setTab(nt.id, { accountId: st.accountId, home: st.home, flow: null });
+        await this.accountAssigned(nt.id, null, st.accountId);
+        this.replay = this.replay || /* @__PURE__ */ new Map();
+        this.replay.set(nt.id, { url: q.url, user: true });
+        await ext.tabs.update(nt.id, { url: q.url });
+        this.updateGroups();
+        return { ok: 1 };
+      }
+      return { error: "unknown op" };
     }
     // ---------------------------------------------------------------- default tabs entering a service (no debugger there)
     async onBeforeNavigate(d) {
@@ -3155,6 +3272,7 @@ importScripts(${JSON.stringify(abs)});`;
               s.origins = {};
             });
             controller2.tabs.clear();
+            controller2.pickerFor.clear();
             await platform2.testCall?.("wipeDefault", { origins: msg.origins });
             return true;
           }

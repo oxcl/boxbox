@@ -31,6 +31,8 @@ export class ChromeMv3Platform extends ChromeBase {
     ext.debugger.onEvent.addListener((src, method, params) => this.onDebuggerEvent(src, method, params));
     ext.debugger.onDetach.addListener((src, reason) => this.onDetach(src, reason));
     ext.webNavigation.onBeforeNavigate.addListener((d) => { if (d.frameId === 0) this.onBeforeNavigate(d); });
+    const stale = await ext.declarativeNetRequest.getSessionRules();
+    if (stale.length) await ext.declarativeNetRequest.updateSessionRules({ removeRuleIds: stale.map((r) => r.id) });
     // After a service-worker restart the in-memory sessions are gone: re-establish isolation for every account tab.
     for (const [tabId, st] of this.c.tabs) if (st.accountId) this.accountAssigned(tabId, null, st.accountId, true).catch((e) => console.warn('re-attach', tabId, dbgErr(e)));
   }
@@ -69,8 +71,16 @@ export class ChromeMv3Platform extends ChromeBase {
     this.lost.delete(tabId);
   }
 
+  /** DNR rule ids must be small integers; Chrome's tab ids can be ~2^31, so tabs get sequential slots. */
+  slotOf(tabId) {
+    if (!this.slots) { this.slots = new Map(); this.nextSlot = 1; }
+    if (!this.slots.has(tabId)) this.slots.set(tabId, this.nextSlot++);
+    return this.slots.get(tabId);
+  }
+
   async setRules(tabId, on, block = false) {
-    const ids = [tabId * 4 + 1, tabId * 4 + 2, tabId * 4 + 3];
+    const n = this.slotOf(tabId) * 3;
+    const ids = [n + 1, n + 2, n + 3];
     const rules = [];
     if (on) {
       rules.push({ id: ids[0], priority: 10, condition: { tabIds: [tabId], resourceTypes: ALL_TYPES }, action: { type: 'modifyHeaders', responseHeaders: [{ header: 'set-cookie', operation: 'remove' }] } });
@@ -100,7 +110,7 @@ export class ChromeMv3Platform extends ChromeBase {
 
   cfgFor(accId) {
     const acc = this.c.accounts[accId];
-    return { acct: accId, pfx: prefixFor(accId), proxied: !!(acc && acc.proxy), src: this.shimSrc, wrapWorkers: false };
+    return { acct: accId, pfx: prefixFor(accId), proxied: !!(acc && acc.proxy), src: this.shimSrc, wrapWorkers: false, guardPopups: true };
   }
 
   async setupTarget(target, s, type) {
@@ -206,7 +216,7 @@ export class ChromeMv3Platform extends ChromeBase {
 
       if (u.pathname === SYNC_PATH && u.protocol.startsWith('http')) {
         let q = {}; try { q = JSON.parse(u.searchParams.get('q') || '{}'); } catch { /* ignore */ }
-        const body = JSON.stringify(this.syncOp(tabId, 0, q));
+        const body = JSON.stringify((q.op === 'popup' || q.op === 'openTab') ? await this.asyncOp(tabId, q) : this.syncOp(tabId, 0, q));
         await send('Fetch.fulfillRequest', { requestId: p.requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Cache-Control', value: 'no-store' }], body: b64(body) });
         return;
       }
@@ -222,11 +232,13 @@ export class ChromeMv3Platform extends ChromeBase {
         initiator = dec.initiator;
         if (!acc) { await cont(); return; }          // left the account: this request travels in the default session
       }
-      if (this.wipeTabs.has(tabId)) { await cont(Object.entries(req.headers).filter(([k]) => k.toLowerCase() !== 'cookie').map(([name, value]) => ({ name, value }))); return; }
+      if (this.wipeTabs.has(tabId)) { await cont([...Object.entries(req.headers).filter(([k]) => k.toLowerCase() !== 'cookie').map(([name, value]) => ({ name, value })), { name: 'Cookie', value: '' }]); return; }
       if (!isMain) initiator = req.headers.Origin || req.headers.Referer || undefined;
       const hdrs = Object.entries(req.headers).filter(([k]) => k.toLowerCase() !== 'cookie').map(([name, value]) => ({ name, value }));
       const ck = this.cookieHeaderFor(acc, { url: req.url, tabId, initiator, type, method: req.method });
-      if (ck) hdrs.push({ name: 'Cookie', value: ck });
+      // An explicit Cookie header — even an empty one — stops Chrome from attaching the real jar's cookies (verified in a spike);
+      // omitting it would leak the default session into this account tab.
+      hdrs.push({ name: 'Cookie', value: ck });
       await cont(hdrs);
     } catch (e) {
       try { await send('Fetch.continueRequest', { requestId: p.requestId }); } catch { /* request gone */ }
@@ -242,7 +254,9 @@ export class ChromeMv3Platform extends ChromeBase {
     const rec = await this.waitInitiator(tabId, req.url);
     const initiator = rec ? rec.initiator : undefined;
     let user = !initiator || /^(chrome-extension|chrome|about):/.test(initiator);
-    if (!user) user = await this.queryGesture(tabId) || (this.tabMeta.get(tabId)?.opener != null && await this.queryGesture(this.tabMeta.get(tabId).opener));
+    const rp = this.replay && this.replay.get(tabId);
+    if (rp && rp.url === req.url) { user = rp.user; this.replay.delete(tabId); }
+    else if (!user) user = await this.queryGesture(tabId) || (this.tabMeta.get(tabId)?.opener != null && await this.queryGesture(this.tabMeta.get(tabId).opener));
     if (user && this.isPopupTab(tabId)) user = false;
     const dec = c.decideNavigation({ tabId, url: req.url, userInitiated: user });
     if (dec.type === 'ask') {
@@ -263,6 +277,54 @@ export class ChromeMv3Platform extends ChromeBase {
   async waitInitiator(tabId, url) {
     for (let i = 0; i < 12; i++) { const r = this.initiators.get(tabId + '|' + url); if (r) return r; await sleep(12); }
     return null;
+  }
+
+  /**
+   * Tabs/popups opened by an account page. The debugger cannot be attached before the new tab's first request starts, so the
+   * navigation is replayed inside the isolated session once attached (the unattached first request is discarded).
+   */
+  onNavTarget(d) {
+    const src = this.c.tabs.get(d.sourceTabId);
+    if (!src || !src.accountId || this.c.getTab(d.tabId).accountId) return;
+    const p = this.adoptNavTarget(d, src);
+    this.lastPopup = this.lastPopup || new Map(); this.popupWait = this.popupWait || new Map();
+    this.lastPopup.set(d.sourceTabId, { p, t: Date.now() });
+    const w = this.popupWait.get(d.sourceTabId);
+    if (w) { this.popupWait.delete(d.sourceTabId); p.then(w, w); }
+  }
+  async adoptNavTarget(d, src) {
+    const user = isWebUrl(d.url) ? await this.queryGesture(d.sourceTabId) : false;
+    this.c.setTab(d.tabId, { accountId: src.accountId, home: src.home, flow: null });
+    await this.accountAssigned(d.tabId, null, src.accountId);
+    if (isWebUrl(d.url)) {          // opened by something other than the shim (e.g. context menu): replay once attached
+      this.replay = this.replay || new Map();
+      this.replay.set(d.tabId, { url: d.url, user });
+      await ext.tabs.update(d.tabId, { url: d.url }).catch(() => {});
+    }
+  }
+
+  /** Blocking ops of the shim (the page is stuck in a synchronous XHR until we answer). */
+  async asyncOp(tabId, q) {
+    this.lastPopup = this.lastPopup || new Map(); this.popupWait = this.popupWait || new Map();
+    if (q.op === 'popup') {
+      const last = this.lastPopup.get(tabId);
+      if (last && Date.now() - last.t < 3000) await last.p;
+      else await new Promise((res) => { this.popupWait.set(tabId, res); setTimeout(res, 3000); });
+      return { ok: 1 };
+    }
+    if (q.op === 'openTab') {
+      const st = this.c.getTab(tabId);
+      const src = await ext.tabs.get(tabId);
+      const nt = await ext.tabs.create({ url: 'about:blank', active: q.active !== false, index: src.index + 1, windowId: src.windowId, openerTabId: tabId });
+      this.c.setTab(nt.id, { accountId: st.accountId, home: st.home, flow: null });
+      await this.accountAssigned(nt.id, null, st.accountId);
+      this.replay = this.replay || new Map();
+      this.replay.set(nt.id, { url: q.url, user: true });
+      await ext.tabs.update(nt.id, { url: q.url });
+      this.updateGroups();
+      return { ok: 1 };
+    }
+    return { error: 'unknown op' };
   }
 
   // ---------------------------------------------------------------- default tabs entering a service (no debugger there)

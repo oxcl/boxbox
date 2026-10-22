@@ -459,6 +459,52 @@ importScripts(${JSON.stringify(abs)});`;
         }
       }
     }
+    if (cfg.guardPopups && !isWorker) {
+      const http = (u) => /^https?:/i.test(u);
+      const asyncOp = (op, args) => g2.fetch(ORIGIN() + "/__box_sync?q=" + encodeURIComponent(JSON.stringify({ op, a: cfg.acct, ...args })), { cache: "no-store", credentials: "omit" }).then((r) => r.json()).catch(() => null);
+      redefine(Object.getOwnPropertyDescriptor(g2, "open") ? g2 : Window.prototype, "open", (o) => function open(url, target, features) {
+        try {
+          const t = target === void 0 || target === "" ? "_blank" : String(target);
+          if (url === void 0 || url === null || url === "" || /^(_self|_top|_parent)$/i.test(t)) return o.apply(this, arguments);
+          const abs = new URL(String(url), g2.location.href).href;
+          if (!http(abs)) return o.apply(this, arguments);
+          if (/noopener|noreferrer/.test(String(features || ""))) {
+            asyncOp("openTab", { url: abs, active: true });
+            return null;
+          }
+          const w = o.call(this, "about:blank", target, features);
+          if (!w) return w;
+          asyncOp("popup", {}).then(() => {
+            try {
+              w.location.replace(abs);
+            } catch {
+              try {
+                w.location = abs;
+              } catch {
+              }
+            }
+          });
+          return w;
+        } catch {
+          return o.apply(this, arguments);
+        }
+      });
+      const onClick = (e) => {
+        if (!e.isTrusted || e.defaultPrevented) return;
+        const a = e.target && e.target.closest ? e.target.closest("a[href], area[href]") : null;
+        if (!a) return;
+        const modifier = e.ctrlKey || e.metaKey || e.button === 1;
+        if (!(a.target === "_blank" || modifier) || e.altKey) return;
+        if (e.type === "click" && e.button !== 0) return;
+        if (e.type === "auxclick" && e.button !== 1) return;
+        const href = a.href;
+        if (!http(href)) return;
+        e.preventDefault();
+        asyncOp("openTab", { url: href, active: !(e.ctrlKey || e.metaKey || e.button === 1) });
+      };
+      g2.addEventListener("click", onClick);
+      g2.addEventListener("auxclick", onClick);
+    }
     if (cfg.proxied && typeof RTCPeerConnection !== "undefined") {
       const R = RTCPeerConnection;
       const NR = function RTCPeerConnection2(conf, c) {
@@ -495,7 +541,7 @@ importScripts(${JSON.stringify(abs)});`;
         if (d) ensure(d.defaultView);
         return d;
       });
-      redefine(Window.prototype, "open", (o) => function open() {
+      redefine(Object.getOwnPropertyDescriptor(g2, "open") ? g2 : Window.prototype, "open", (o) => function open() {
         const w = o.apply(this, arguments);
         ensure(w);
         return w;

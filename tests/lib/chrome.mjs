@@ -24,6 +24,12 @@ export class ChromeDriver {
     const drv = new ChromeDriver(browser, fixture, which, userDataDir);
     if (process.env.BOX_DEBUG) drv.captureBackground();
     drv.control = await drv.openControl();
+    if (which === 'helium') {      // Helium's bundled extensions reload the first pages after start-up; get that out of the way
+      const w = await browser.newPage();
+      await w.goto(fixture.url('ctl.localhost', '/blank')).catch(() => {});
+      await sleep(2500);
+      await w.close().catch(() => {});
+    }
     return drv;
   }
 
@@ -51,7 +57,11 @@ export class ChromeDriver {
   }
 
   idOf(page) { if (!this.ids.has(page)) this.ids.set(page, this.next++); return this.ids.get(page); }
-  tabFromPage(page) { return new ChromeTab(this, page); }
+  tabFromPage(page) {
+    if (process.env.BOX_DEBUG && !this._hooked) this._hooked = new WeakSet();
+    if (process.env.BOX_DEBUG && !this._hooked.has(page)) { this._hooked.add(page); page.on('framenavigated', (f) => { if (f === page.mainFrame()) console.error('[nav-event]', this.idOf(page), f.url()); }); }
+    return new ChromeTab(this, page);
+  }
   tabFromHandle(h) { for (const [p, id] of this.ids) if (id === h) return this.tabFromPage(p); throw new Error('no tab ' + h); }
 
   async pages() { return (await this.browser.pages()).filter((p) => !p.isClosed() && !/^chrome-extension:|^devtools:/.test(p.url())); }

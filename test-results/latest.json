@@ -1,39 +1,51 @@
 {
-  "helium": [
+  "chrome": [
     {
-      "name": "mode \"default session\": entering a service never switches account",
-      "status": "fail",
-      "ms": 2983,
-      "error": "Error: Execution context was destroyed, most likely because of a navigation.\n    at rewriteError (file:///home/user/Projects/boxbox.claude/node_modules/puppeteer-core/lib/puppeteer/cdp/ExecutionContext.js:468:15)\n    at async #evaluate (file:///home/user/Projects/boxbox.claude/node_modules/puppeteer-core/lib/puppeteer/cdp/ExecutionContext.js:400:60)\n    at async ExecutionContext.evaluate (file:///home/user/Projects/boxbox.claude/node_modules/puppeteer-core/lib/puppeteer/cdp/ExecutionContext.js:288:16)\n    at async IsolatedWorld.evaluate (file:///home/user/Projects/boxbox.claude/node_modules/puppeteer-core/lib/puppeteer/cdp/IsolatedWorld.js:104:16)\n    at async CdpFrame.evaluate (file:///home/user/Projects/boxbox.claude/node_modules/puppeteer-core/lib/puppeteer/api/Frame.js:364:20)\n    at async CdpPage.evaluate (file:///home/user/Projects/boxbox.claude/node_modules/puppeteer-core/lib/puppeteer/api/Page.js:832:20)\n    at async ChromeTab.boxId (file:///home/user/Projects/boxbox.claude/tests/lib/chrome.mjs:122:27)\n    at async BoxHelper.tabAccount (file:///home/user/Projects/boxbox.claude/tests/lib/box.mjs:48:16)\n    at async Object.fn (file:///home/user/Projects/boxbox.claude/tests/suites/modes.mjs:11:11)\n    at async Runner.run (file:///home/user/Projects/boxbox.claude/tests/lib/framework.mjs:36:11)"
-    },
-    {
-      "name": "mode \"remember last\": opens in the account used last, and follows later choices",
+      "name": "navigating between domains of one service keeps the account",
       "status": "pass",
-      "ms": 1127,
+      "ms": 1790,
       "error": null
     },
     {
-      "name": "mode \"ask\": picker appears before the page loads; choice opens the account",
+      "name": "user navigation to another service leaves the account",
       "status": "pass",
-      "ms": 838,
+      "ms": 916,
       "error": null
     },
     {
-      "name": "mode \"ask\": choosing \"Default session\" opens the page in the default session",
+      "name": "page-initiated navigation (no user gesture) stays in the account",
       "status": "pass",
-      "ms": 413,
+      "ms": 877,
       "error": null
     },
     {
-      "name": "per-service override beats the global mode",
+      "name": "OAuth: redirect flow to another service and back stays in the account",
       "status": "pass",
-      "ms": 423,
+      "ms": 719,
       "error": null
     },
     {
-      "name": "ask mode with no accounts does not interrupt",
+      "name": "popup (window.open) login stays inside the account",
       "status": "pass",
-      "ms": 297,
+      "ms": 1427,
+      "error": null
+    },
+    {
+      "name": "embedded content (iframes) uses the tab's account",
+      "status": "pass",
+      "ms": 1282,
+      "error": null
+    },
+    {
+      "name": "link opened in a new tab: same service inherits the account, other service does not",
+      "status": "pass",
+      "ms": 1141,
+      "error": null
+    },
+    {
+      "name": "switching one tab's account never affects other tabs",
+      "status": "pass",
+      "ms": 1775,
       "error": null
     }
   ]

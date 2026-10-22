@@ -1884,6 +1884,7 @@
               s.origins = {};
             });
             controller2.tabs.clear();
+            controller2.pickerFor.clear();
             await platform2.testCall?.("wipeDefault", { origins: msg.origins });
             return true;
           }
