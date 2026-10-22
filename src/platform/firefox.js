@@ -180,19 +180,30 @@ export class FirefoxPlatform {
     const cs = acc.cookieStoreId;
     if (!cs) return;
     try {
-      await ext.browsingData.remove({ cookieStoreId: cs }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true, formData: true });
+      await ext.browsingData.remove({ cookieStoreId: cs }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, formData: true });
     } catch (e) { console.warn('browsingData.remove', e); }
     await ext.contextualIdentities.remove(cs);
     this.csToAccount.delete(cs);
   }
-  async accountsChanged() { this.updateGroups(); }
+  async accountsChanged() { this.updateGroups(); this.syncWebRtc(); }
   async settingsChanged() { for (const id of this.c.tabs.keys()) this.pushIdentity(id); this.updateGroups(); }
 
   // ---------------------------------------------------------------- identity
   async pushIdentity(tabId) {
     try { await ext.tabs.sendMessage(tabId, { box: true, type: 'identity', identity: this.c.identityFor(tabId) }); } catch { /* no content script yet */ }
   }
-  tabChanged(tabId) { this.pushIdentity(tabId); }
+  tabChanged(tabId) { this.pushIdentity(tabId); this.syncWebRtc(); }
+  tabDropped() { this.syncWebRtc(); }
+
+  /** WebRTC would otherwise reveal the real IP around a proxied container. Firefox only offers a browser-wide policy. */
+  async syncWebRtc() {
+    try {
+      const p = ext.privacy && ext.privacy.network && ext.privacy.network.webRTCIPHandlingPolicy;
+      if (!p) return;
+      const any = [...this.c.tabs.values()].some((t) => t.accountId && this.c.accounts[t.accountId]?.proxy);
+      if (any !== this._rtc) { this._rtc = any; if (any) await p.set({ value: 'disable_non_proxied_udp' }); else await p.clear({}); }
+    } catch { /* not controllable */ }
+  }
 
   status(tabId, tab) {
     const acc = tab.accountId ? this.c.accounts[tab.accountId] : null;
@@ -230,9 +241,6 @@ export class FirefoxPlatform {
     if (call === 'cookies') { try { return await ext.cookies.getAll({ cookieStoreId: args.cookieStoreId }); } catch (e) { return { err: String(e) }; } }
     if (call === 'wipeDefault') {
       await ext.browsingData.remove({ since: 0 }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true });
-      if (args && args.origins && args.origins.length) {
-        await ext.browsingData.remove({ origins: args.origins }, { cookies: true, localStorage: true, indexedDB: true, serviceWorkers: true, cache: true });
-      }
       return true;
     }
     if (call === 'groups') return ext.tabGroups ? ext.tabGroups.query({}) : null;
@@ -246,10 +254,12 @@ export class FirefoxPlatform {
     return acc && acc.proxy ? acc : null;
   }
   onProxy(d) {
+    if (typeof __TEST__ !== 'undefined' && __TEST__ && /fixture\.test|third\.test/.test(d.url)) console.log('[proxy]', d.url, 'cs=' + d.cookieStoreId, 'tab=' + d.tabId);
     const acc = this.proxyFor(d.cookieStoreId);
     if (!acc) return { type: 'direct' };
     const p = acc.proxy;
-    const info = { type: p.type === 'socks5' ? 'socks' : p.type, host: p.host, port: p.port, proxyDNS: true, failoverTimeout: 1 };
+    const info = { type: p.type === 'socks5' ? 'socks' : p.type, host: p.host, port: p.port };
+    if (p.type === 'socks5') info.proxyDNS = true;
     if (p.type === 'socks5' && p.username) { info.username = p.username; info.password = p.password; }
     return [info];   // no direct fallback: a dead proxy fails the request instead of leaking the IP
   }

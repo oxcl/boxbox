@@ -142,7 +142,7 @@ self.addEventListener('fetch', e => {
       if (p === '/log') return json(res, log.filter((l) => !l.path.startsWith('/__') ));
       if (p === '/reset') { log.length = 0; return json(res, { ok: true }); }
       if (p === '/sessions') return json(res, [...sessions.entries()]);
-      if (p !== '/blank') return json(res, { ok: true, port: PORT });
+      if (p === '/') return json(res, { ok: true, port: PORT });
     }
 
     // ---- shared assets
@@ -154,8 +154,12 @@ self.addEventListener('fetch', e => {
     if (p === '/blank') return html(res, layout(hostname, 'Blank', ''));
 
     // ---- IP echo for proxy tests
-    if (p === '/whoami') return json(res, { remote, host: hostname });
-    if (hostname === 'echo.fixture.test') return html(res, layout(hostname, 'Echo', `<pre id="remote">${remote}</pre>`));
+    if (p === '/whoami') return json(res, { remote, host: hostname }, { 'access-control-allow-origin': '*' });
+    if (hostname === 'echo.fixture.test' || hostname === 'echo2.fixture.test') {
+      if (p === '/leak') return html(res, layout(hostname, 'Echo leak', `<pre id="remote">${remote}</pre><pre id="leak-remote">pending</pre>
+        <script>fetch('http://leak.third.test:${PORT}/whoami').then(r=>r.json()).then(j=>{document.getElementById('leak-remote').textContent=j.remote}).catch(e=>{document.getElementById('leak-remote').textContent='ERR '+e})</script>`));
+      return html(res, layout(hostname, 'Echo', `<pre id="remote">${remote}</pre>`));
+    }
 
     const isAlphaFamily = siteOf(hostname) === 'alpha';
     const site = isAlphaFamily ? 'alpha' : hostname.split('.')[0];

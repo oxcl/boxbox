@@ -1,39 +1,9 @@
 {
-  "chrome": [
+  "firefox": [
     {
-      "name": "mode \"default session\": entering a service never switches account",
+      "name": "settings: general modes, theme, services editor (merge / split / create) and accounts",
       "status": "pass",
-      "ms": 417,
-      "error": null
-    },
-    {
-      "name": "mode \"remember last\": opens in the account used last, and follows later choices",
-      "status": "pass",
-      "ms": 1419,
-      "error": null
-    },
-    {
-      "name": "mode \"ask\": picker appears before the page loads; choice opens the account",
-      "status": "pass",
-      "ms": 6855,
-      "error": null
-    },
-    {
-      "name": "mode \"ask\": choosing \"Default session\" opens the page in the default session",
-      "status": "pass",
-      "ms": 490,
-      "error": null
-    },
-    {
-      "name": "per-service override beats the global mode",
-      "status": "pass",
-      "ms": 463,
-      "error": null
-    },
-    {
-      "name": "ask mode with no accounts does not interrupt",
-      "status": "pass",
-      "ms": 224,
+      "ms": 3160,
       "error": null
     }
   ]

@@ -65,6 +65,7 @@ export class ChromeMv3Platform extends ChromeBase {
     if (!force && prev === next && this.sessions.has(tabId)) return;
     if (this.sessions.has(tabId)) await this.detachSession(tabId);
     await this.attachSession(tabId, next);
+    await this.proxy.recompute(true);
   }
   async accountUnassigned(tabId) {
     await this.detachSession(tabId);
@@ -270,7 +271,7 @@ export class ChromeMv3Platform extends ChromeBase {
     if (dec.type === 'move') {
       const prev = c.getTab(tabId).accountId || null;
       c.setTab(tabId, { accountId: dec.accountId, home: dec.home, flow: null });
-      if (dec.accountId) await this.reconfigure(tabId, dec.accountId);
+      if (dec.accountId) { await this.reconfigure(tabId, dec.accountId); await this.proxy.recompute(true); }
       else { await this.setRules(tabId, false); /* detach after the request has been continued */ setTimeout(() => this.accountUnassigned(tabId, prev).catch(() => {}), 0); }
       this.updateGroups(); this.proxy.recompute(); this.pushIdentity(tabId);
     }

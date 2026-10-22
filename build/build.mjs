@@ -45,7 +45,7 @@ function manifest(target) {
   if (ff) {
     m.browser_specific_settings = { gecko: { id: 'box@box.local', strict_min_version: '140.0' } };
     m.background = { scripts: ['background.js'], persistent: true };
-    m.permissions = [...perms, 'webRequestBlocking', 'contextualIdentities', 'browsingData', 'tabGroups', 'windows'];
+    m.permissions = [...perms, 'webRequestBlocking', 'contextualIdentities', 'browsingData', 'tabGroups', 'privacy'];
     m.permissions = m.permissions.filter((p) => p !== 'windows');
   } else {
     m.key = KEY;

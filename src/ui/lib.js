@@ -7,7 +7,7 @@ export function h(tag, props, ...kids) {
   if (props) for (const [k, v] of Object.entries(props)) {
     if (k === '__svg' || v == null || v === false) continue;
     if (k === 'class') el.setAttribute('class', v);
-    else if (k === 'style' && typeof v === 'object') for (const [sk, sv] of Object.entries(v)) { if (sk.startsWith('--')) el.style.setProperty(sk, sv); else el.style[sk] = sv; }
+    else if (k === 'style' && typeof v === 'object') for (const [sk, sv] of Object.entries(v)) { if (sv == null || sv === false) continue; if (sk.startsWith('--')) el.style.setProperty(sk, sv); else el.style[sk] = sv; }
     else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
     else if (k === 'html') el.innerHTML = v;
     else if (v === true) el.setAttribute(k, '');

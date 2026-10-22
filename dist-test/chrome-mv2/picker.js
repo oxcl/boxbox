@@ -42,6 +42,7 @@
       if (k === "__svg" || v == null || v === false) continue;
       if (k === "class") el.setAttribute("class", v);
       else if (k === "style" && typeof v === "object") for (const [sk, sv] of Object.entries(v)) {
+        if (sv == null || sv === false) continue;
         if (sk.startsWith("--")) el.style.setProperty(sk, sv);
         else el.style[sk] = sv;
       }
@@ -168,9 +169,9 @@
       remember = e.target.checked;
     } });
     app.replaceChildren(
-      h("div", { class: "brand" }, h("div", { class: "logo" }, p.service.name.charAt(0).toUpperCase()), h("div", { class: "grow" }, h("h1", {}, `Open ${p.service.name} as\u2026`), h("div", { class: "url", id: "target-url" }, p.url))),
+      h("div", { class: "brand" }, h("div", { class: "logo" }, p.service.name.charAt(0).toUpperCase()), h("div", { class: "grow" }, h("h1", {}, `Open ${p.service.name} as\u2026`), h("div", { class: "url", id: "target-url" }, p.url), h("div", { class: "muted", style: { fontSize: "12px", marginTop: "2px" } }, `Service: ${p.service.name} \xB7 ${host}`))),
       tiles,
-      h("label", { class: "opts checkbox" }, rem, h("span", {}, "Always open this service in the account I used last"), h("span", { class: "grow" }), h("span", { class: "chip" }, host))
+      h("label", { class: "opts checkbox" }, rem, h("span", { class: "grow" }, "Always open this service in the account I used last"))
     );
     document.addEventListener("keydown", (e) => {
       const n = Number(e.key);

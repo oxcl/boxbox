@@ -15,7 +15,7 @@ async function refresh(keep = true) {
 function render() {
   nav.replaceChildren(
     h('div', { class: 'brand' }, h('span', { class: 'mark' }, icon('layers')), 'Box'),
-    SECTIONS.map(([id, label, ic]) => h('button', { class: 'navbtn', 'data-section': id, 'aria-current': section === id ? 'page' : null, onclick: () => { section = id; location.hash = id; render(); } }, icon(ic), label)));
+    ...SECTIONS.map(([id, label, ic]) => h('button', { class: 'navbtn', 'data-section': id, 'aria-current': section === id ? 'page' : null, onclick: () => { section = id; location.hash = id; render(); } }, icon(ic), label)));
   main.replaceChildren(({ general, services, accounts, proxy, about }[section] || general)());
 }
 

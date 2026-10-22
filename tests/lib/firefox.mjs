@@ -16,7 +16,7 @@ export class FirefoxDriver {
     if (headless) o.addArguments('-headless');
     o.setPreference('extensions.webextensions.uuids', JSON.stringify({ [EXT_ID]: UUID }));
     o.setPreference('privacy.userContext.enabled', true);
-    o.setPreference('network.dns.localDomains', 'echo.fixture.test,echo2.fixture.test');
+    o.setPreference('network.dns.localDomains', 'echo.fixture.test,echo2.fixture.test,leak.third.test');
     o.setPreference('browser.shell.checkDefaultBrowser', false);
     o.setPreference('datareporting.policy.dataSubmissionEnabled', false);
     o.setPreference('app.update.auto', false);
@@ -27,7 +27,9 @@ export class FirefoxDriver {
     o.setPreference('network.proxy.allow_hijacking_localhost', true);
     o.setPreference('devtools.chrome.enabled', true);
     for (const [k, v] of Object.entries(prefs)) o.setPreference(k, v);
+    if (process.env.BOX_DEBUG) { o.setPreference('devtools.console.stdout.chrome', true); o.setPreference('devtools.console.stdout.content', true); }
     const svc = new firefox.ServiceBuilder(process.env.BOX_GECKODRIVER);
+    if (process.env.BOX_DEBUG) svc.setStdio('inherit');
     const d = await new Builder().forBrowser('firefox').setFirefoxOptions(o).setFirefoxService(svc).build();
     const drv = new FirefoxDriver(d, fixture, profile);
     await d.installAddon(path.resolve(extDir), true);

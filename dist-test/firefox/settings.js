@@ -42,6 +42,7 @@
       if (k === "__svg" || v == null || v === false) continue;
       if (k === "class") el.setAttribute("class", v);
       else if (k === "style" && typeof v === "object") for (const [sk, sv] of Object.entries(v)) {
+        if (sv == null || sv === false) continue;
         if (sk.startsWith("--")) el.style.setProperty(sk, sv);
         else el.style[sk] = sv;
       }
@@ -300,7 +301,7 @@
   function render() {
     nav.replaceChildren(
       h("div", { class: "brand" }, h("span", { class: "mark" }, icon("layers")), "Box"),
-      SECTIONS.map(([id, label, ic]) => h("button", { class: "navbtn", "data-section": id, "aria-current": section === id ? "page" : null, onclick: () => {
+      ...SECTIONS.map(([id, label, ic]) => h("button", { class: "navbtn", "data-section": id, "aria-current": section === id ? "page" : null, onclick: () => {
         section = id;
         location.hash = id;
         render();

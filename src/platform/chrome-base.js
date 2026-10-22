@@ -266,6 +266,7 @@ export class ChromeBase {
     const prev = c.getTab(tabId).accountId || null;
     c.setTab(tabId, { accountId: accountId || null, home: web ? c.serviceOfUrl(target) : c.getTab(tabId).home, flow: null });
     await this.accountAssigned(tabId, prev, accountId || null);
+    await this.proxy.recompute(true);               // the PAC must be live before the first request of the new account
     if (web) {
       this.expect.set(tabId, target);
       await ext.tabs.update(tabId, { url: target });
@@ -290,6 +291,7 @@ export class ChromeBase {
       return true;
     }
     if (call === 'proxy') return this.proxy.debug();
+    if (call === 'badge') return (ext.action || ext.browserAction).getBadgeText({ tabId: args.tabId });
     if (call === 'raw-cookies') return ext.cookies.getAll({});
     return null;
   }

@@ -18,9 +18,9 @@ async function main() {
       h('div', {}, h('div', { class: 'title' }, o.acc ? o.acc.name : 'Default session'), h('div', { class: 'sub' }, o.acc ? (o.acc.proxy ? `via ${proxyLabel(o.acc.proxy)}` : 'Isolated account') : 'Your normal session')))));
   const rem = h('input', { type: 'checkbox', id: 'remember', onchange: (e) => { remember = e.target.checked; } });
   app.replaceChildren(
-    h('div', { class: 'brand' }, h('div', { class: 'logo' }, p.service.name.charAt(0).toUpperCase()), h('div', { class: 'grow' }, h('h1', {}, `Open ${p.service.name} as…`), h('div', { class: 'url', id: 'target-url' }, p.url))),
+    h('div', { class: 'brand' }, h('div', { class: 'logo' }, p.service.name.charAt(0).toUpperCase()), h('div', { class: 'grow' }, h('h1', {}, `Open ${p.service.name} as…`), h('div', { class: 'url', id: 'target-url' }, p.url), h('div', { class: 'muted', style: { fontSize: '12px', marginTop: '2px' } }, `Service: ${p.service.name} · ${host}`))),
     tiles,
-    h('label', { class: 'opts checkbox' }, rem, h('span', {}, 'Always open this service in the account I used last'), h('span', { class: 'grow' }), h('span', { class: 'chip' }, host)),
+    h('label', { class: 'opts checkbox' }, rem, h('span', { class: 'grow' }, 'Always open this service in the account I used last')),
   );
   document.addEventListener('keydown', (e) => {
     const n = Number(e.key);

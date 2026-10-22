@@ -73,6 +73,12 @@ export class ChromeMv2Platform extends ChromeBase {
       c.setTab(d.tabId, { accountId: dec.accountId, home: dec.home, flow: null });
       this.accountAssigned(d.tabId, prev, dec.accountId);
       this.afterAccountChange();
+      const acc = dec.accountId && c.accounts[dec.accountId];
+      if (acc && acc.proxy && !this.proxy.isActive(dec.accountId)) {
+        // A blocking handler cannot wait for the PAC update, so hold this navigation back and replay it once the proxy rule is live.
+        this.proxy.recompute(true).then(() => { this.expect.set(d.tabId, d.url); return ext.tabs.update(d.tabId, { url: d.url }); }).catch(() => {});
+        return { cancel: true };
+      }
     }
     return undefined;
   }

@@ -9,7 +9,7 @@ export class ChromeDriver {
   static async launch({ extDir, fixture, which, headless = true }) {
     const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), `box-${which}-`));
     const common = ['--no-first-run', '--no-default-browser-check', '--password-store=basic', '--use-mock-keychain', '--disable-search-engine-choice-screen',
-      '--host-resolver-rules=MAP echo.fixture.test 127.0.0.1,MAP echo2.fixture.test 127.0.0.1', '--window-size=1280,900', '--disable-background-networking'];
+      '--host-resolver-rules=MAP echo.fixture.test 127.0.0.1,MAP echo2.fixture.test 127.0.0.1,MAP leak.third.test 127.0.0.1', '--window-size=1280,900', '--disable-background-networking'];
     let browser;
     if (which === 'chrome') {
       browser = await puppeteer.launch({ executablePath: process.env.BOX_CHROME, headless, pipe: true, enableExtensions: true, args: common, userDataDir, protocolTimeout: 120000 });
@@ -125,11 +125,17 @@ export class ChromeTab {
   async gotoMayReplace(url) { return this.goto(url); }
   async url() { return this.page.url(); }
   async title() { return this.page.title(); }
-  async eval(fn, ...args) { return (await this.page.evaluate(fn, ...args)) ?? null; }
+  /** Retry when a navigation (ours or the browser's) destroys the execution context mid-call. */
+  async retrying(fn) {
+    for (let i = 0; ; i++) {
+      try { return await fn(); } catch (e) { if (i < 4 && /Execution context was destroyed|Cannot find context|Target closed.*navigat|detached Frame/i.test(e.message)) { await sleep(400); continue; } throw e; }
+    }
+  }
+  async eval(fn, ...args) { return (await this.retrying(() => this.page.evaluate(fn, ...args))) ?? null; }
   async click(sel) { await this.page.bringToFront(); await this.page.click(sel); }
   async screenshot() { return Buffer.from(await this.page.screenshot({ type: 'png' })); }
   async close() { await this.page.close(); }
-  async boxId() { return (await this.drv.rawBridge({ type: 'test:sender' }, this.page)).tabId; }
+  async boxId() { return (await this.retrying(() => this.drv.rawBridge({ type: 'test:sender' }, this.page))).tabId; }
   async frameEval(urlPart, fn, ...args) {
     const f = this.page.frames().find((x) => x.url().includes(urlPart));
     if (!f) throw new Error('no frame matching ' + urlPart);

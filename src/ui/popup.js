@@ -38,10 +38,11 @@ function render() {
   const svc = info.service;
   const hostName = info.host || '';
   const site = h('div', { class: 'site' }, info.favIconUrl && !/^data:/.test(info.favIconUrl) ? h('img', { src: info.favIconUrl, alt: '', onerror: (e) => { e.target.replaceWith(document.createTextNode(svc.name.charAt(0).toUpperCase())); } }) : svc.name.charAt(0).toUpperCase());
-  const doms = h('div', { class: 'domains' }, svc.domains.slice(0, 3).map((d) => h('span', { class: 'chip' }, d)), svc.domains.length > 3 ? h('span', { class: 'chip' }, `+${svc.domains.length - 3}`) : null);
+  const others = svc.domains.filter((d) => hostName !== d && !hostName.endsWith('.' + d));
+  const doms = h('div', { class: 'domains' }, h('span', { class: 'chip' }, hostName), others.length ? h('span', { class: 'chip' }, `+${others.length} more`) : null);
   const header = h('header', {},
     site,
-    h('div', { class: 'grow' }, h('h1', { id: 'svc-name' }, svc.name), svc.kind === 'auto' ? h('div', { class: 'muted' }, hostName) : doms),
+    h('div', { class: 'grow' }, h('h1', { id: 'svc-name' }, svc.name), doms),
     h('button', { class: 'iconbtn', id: 'open-settings', 'aria-label': 'Settings', title: 'Settings', onclick: openSettings }, icon('gear')));
 
   const cur = info.accountId;
@@ -70,8 +71,7 @@ function render() {
   const footer = h('footer', {},
     h('div', { class: 'row' }, icon('sliders'), h('div', { class: 'grow' }, h('div', { style: { fontWeight: 700, fontSize: '12.5px' } }, 'When opening ' + svc.name), h('div', { class: 'muted', style: { fontSize: '12px' } }, info.modeOverride ? modeLabel[info.mode] : `Global: ${modeLabel[info.defaultMode]}`))),
     modeSeg);
-  app.append(header, statusBanner(), list, footer);
-  if (first) requestAnimationFrame(() => app.querySelector('.card.selected')?.focus({ preventScroll: true }));
+  app.append(header, ...[statusBanner()].filter(Boolean), list, footer);
 }
 
 async function choose(accountId) {

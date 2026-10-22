@@ -69,7 +69,8 @@
     "webRequestBlocking",
     "contextualIdentities",
     "browsingData",
-    "tabGroups"
+    "tabGroups",
+    "privacy"
   ],
   "web_accessible_resources": [
     "popup.html",

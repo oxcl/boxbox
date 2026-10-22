@@ -79,6 +79,8 @@ export class ChromeProxy {
     return set;
   }
 
+  isActive(accId) { return !!this.applied && this.activeAccounts().some((a) => a.id === accId) && this.applied.includes(JSON.stringify([...this.coveredHosts(accId)][0] || '')); }
+
   activeAccounts() {
     const ids = new Set();
     for (const t of this.b.c.tabs.values()) if (t.accountId) ids.add(t.accountId);
@@ -144,7 +146,7 @@ export class ChromeProxy {
     }
     if (sharing.length) bump('warn', `${sharing.length} other tab(s) outside this account (default session or other accounts) use the same sites, so Chrome sends them through ${label} too — Chrome has one proxy setting for the whole browser.`);
     const conflicts = [];
-    if (this.claims) for (const other of this.activeAccounts()) { if (other.id === acc.id) continue; for (const d of this.coveredHosts(other.id)) if (this.claims.get(d) && this.claims.get(d) !== other.id && covered.has(d)) conflicts.push(d); }
+    if (this.claims) for (const d of covered) { const owner = this.claims.get(d); if (owner && owner !== acc.id && this.activeAccounts().some((x) => x.id === owner)) conflicts.push(d); }
     if (conflicts.length) bump('warn', `Another proxied account claims the same site(s) (${[...new Set(conflicts)].slice(0, 3).join(', ')}); only one proxy can apply.`);
     const leaks = this.leaks.get(tabId);
     if (leaks && leaks.size) bump('warn', `${leaks.size} host(s) were first contacted before Box could add them to the proxy rule and may have connected directly: ${[...leaks].slice(0, 3).join(', ')}${leaks.size > 3 ? '…' : ''}.`);
