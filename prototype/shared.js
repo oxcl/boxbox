@@ -38,10 +38,18 @@ const BB = (() => {
     el.innerHTML = `<div class="bob"><div class="cube">
       <div class="f front">${detail ? '<div class="tape"></div>' : ''}${wordmark ? `<div class="wm">${wordmark}</div>` : `<div class="ico">${icons[icon] || ''}</div>`}${detail ? '<div class="sticker"></div>' : ''}<i class="sw"></i></div>
       <div class="f right">${detail ? `<div class="label"><b>${label || (kraft ? 'BoxBox' : 'Box')}</b>${lod === 'lg' ? '<small>THIS SIDE UP</small>' : ''}<i></i></div>` : ''}${lod === 'lg' ? '<div class="marks"><i></i><i></i></div>' : ''}${face ? '<div class="smile"></div>' : ''}</div>
-      <div class="top">${lid ? '<div class="inside"></div>' : ''}<div class="lid"><i class="o">${detail ? '<b class="tape"></b>' : ''}</i>${lid ? '<i class="n"></i>' : ''}</div></div>
+      <div class="top">${lid ? `<div class="inside"></div><div class="fl l"><i class="o"><b class="tape"></b></i><i class="n"></i></div><div class="fl r"><i class="o"><b class="tape"></b></i><i class="n"></i></div>` : `<i class="o plain">${detail ? '<b class="tape"></b>' : ''}</i>`}</div>
       </div></div>${inner ? '' : `<div class="shadow-blob"></div><div class="check">${icons.check}</div>`}`;
     if (drop) requestAnimationFrame(() => MO.dropIn(el, drop));
     return el;
+  }
+  /** Paint the box a new colour: the new colour fills the faces from the bottom up (one box, no cross-fade). */
+  function recolor(b, color) {
+    if (MO.reduce) { b.style.setProperty('--c', color); return Promise.resolve(); }
+    b.querySelectorAll('.pt').forEach((x) => x.remove()); b.style.setProperty('--cn', color);
+    const jobs = [[b.querySelector('.front'), 'pf', 0, 620], [b.querySelector('.right'), 'pr', 60, 620], ...[...b.querySelectorAll('.top .o')].map((o) => [o, 'po', 330, 460])];
+    const anims = jobs.map(([host, cls, delay, dur]) => { const p = document.createElement('i'); p.className = 'pt ' + cls; host.prepend(p); return p.animate([{ '--p': '0%' }, { '--p': '114%' }], { duration: dur, delay, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'both' }); });
+    return Promise.all(anims.map((a) => a.finished)).then(() => { b.style.transition = 'none'; b.style.setProperty('--c', color); b.querySelectorAll('.pt').forEach((x) => x.remove()); void b.offsetWidth; b.style.transition = ''; }).catch(() => {});
   }
   /** Flat isometric mini cube (no 3D, no children): for counts and rows. */
   function mini(color, size = 20) {
@@ -50,37 +58,47 @@ const BB = (() => {
     return m;
   }
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  function chipFor(tile, label) {
-    const c = document.createElement('div'); c.className = 'chip-fly'; c.innerHTML = `<span class="tile2">${tile.dataset.letter || tile.textContent.trim().slice(0, 1)}</span><b>${label}</b>`; document.body.append(c); return c;
-  }
-  /** Parabolic flight of a fixed-position chip between two points (centre to centre) with a scale change. */
-  function fly(chip, from, to, { s0 = 1, s1 = 1, lift = 90, duration = 420 } = {}) {
-    const kf = []; for (let k = 0; k <= 12; k++) { const q = k / 12; kf.push({ transform: `translate(${(from[0] + (to[0] - from[0]) * q).toFixed(1)}px, ${(from[1] + (to[1] - from[1]) * q - Math.sin(Math.PI * q) * lift).toFixed(1)}px) translate(-50%, -50%) scale(${(s0 + (s1 - s0) * q).toFixed(3)})`, offset: q }); }
-    return chip.animate(kf, { duration, easing: 'cubic-bezier(.4,.05,.3,1)', fill: 'forwards' }).finished;
-  }
   const centre = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
-  /** The site tile hops INTO a box: lid opens, tile drops in, lid closes (squash). */
-  async function tabInto(box, tile, label, col) {
-    if (!tile || MO.reduce) return;
-    const chip = chipFor(tile, label), from = centre(tile), r = box.getBoundingClientRect(), to = [r.left + r.width / 2, r.top + r.height * .3];
-    chip.style.cssText += `left:0;top:0;transform:translate(${from[0]}px,${from[1]}px) translate(-50%,-50%)`; tile.style.visibility = 'hidden';
-    try { MO.lid(box, 1); await sleep(150); await fly(chip, from, to, { s1: .35, duration: 380 }); chip.remove(); MO.squish(box); await sleep(60); MO.lid(box, 0); await sleep(200); }
-    finally { chip.remove(); }
+  /** Visual clone of an element, fixed on top of the page, that can be flown around while the original is hidden. */
+  function cloneOf(el) {
+    const r = el.getBoundingClientRect(), c = el.cloneNode(true);
+    c.removeAttribute('id'); c.classList.add('fly-clone'); c.style.cssText = `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;margin:0;z-index:9000;pointer-events:none;transform-origin:50% 50%;visibility:visible;`;
+    document.body.append(c); return c;
   }
-  /** The tile climbs OUT of a box and flies to its resting place (tile's own slot). */
-  async function tabOutOf(box, tile, label, col) {
-    if (MO.reduce) { tile.style.visibility = ''; return; }
-    const chip = chipFor(tile, label), r = box.getBoundingClientRect(), from = [r.left + r.width / 2, r.top + r.height * .3], to = centre(tile);
-    chip.style.cssText += `left:0;top:0;opacity:0;transform:translate(${from[0]}px,${from[1]}px) translate(-50%,-50%) scale(.35)`;
-    try { MO.lid(box, 1); await sleep(130); chip.style.opacity = 1; await fly(chip, from, to, { s0: .35, s1: 1, duration: 420 }); MO.lid(box, 0); }
-    finally { chip.remove(); tile.style.visibility = ''; }
-    MO.shine(box); const c = centre(box); MO.ring(c[0], c[1], col);
+  /** Fly a clone between two centre points with a scale change and a soft arc. dir 'in' fades out at the end, 'out' fades in at the start. */
+  function flight(c, from, to, { s0, s1, dir, duration, delay = 0, lift = 36 }) {
+    const kf = [], n = 14, base = centre(c);
+    for (let k = 0; k <= n; k++) { const q = k / n, x = from[0] + (to[0] - from[0]) * q - base[0], y = from[1] + (to[1] - from[1]) * q - base[1] - Math.sin(Math.PI * q) * lift, s = s0 + (s1 - s0) * q; kf.push({ transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${s.toFixed(3)})`, opacity: dir === 'in' ? Math.min(1, (1 - q) * 4) : Math.min(1, q * 4), offset: q }); }
+    return c.animate(kf, { duration, delay, easing: 'cubic-bezier(.35,.1,.25,1)', fill: 'both' });
   }
-  /** Switch a tab between boxes: it goes back into the previous box, then the new box lets it out again. */
-  async function swapTab(prevBox, newBox, tile, label, col) {
+  const lidTop = (box) => { const r = box.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height * .32]; };
+  /** One overlapped motion: `header` shrinks into the previous box while the new box lets a copy out that grows back into place.
+   *  prevBox may be null (then it's just the "out" half). onSwitch fires at the hand-over moment so state changes read as part of the motion. */
+  async function swapTab(prevBox, newBox, header, { col, onSwitch } = {}) {
+    if (!header || MO.reduce) { onSwitch && onSwitch(); return; }
+    const home = centre(header), same = !prevBox || prevBox === newBox, T = same ? 0 : 1;
+    const out = cloneOf(header); header.style.visibility = 'hidden';
+    const done = [];
+    try {
+      if (!same) {
+        MO.lid(prevBox, 1); const down = flight(out, home, lidTop(prevBox), { s0: 1, s1: .16, dir: 'in', duration: 440, delay: 70, lift: 28 }); done.push(down.finished);
+        setTimeout(() => { MO.squish(prevBox); MO.lid(prevBox, 0); }, 430);
+      } else out.remove();
+      const back = cloneOf(header); back.style.opacity = 0;
+      setTimeout(() => MO.lid(newBox, 1), same ? 0 : 250);
+      const up = flight(back, lidTop(newBox), home, { s0: .16, s1: 1, dir: 'out', duration: 460, delay: same ? 150 : 330, lift: 40 }); done.push(up.finished);
+      setTimeout(() => { onSwitch && onSwitch(); }, same ? 120 : 380);
+      setTimeout(() => { MO.lid(newBox, 0); MO.squish(newBox); MO.shine(newBox); const c = centre(newBox); MO.ring(c[0], c[1], col); }, (same ? 150 : 330) + 380);
+      await Promise.all(done.map((p) => p.catch(() => {})));
+      back.remove();
+    } finally { out.remove(); header.style.visibility = ''; }
+  }
+  /** First choice (no previous box): the tile hops into the chosen box, lid opens and closes. */
+  async function tabInto(box, tile) {
     if (!tile || MO.reduce) return;
-    if (prevBox && prevBox !== newBox) await tabInto(prevBox, tile, label, col);
-    await tabOutOf(newBox, tile, label, col);
+    const c = cloneOf(tile); tile.style.visibility = 'hidden';
+    try { MO.lid(box, 1); await flight(c, centre(tile), lidTop(box), { s0: 1, s1: .2, dir: 'in', duration: 460, delay: 120, lift: 70 }).finished; MO.squish(box); MO.lid(box, 0); await sleep(220); }
+    finally { c.remove(); }
   }
   function confetti(x, y, colors = Object.values(COLORS), n = 12) {
     for (let i = 0; i < Math.min(n, 14); i++) {
@@ -114,5 +132,5 @@ const BB = (() => {
   initTheme();
   let idle; const wake = () => { document.body && document.body.classList.remove('calm'); clearTimeout(idle); idle = setTimeout(() => document.body.classList.add('calm'), 30000); };
   ['pointermove', 'keydown', 'pointerdown'].forEach((e) => addEventListener(e, wake, { passive: true })); addEventListener('DOMContentLoaded', wake);
-  return { icons, COLORS, tabInto, tabOutOf, swapTab, box, mini, confetti, burstAt, toast, seg, chrome, scene, logo };
+  return { icons, COLORS, recolor, tabInto, swapTab, box, mini, confetti, burstAt, toast, seg, chrome, scene, logo };
 })();

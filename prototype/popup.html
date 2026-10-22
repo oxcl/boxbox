@@ -11,7 +11,7 @@
  .tbtn:hover, .tbtn.open { background: rgba(0, 0, 0, .08); } .tbtn:active { transform: scale(.9); }
  .tbtn .bx { --s: 24px; } .tbtn .badge { position: absolute; right: 5px; bottom: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--c, transparent); box-shadow: 0 0 0 2px #fff; transition: background .4s; }
  .demo-switch { position: fixed; left: 18px; top: 74px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
- .demo-switch button { text-align: left; padding: 10px 14px; border-radius: 14px; background: rgba(255, 255, 255, .8); font-weight: 700; font-size: 13px; box-shadow: 0 2px 10px rgba(0, 0, 0, .1); backdrop-filter: blur(8px); transition: .3s var(--ease); } .demo-switch button.on { background: #16142a; color: #fff; transform: translateX(6px); }
+ .demo-switch button { color: #16142a; text-align: left; padding: 10px 14px; border-radius: 14px; background: rgba(255, 255, 255, .8); font-weight: 700; font-size: 13px; box-shadow: 0 2px 10px rgba(0, 0, 0, .1); backdrop-filter: blur(8px); transition: .3s var(--ease); } .demo-switch button.on { background: #16142a; color: #fff; transform: translateX(6px); }
  .pop { position: fixed; top: 68px; right: 74px; width: 424px; border-radius: 28px; padding: 22px 22px 20px; transform-origin: 88% -20px;  background: var(--card-solid); box-shadow: 0 30px 80px rgba(20, 20, 50, .3), 0 0 0 1px var(--line); }
  .pop::before { content: ''; position: absolute; top: -8px; right: 20px; width: 18px; height: 18px; background: var(--card-solid); transform: rotate(45deg); border-radius: 4px; }
  @keyframes popin { from { transform: scale(.6) translateY(-20px); opacity: 0; } }
@@ -20,12 +20,12 @@
  .head h1 { margin: 0; font-size: 22px; letter-spacing: -.02em; } .head .logo .bx { --s: 30px; }
  .site { display: flex; align-items: center; gap: 14px; padding: 16px 0 12px; } .site .tile { width: 52px; height: 52px; border-radius: 16px; background: #fff; box-shadow: 0 4px 14px rgba(0, 0, 0, .1), 0 0 0 1px var(--line); display: grid; place-items: center; font-weight: 800; font-size: 26px; }
  .site h2 { margin: 0; font-size: 20px; } .site span { color: var(--muted); font-weight: 500; }
- .status { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; font-weight: 700; font-size: 16px; background: color-mix(in srgb, var(--c, #3b82f6) 12%, transparent); color: var(--ink); transition: background .5s; }
+ .status { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; font-weight: 700; font-size: 16px; background: color-mix(in srgb, var(--c, #a9714b) 12%, transparent); color: var(--ink); transition: background .5s; }
  .status b { color: var(--c); transition: color .4s; } .status .bx { --s: 26px; }
  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 14px; padding: 22px 0 10px; }
  .cell { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 4px 14px; border-radius: 22px; text-align: center; transition: background .3s; }
  .cell:hover { background: rgba(120, 100, 80, .05); } .cell.selected { background: color-mix(in srgb, var(--c) 9%, transparent); }
- .cell .bx { --s: 64px; margin: 14px 0 10px; } .cell .name { font-weight: 600; font-size: 15px; color: var(--muted); transition: color .3s; } .cell.selected .name { color: var(--c); font-weight: 800; }
+ .cell .bx { --s: 56px; margin: 16px 0 12px; } .cell .bx .check { display: none; } .cell .name { font-weight: 600; font-size: 15px; color: var(--muted); transition: color .3s; } .cell.selected .name { color: var(--c); font-weight: 800; }
  .cell .menu { position: absolute; top: 6px; left: 6px; opacity: 0; transition: .2s; width: 26px; height: 26px; border-radius: 9px; background: var(--card-solid); box-shadow: 0 1px 6px rgba(0, 0, 0, .15); display: grid; place-items: center; } .cell:hover .menu { opacity: 1; } .menu svg { width: 14px; }
  .cell .check { right: 8px; bottom: 36px; width: 26px; }
  .newcell { border: 2px dashed rgba(120, 100, 80, .28); border-radius: 22px; margin: 0; min-height: 148px; padding: 0; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-weight: 600; transition: .3s var(--ease); min-height: 112px; }
@@ -41,7 +41,7 @@
  .row { display: flex; gap: 10px; margin-top: auto; } .row .btn { flex: 1; justify-content: center; }
  .shelf-view h1 { font-size: 26px; margin: 0; letter-spacing: -.02em; }
  .shelf { position: relative; padding: 14px 6px 0; margin-top: 6px; } .shelf .boards { position: relative; display: flex; align-items: flex-end; justify-content: space-around; height: 128px; }
- .shelf .boards::after { content: ''; position: absolute; left: -4px; right: -4px; bottom: -14px; height: 20px; border-radius: 8px 8px 14px 14px; background: linear-gradient(#e7c58f, #cf9f5a); box-shadow: 0 8px 14px rgba(110, 70, 20, .25); z-index: 0; }
+ .shelf .boards .plank { position: absolute; left: -6px; right: -6px; bottom: -22px; height: 30px; z-index: 0; }
  .stack { position: relative; width: 150px; height: 120px; z-index: 1; } .stack .bx { position: absolute; }
  .shelf .pill { position: relative; z-index: 2; margin-top: 26px; display: flex; justify-content: space-around; } .shelf .pill span { padding: 8px 16px; border-radius: 99px; font-weight: 700; font-size: 14px; background: color-mix(in srgb, var(--c) 18%, #fff); box-shadow: 0 2px 8px rgba(0, 0, 0, .08); transition: transform .3s var(--ease); } .shelf .pill span:hover { transform: translateY(-3px); }
  .shelf + .shelf { margin-top: 22px; }
@@ -76,12 +76,13 @@ function fillStatus(status) {
   MO.popIn(mb); const t = status.querySelector('span'); MO.A(t, [{ transform: 'translateX(14px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.3,.8,.3,1)' });
 }
 async function select(b, col, prevId) {
-  const prevCell = pop.querySelector(`.cell[data-id="${prevId || ''}"]`), prevBox = prevCell && prevCell.querySelector('.bx'), tile = pop.querySelector('.site .tile');
-  pop.querySelectorAll('.cell').forEach((c) => { c.classList.remove('selected', 'rf', 'on'); const bx = c.querySelector('.bx'); bx.classList.remove('bx-selected', 'glow'); });
-  try { await Promise.race([BB.swapTab(prevBox, b, tile, 'amazon.com', col), new Promise((r) => setTimeout(r, 3500))]); } catch (e) { /* element replaced mid-flight: carry on */ }
-  tile && (tile.style.visibility = '');
-  pop.querySelectorAll('.cell').forEach((c) => { const on = (c.dataset.id || '') === (state.selected || ''); c.classList.toggle('selected', on); c.classList.toggle('rf', on); const bx = c.querySelector('.bx'); bx.classList.toggle('bx-selected', on); bx.classList.toggle('glow', on); if (on) { c.style.setProperty('--rc', col || '#a9714b'); void c.offsetWidth; c.classList.add('on'); } });
-  setBadge(true); fillStatus(document.getElementById('status'));
+  const prevCell = pop.querySelector(`.cell[data-id="${prevId || ''}"]`), prevBox = prevCell && prevCell.querySelector('.bx'), header = pop.querySelector('.site');
+  const apply = () => {
+    pop.querySelectorAll('.cell').forEach((c) => { const on = (c.dataset.id || '') === (state.selected || ''); c.classList.toggle('selected', on); c.classList.toggle('rf', on); c.classList.remove('on'); const bx = c.querySelector('.bx'); bx.classList.toggle('glow', on); if (on) { c.style.setProperty('--rc', col || '#a9714b'); void c.offsetWidth; c.classList.add('on'); } });
+    setBadge(true); fillStatus(document.getElementById('status'));
+  };
+  try { await Promise.race([BB.swapTab(prevBox, b, header, { col, onSwitch: apply }), new Promise((r) => setTimeout(r, 3000))]); } catch (e) { /* element replaced mid-flight */ }
+  header && (header.style.visibility = ''); if (!pop.querySelector('.cell.selected')) apply();
 }
 function render(animate) {
   pop.replaceChildren(); setBadge();
@@ -94,9 +95,9 @@ function render(animate) {
   const cells = [{ id: null, name: 'No box', kraft: true, icon: 'home' }, ...state.accounts];
   cells.forEach((a, i) => {
     const c = el('button', 'cell' + ((a.id || null) === (state.selected || null) ? ' selected' : '')); c.style.setProperty('--c', a.color || '#a9714b'); c.dataset.id = a.id || ''; if ((a.id || null) === (state.selected || null)) { c.classList.add('rf', 'on'); c.style.setProperty('--rc', a.color || '#a9714b'); }
-    const b = BB.box(a.kraft ? { kraft: true, icon: a.icon, label: 'default', size: 84, lid: true } : { color: a.color, icon: a.icon, label: a.name.slice(0, 8), size: 84, glow: a.id === state.selected, lid: true }); if (animate) MO.dropIn(b, i * 55);
+    const b = BB.box(a.kraft ? { kraft: true, icon: a.icon, label: 'default', size: 56, lid: true } : { color: a.color, icon: a.icon, label: a.name.slice(0, 8), size: 56, glow: a.id === state.selected, lid: true }); if (animate) MO.dropIn(b, i * 55);
     if (a.id === state.selected) b.classList.add('bx-selected');
-    c.append(b, el('span', 'name', a.name)); if (a.id) c.append(el('span', 'menu', BB.icons.dots));
+    c.append(b, el('span', 'name', a.name), el('span', 'tick', BB.icons.check)); if (a.id) c.append(el('span', 'menu', BB.icons.dots));
     c.onclick = () => { if ((a.id || null) === state.selected) { MO.squish(b); MO.shine(b); return; } if (selecting) return; selecting = true; const prev = state.selected; state.selected = a.id; select(b, a.color || '#a9714b', prev).finally(() => (selecting = false)); setTimeout(() => (selecting = false), 4000); };
     grid.append(c);
   });
@@ -109,14 +110,14 @@ function renderKeep() { const bs = pop.scrollTop; render(); pop.querySelectorAll
 function sheetEl() {
   const s = el('div', 'sheet'); s.id = 'sheet'; const n = state.accounts.length + 1; const draft = { name: `Amazon ${n}`, color: Object.values(C)[(n + 1) % 6], icon: 'user' };
   s.style.setProperty('--c', draft.color);
-  s.innerHTML = '<h3>New box for Amazon</h3><div class="prev" id="prev"></div><input class="input" id="nm" maxlength="24"><div class="swatches" id="sw"></div><div class="icons" id="ic"></div><div class="row"><button class="btn ghost" id="cancel">Cancel</button><button class="btn blue" id="create">Create box</button></div>';
+  s.innerHTML = '<h3>New box for Amazon</h3><div class="prev" id="prev"></div><input class="input" id="nm" maxlength="24"><div class="swatches" id="sw"></div><div class="icons" id="ic"></div><div class="row"><button class="btn ghost" id="cancel">Cancel</button><button class="btn brand" id="create">Create box</button></div>';
   // one box: colour morphs in place (CSS-registered --c), icon swaps with a quick flip
   let pb = null;
   const paint = (what) => {
     s.style.setProperty('--c', draft.color);
     const prev = s.querySelector('#prev');
-    if (!pb) { pb = BB.box({ color: draft.color, icon: draft.icon, label: draft.name.slice(0, 8), size: 104, lid: true, hover: true }); prev.append(pb); MO.spinIn(pb); }
-    else if (what === 'color') { pb.style.setProperty('--c', draft.color); MO.squish(pb); MO.shine(pb); }
+    if (!pb) { pb = BB.box({ color: draft.color, icon: draft.icon, label: draft.name.slice(0, 8), size: 96, lid: true, hover: true, glow: true }); prev.append(pb); MO.spinIn(pb); }
+    else if (what === 'color') { BB.recolor(pb, draft.color); }
     else if (what === 'icon') { const ico = pb.querySelector('.ico'); MO.A(ico, [{ transform: 'rotateY(0)', opacity: 1 }, { transform: 'rotateY(90deg)', opacity: 0 }], { duration: 140, fill: 'forwards' }).finished.then(() => { ico.innerHTML = BB.icons[draft.icon]; MO.A(ico, [{ transform: 'rotateY(-90deg)', opacity: 0 }, { transform: 'rotateY(0)', opacity: 1 }], { duration: 200, fill: 'none' }); ico.getAnimations().forEach((a) => a.playState === 'finished' && a.cancel()); }); }
     s.querySelectorAll('#sw button').forEach((b) => b.classList.toggle('on', b.dataset.c === draft.color)); s.querySelectorAll('#ic button').forEach((b) => b.classList.toggle('on', b.dataset.i === draft.icon));
   };
@@ -130,7 +131,7 @@ function sheetEl() {
 function openSheet() { document.getElementById('sheet').classList.add('on'); setTimeout(() => document.getElementById('nm').select(), 450); }
 function renderShelf() {
   const v = el('div', 'shelf-view'); const h = el('div', 'head'); h.style.border = '0'; h.append(el('h1', '', 'No site here'), el('button', 'ico-btn', BB.icons.gear)); v.append(h);
-  const mk = (rows) => { const sh = el('div', 'shelf'); const bd = el('div', 'boards'); const pl = el('div', 'pill'); rows.forEach(([col, ic, n, name, tabs]) => { const st = el('div', 'stack'); const pos = { 1: [[45, 4]], 2: [[8, 4], [64, 4]], 3: [[8, 4], [64, 4], [36, 50]] }[Math.min(n, 3)]; for (let i = 0; i < n && i < 3; i++) { const b = BB.box({ color: col, icon: ic, size: 54, label: name.slice(0, 6) }); b.style.left = pos[i][0] + 'px'; b.style.bottom = pos[i][1] + 'px'; b.style.zIndex = i === 2 ? 2 : 1; MO.dropIn(b, i * 90); st.append(b); } bd.append(st); const sp = el('span', '', `${name} · ${tabs}`); sp.style.setProperty('--c', col); pl.append(sp); }); sh.append(bd, pl); return sh; };
+  const mk = (rows) => { const sh = el('div', 'shelf'); const bd = el('div', 'boards'); bd.append(el('div', 'plank')); const pl = el('div', 'pill'); rows.forEach(([col, ic, n, name, tabs]) => { const st = el('div', 'stack'); const pos = { 1: [[45, 4]], 2: [[8, 4], [64, 4]], 3: [[8, 4], [64, 4], [36, 50]] }[Math.min(n, 3)]; for (let i = 0; i < n && i < 3; i++) { const b = BB.box({ color: col, icon: ic, size: 54, label: name.slice(0, 6) }); b.style.left = pos[i][0] + 'px'; b.style.bottom = pos[i][1] + 'px'; b.style.zIndex = i === 2 ? 2 : 1; MO.dropIn(b, i * 90); st.append(b); } bd.append(st); const sp = el('span', '', `${name} · ${tabs}`); sp.style.setProperty('--c', col); pl.append(sp); }); sh.append(bd, pl); return sh; };
   v.append(mk([[C.blue, 'user', 3, 'Google', '3 tabs'], [C.orange, 'users', 1, 'Reddit', '1 tab']]), mk([[C.purple, 'laptop', 2, 'GitHub', '2 tabs'], [C.kraft, 'globe', 1, 'Other', '1 tab']]));
   const m = el('button', 'manage', BB.icons.grid + '<span class="grow">Manage boxes</span>' + BB.icons.chev); m.querySelector('svg:last-child').style.transform = 'rotate(-90deg)'; m.onclick = () => location.href = 'services.html'; v.append(m); pop.append(v);
 }

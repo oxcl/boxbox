@@ -28,15 +28,18 @@
  .mode h3 { margin: 10px 0 4px; font-size: 19px; } .mode p { margin: 0; font-size: 14px; }
  .mode .stage { height: 120px; display: grid; place-items: center; position: relative; }
  .mode .q { position: absolute; font-size: 28px; font-weight: 800; color: var(--brand); animation: qpop 2s ease-in-out infinite; right: 18%; top: 6%; } @keyframes qpop { 50% { transform: translateY(-8px) rotate(10deg) scale(1.2); } }
- .hero { position: relative; width: 420px; height: 250px; margin: 36px auto 0; display: grid; place-items: center; }
- .hero-box { --s: 190px; margin-top: 56px; }
- .hero-box .in { position: absolute; width: var(--s); height: var(--s); backface-visibility: visible; }
- .hero-box .in.b { background: linear-gradient(180deg, #a77d49, #6e4d28); } .hero-box .in.l { background: linear-gradient(90deg, #8a6538, #b08550); } .hero-box .in.f { background: radial-gradient(circle at 50% 50%, #7a5731, #523a1f); }
+ .hero { position: relative; width: 520px; height: 260px; margin: 34px auto 0; display: grid; place-items: center; }
+ .hero-box { margin-top: 56px; scale: .84; }
+ .hero-box .in { position: absolute; backface-visibility: visible; }
+ .hero-box .in.b { width: var(--w); height: var(--h); left: calc(50% - var(--w) / 2); top: calc(50% - var(--h) / 2); transform: rotateY(180deg) translateZ(calc(var(--d) / 2)); background: linear-gradient(180deg, #a77d49, #6e4d28); }
+ .hero-box .in.l { width: var(--d); height: var(--h); left: calc(50% - var(--d) / 2); top: calc(50% - var(--h) / 2); transform: rotateY(-90deg) translateZ(calc(var(--w) / 2)); background: linear-gradient(90deg, #8a6538, #b08550); }
+ .hero-box .in.f { width: var(--w); height: var(--d); left: calc(50% - var(--w) / 2); top: calc(50% - var(--d) / 2); transform: rotateX(-90deg) translateZ(calc(var(--h) / 2)); background: radial-gradient(circle at 50% 50%, #7a5731, #523a1f); }
  .hero-box .inside { display: none; }
  .plus { width: 26px; height: 26px; margin-left: -8px; border-radius: 8px; background: rgba(255,255,255,.92); color: #94603c; display: grid; place-items: center; flex: none; } .plus svg { width: 16px; height: 16px; } .btn svg { width: 18px; height: 18px; }
+ .slide:not(.on) * { animation-play-state: paused !important; }
 </style></head><body>
 <div class="bg-scene"><div class="shadow"></div><div class="leaf l1"></div><div class="leaf l2"></div></div>
-<div class="win glass">
+<div class="win glass big">
   <div class="bar"><span id="logo"></span><span class="count" id="count">1 / 3</span></div>
   <div class="track" id="track">
     <section class="slide on">

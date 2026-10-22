@@ -11,8 +11,8 @@
  .gtile { width: 84px; height: 84px; border-radius: 24px; background: #fff; box-shadow: 0 10px 30px rgba(0, 0, 0, .12); display: grid; place-items: center; font-size: 46px; font-weight: 800; background-clip: padding-box; animation: fadeup .7s var(--ease) both; }
  .gtile span { background: linear-gradient(135deg, #4285f4 25%, #ea4335 25% 50%, #fbbc05 50% 75%, #34a853 75%); -webkit-background-clip: text; color: transparent; }
  h1 { font-size: clamp(34px, 5vw, 54px); letter-spacing: -.035em; margin: 22px 0 28px; animation: fadeup .7s .08s var(--ease-out) both; }
+ .shelf .plank { position: absolute; left: 0; right: 0; top: 208px; z-index: 0; }
  .shelf { position: relative; display: flex; justify-content: center; gap: clamp(10px, 4vw, 60px); padding: 60px 70px 0; } 
- .shelf::before { content: ''; position: absolute; left: 0; right: 0; bottom: 78px; height: 56px; border-radius: 28px; background: linear-gradient(#fff, #f1e9de); box-shadow: 0 18px 30px rgba(120, 80, 40, .15), inset 0 -4px 0 rgba(0, 0, 0, .04); } [data-theme="dark"] .shelf::before { background: linear-gradient(#41352a, #2e251c); }
  .opt { position: relative; width: 200px; display: flex; flex-direction: column; align-items: center; z-index: 1; padding-bottom: 6px; cursor: pointer; border-radius: 24px; }
  .opt .stage { height: 190px; display: grid; place-items: end center; padding-bottom: 30px; }
  .opt .bx { --s: 112px; }
@@ -48,7 +48,7 @@
 <script src="motion.js"></script><script src="shared.js"></script>
 <script>
 const opts = [{ n: 'No box', d: 'Use your normal browser session', k: true, i: 'home', c: '#a9714b' }, { n: 'Work', d: 'For your job, teams, and work stuff', c: BB.COLORS.blue, i: 'briefcase' }, { n: 'Personal', d: 'Your personal accounts and everyday browsing', c: BB.COLORS.coral, i: 'user' }, { n: 'Research', d: 'For learning, reading and exploring', c: BB.COLORS.green, i: 'flask' }];
-const shelf = document.getElementById('shelf'); let sel = 1, shipping = false;
+const shelf = document.getElementById('shelf'); shelf.append(Object.assign(document.createElement('div'), { className: 'plank' })); let sel = 1, shipping = false;
 opts.forEach((o, k) => { const d = document.createElement('div'); d.className = 'opt' + (k === sel ? ' sel' : ''); d.style.setProperty('--c', o.c); d.tabIndex = 0;
   const st = document.createElement('div'); st.className = 'stage'; const b = BB.box(o.k ? { kraft: true, icon: o.i, label: 'default', size: 112, hover: true, lid: true } : { color: o.c, icon: o.i, label: o.n, size: 112, hover: true, glow: false, lid: true }); MO.dropIn(b, 120 + k * 80); st.append(b);
   d.append(st); d.insertAdjacentHTML('beforeend', `<h3>${o.n}</h3><p>${o.d}</p>`); b.classList.toggle('bx-selected', k === sel);
@@ -59,7 +59,7 @@ document.getElementById('rem').onclick = (e) => { e.currentTarget.classList.togg
 document.getElementById('rem').querySelector('i').innerHTML = BB.icons.check;
 async function ship(o, d) {
   if (shipping) return; shipping = true; const b = d.querySelector('.bx');
-  await BB.tabInto(b, document.querySelector('.gtile'), 'google.com', o.c || '#c8a06b'); const r = b.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+  await BB.tabInto(b, document.querySelector('.gtile')); const r = b.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
   document.querySelectorAll('.opt').forEach((x2) => { if (x2 !== d) MO.A(x2, [{ opacity: 1, transform: 'none' }, { opacity: .25, transform: 'scale(.92) translateY(14px)' }], { duration: 420, easing: 'ease-out' }); });
   MO.A(b, [{ transform: 'translateY(0)' }, { transform: 'translateY(-40px) scale(1.12)', offset: .5 }, { transform: 'translateY(-14px) scale(1)' }], { duration: 650, easing: 'cubic-bezier(.3,.8,.3,1)' });
   const wash = document.getElementById('wash'), site = document.getElementById('site'); wash.style.background = o.c; site.style.setProperty('--c', o.c || '#a9714b');
