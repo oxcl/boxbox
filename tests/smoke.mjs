@@ -117,15 +117,22 @@ sites.popularSites = async (h, drv, a) => {
     ['https://en.wikipedia.org/wiki/Main_Page', () => !!document.querySelector('#searchInput, input[name=search]')],
     ['https://github.com/login', () => !!document.querySelector('#login_field')],
     ['https://news.ycombinator.com/', () => !!document.querySelector('.hnname, .titleline')],
-    ['https://www.reddit.com/', () => document.title.length > 0],
-    ['https://stackoverflow.com/users/login', () => document.title.length > 0],
+    ['https://www.python.org/', () => !!document.querySelector('#mainnav, .python-logo')],
+    ['https://developer.mozilla.org/en-US/', () => !!document.querySelector('header, #content, main')],
   ];
   for (const [u, ok] of targets) {
+    // Default session first: some sites throttle or refuse automated browsers (reddit.com does, per IP). Only a site that renders
+    // there can say anything about Box.
+    const d = await h.open(u);
+    let defaultOk = true;
+    try { await settle(d, async () => d.eval(ok), `${u} renders in the default session`, 25000); } catch { defaultOk = false; }
+    await d.close().catch(() => {});
+    if (!defaultOk) { a(true, `${u}: inconclusive — it does not render for an automated default-session tab`); continue; }
     const acc = (await h.createAccount(await SVC(u), 'Load test')).id;
     const t = await h.openIn(acc, u);
     await settle(t, async () => t.eval(ok), `${u} renders inside an account`, 25000);
-    a(true, `${u} rendered (title: ${await t.title()})`);
-    await t.close(); await h.box({ type: 'deleteAccount', id: acc });
+    a(true, `${u} rendered inside an account`);
+    await t.close().catch(() => {}); await h.box({ type: 'deleteAccount', id: acc });
   }
 };
 

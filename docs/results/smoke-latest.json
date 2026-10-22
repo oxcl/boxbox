@@ -1,0 +1,212 @@
+{
+  "firefox": {
+    "saucedemo": {
+      "status": "pass",
+      "ms": 5451,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "tab A holds the standard_user session: standard_user"
+        },
+        {
+          "ok": true,
+          "msg": "tab B holds the problem_user session: problem_user"
+        },
+        {
+          "ok": true,
+          "msg": "default session was bounced back to the login page"
+        }
+      ]
+    },
+    "theInternet": {
+      "status": "pass",
+      "ms": 10837,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "sessions are independent"
+        }
+      ]
+    },
+    "automationExercise": {
+      "status": "pass",
+      "ms": 36419,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "default session is not logged in"
+        }
+      ]
+    },
+    "popularSites": {
+      "status": "pass",
+      "ms": 14255,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "https://en.wikipedia.org/wiki/Main_Page rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://github.com/login rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://news.ycombinator.com/ rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://www.python.org/ rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://developer.mozilla.org/en-US/ rendered inside an account"
+        }
+      ]
+    }
+  },
+  "chrome": {
+    "saucedemo": {
+      "status": "pass",
+      "ms": 3584,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "tab A holds the standard_user session: standard_user"
+        },
+        {
+          "ok": true,
+          "msg": "tab B holds the problem_user session: problem_user"
+        },
+        {
+          "ok": true,
+          "msg": "default session was bounced back to the login page"
+        }
+      ]
+    },
+    "theInternet": {
+      "status": "pass",
+      "ms": 10465,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "sessions are independent"
+        }
+      ]
+    },
+    "automationExercise": {
+      "status": "pass",
+      "ms": 34973,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "default session is not logged in"
+        }
+      ]
+    },
+    "popularSites": {
+      "status": "pass",
+      "ms": 11919,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "https://en.wikipedia.org/wiki/Main_Page rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://github.com/login rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://news.ycombinator.com/ rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://www.python.org/ rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://developer.mozilla.org/en-US/ rendered inside an account"
+        }
+      ]
+    }
+  },
+  "helium": {
+    "saucedemo": {
+      "status": "pass",
+      "ms": 4493,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "tab A holds the standard_user session: standard_user"
+        },
+        {
+          "ok": true,
+          "msg": "tab B holds the problem_user session: problem_user"
+        },
+        {
+          "ok": true,
+          "msg": "default session was bounced back to the login page"
+        }
+      ]
+    },
+    "theInternet": {
+      "status": "pass",
+      "ms": 7121,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "sessions are independent"
+        }
+      ]
+    },
+    "automationExercise": {
+      "status": "pass",
+      "ms": 25445,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "default session is not logged in"
+        }
+      ]
+    },
+    "popularSites": {
+      "status": "pass",
+      "ms": 15384,
+      "error": null,
+      "checks": [
+        {
+          "ok": true,
+          "msg": "https://en.wikipedia.org/wiki/Main_Page rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://github.com/login rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://news.ycombinator.com/ rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://www.python.org/ rendered inside an account"
+        },
+        {
+          "ok": true,
+          "msg": "https://developer.mozilla.org/en-US/ rendered inside an account"
+        }
+      ]
+    }
+  }
+}

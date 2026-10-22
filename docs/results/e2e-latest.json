@@ -1,0 +1,890 @@
+{
+  "firefox": [
+    {
+      "name": "three tabs / three accounts / default: every storage type isolated",
+      "status": "pass",
+      "ms": 3973,
+      "error": null
+    },
+    {
+      "name": "default session is unaffected by accounts (and vice versa)",
+      "status": "pass",
+      "ms": 2016,
+      "error": null
+    },
+    {
+      "name": "navigating between domains of one service keeps the account",
+      "status": "pass",
+      "ms": 1749,
+      "error": null
+    },
+    {
+      "name": "user navigation to another service leaves the account",
+      "status": "pass",
+      "ms": 1946,
+      "error": null
+    },
+    {
+      "name": "page-initiated navigation (no user gesture) stays in the account",
+      "status": "pass",
+      "ms": 937,
+      "error": null
+    },
+    {
+      "name": "OAuth: redirect flow to another service and back stays in the account",
+      "status": "pass",
+      "ms": 978,
+      "error": null
+    },
+    {
+      "name": "popup (window.open) login stays inside the account",
+      "status": "pass",
+      "ms": 1760,
+      "error": null
+    },
+    {
+      "name": "embedded content (iframes) uses the tab's account",
+      "status": "pass",
+      "ms": 2115,
+      "error": null
+    },
+    {
+      "name": "link opened in a new tab: same service inherits the account, other service does not",
+      "status": "pass",
+      "ms": 1306,
+      "error": null
+    },
+    {
+      "name": "switching one tab's account never affects other tabs",
+      "status": "pass",
+      "ms": 2083,
+      "error": null
+    },
+    {
+      "name": "mode \"default session\": entering a service never switches account",
+      "status": "pass",
+      "ms": 487,
+      "error": null
+    },
+    {
+      "name": "mode \"remember last\": opens in the account used last, and follows later choices",
+      "status": "pass",
+      "ms": 2141,
+      "error": null
+    },
+    {
+      "name": "mode \"ask\": picker appears before the page loads; choice opens the account",
+      "status": "pass",
+      "ms": 637,
+      "error": null
+    },
+    {
+      "name": "mode \"ask\": choosing \"Default session\" opens the page in the default session",
+      "status": "pass",
+      "ms": 505,
+      "error": null
+    },
+    {
+      "name": "per-service override beats the global mode",
+      "status": "pass",
+      "ms": 731,
+      "error": null
+    },
+    {
+      "name": "ask mode with no accounts does not interrupt",
+      "status": "pass",
+      "ms": 396,
+      "error": null
+    },
+    {
+      "name": "automatic fallback: unlisted sites are services keyed by registrable domain",
+      "status": "pass",
+      "ms": 44,
+      "error": null
+    },
+    {
+      "name": "built-in catalog groups many domains into one service",
+      "status": "pass",
+      "ms": 81,
+      "error": null
+    },
+    {
+      "name": "user edit: merging a domain into a service overrides the automatic layer",
+      "status": "pass",
+      "ms": 746,
+      "error": null
+    },
+    {
+      "name": "user edit: splitting a domain out of a catalog service overrides the catalog",
+      "status": "pass",
+      "ms": 833,
+      "error": null
+    },
+    {
+      "name": "user edit: create, rename and delete a service; user edits beat the catalog on rename",
+      "status": "pass",
+      "ms": 80,
+      "error": null
+    },
+    {
+      "name": "merging two services moves accounts along",
+      "status": "pass",
+      "ms": 63,
+      "error": null
+    },
+    {
+      "name": "page border: colored, labeled, non-blocking overlay on account pages only",
+      "status": "pass",
+      "ms": 2430,
+      "error": null
+    },
+    {
+      "name": "favicon badge: the site icon gets a dot in the account color",
+      "status": "pass",
+      "ms": 2067,
+      "error": null
+    },
+    {
+      "name": "tab color: account tabs are marked with the account color (container / tab group)",
+      "status": "pass",
+      "ms": 729,
+      "error": null
+    },
+    {
+      "name": "deleting an account wipes its data and returns its tabs to the default session",
+      "status": "pass",
+      "ms": 2274,
+      "error": null
+    },
+    {
+      "name": "popup: shows the service, switches accounts, creates / edits / deletes an account",
+      "status": "pass",
+      "ms": 4257,
+      "error": null
+    },
+    {
+      "name": "popup: per-service entry mode override",
+      "status": "pass",
+      "ms": 636,
+      "error": null
+    },
+    {
+      "name": "popup on a non-web page explains itself",
+      "status": "pass",
+      "ms": 701,
+      "error": null
+    },
+    {
+      "name": "settings: general modes, theme, services editor (merge / split / create) and accounts",
+      "status": "pass",
+      "ms": 2939,
+      "error": null
+    },
+    {
+      "name": "picker UI screenshot (light + dark)",
+      "status": "pass",
+      "ms": 1755,
+      "error": null
+    },
+    {
+      "name": "Web Storage under isolation behaves like real Web Storage and stays private to the account",
+      "status": "pass",
+      "ms": 1420,
+      "error": null
+    },
+    {
+      "name": "IndexedDB / Cache Storage listings only show the account's own names",
+      "status": "pass",
+      "ms": 870,
+      "error": null
+    },
+    {
+      "name": "BroadcastChannel is per account",
+      "status": "pass",
+      "ms": 2208,
+      "error": null
+    },
+    {
+      "name": "dedicated Worker sees the account's IndexedDB, Cache Storage and cookies — not the default session's",
+      "status": "pass",
+      "ms": 1737,
+      "error": null
+    },
+    {
+      "name": "a strict CSP (script nonce, connect-src self) does not break an account tab",
+      "status": "pass",
+      "ms": 1278,
+      "error": null
+    },
+    {
+      "name": "cookies written by page script are scoped, readable and sent to the server only within the account",
+      "status": "pass",
+      "ms": 1326,
+      "error": null
+    },
+    {
+      "name": "account data persists when its tabs close and reopen, and never reaches the default session",
+      "status": "pass",
+      "ms": 2182,
+      "error": null
+    },
+    {
+      "name": "deleting an account leaves no namespaced data in the origin storage",
+      "status": "pass",
+      "ms": 1848,
+      "error": null
+    },
+    {
+      "name": "a default-session service worker does not take over an account tab",
+      "status": "skip",
+      "ms": 0,
+      "error": "Chrome-only (Firefox containers are native)"
+    },
+    {
+      "name": "restored tab (browser restart) re-enters its account from its sessionStorage marker",
+      "status": "skip",
+      "ms": 0,
+      "error": "Chrome-only (Firefox containers are native)"
+    },
+    {
+      "name": "MV3: closing the debugging bar fails closed; \"Restore isolation\" brings the tab back",
+      "status": "skip",
+      "ms": 0,
+      "error": "MV3-only"
+    },
+    {
+      "name": "MV3: WebSockets from account tabs are flagged (Chrome gives extensions no handshake hook)",
+      "status": "skip",
+      "ms": 0,
+      "error": "MV3-only"
+    },
+    {
+      "name": "MV3: isolation state is rebuilt from storage after a service-worker restart",
+      "status": "skip",
+      "ms": 0,
+      "error": "MV3-only"
+    },
+    {
+      "name": "proxy: each account exits through its own proxy (HTTP, SOCKS5, authenticated HTTP); default stays direct",
+      "status": "pass",
+      "ms": 2829,
+      "error": null
+    },
+    {
+      "name": "proxy: WebRTC cannot reveal the real address around a proxied account",
+      "status": "pass",
+      "ms": 613,
+      "error": null
+    },
+    {
+      "name": "proxy (Chrome): two proxied accounts on the same service conflict — flagged, not silent",
+      "status": "skip",
+      "ms": 0,
+      "error": "Chrome-only: Firefox applies proxies exactly per account"
+    },
+    {
+      "name": "proxy: a dead proxy fails closed (the request is not sent directly)",
+      "status": "pass",
+      "ms": 2885,
+      "error": null
+    },
+    {
+      "name": "proxy (Chrome): shared hosts and late-discovered third-party hosts raise a warning, never silence",
+      "status": "skip",
+      "ms": 0,
+      "error": "Chrome-only: Firefox applies proxies exactly per account"
+    }
+  ],
+  "chrome": [
+    {
+      "name": "three tabs / three accounts / default: every storage type isolated",
+      "status": "pass",
+      "ms": 2802,
+      "error": null
+    },
+    {
+      "name": "default session is unaffected by accounts (and vice versa)",
+      "status": "pass",
+      "ms": 1712,
+      "error": null
+    },
+    {
+      "name": "navigating between domains of one service keeps the account",
+      "status": "pass",
+      "ms": 2490,
+      "error": null
+    },
+    {
+      "name": "user navigation to another service leaves the account",
+      "status": "pass",
+      "ms": 1265,
+      "error": null
+    },
+    {
+      "name": "page-initiated navigation (no user gesture) stays in the account",
+      "status": "pass",
+      "ms": 1302,
+      "error": null
+    },
+    {
+      "name": "OAuth: redirect flow to another service and back stays in the account",
+      "status": "pass",
+      "ms": 1188,
+      "error": null
+    },
+    {
+      "name": "popup (window.open) login stays inside the account",
+      "status": "pass",
+      "ms": 1941,
+      "error": null
+    },
+    {
+      "name": "embedded content (iframes) uses the tab's account",
+      "status": "pass",
+      "ms": 1698,
+      "error": null
+    },
+    {
+      "name": "link opened in a new tab: same service inherits the account, other service does not",
+      "status": "pass",
+      "ms": 1504,
+      "error": null
+    },
+    {
+      "name": "switching one tab's account never affects other tabs",
+      "status": "pass",
+      "ms": 2687,
+      "error": null
+    },
+    {
+      "name": "mode \"default session\": entering a service never switches account",
+      "status": "pass",
+      "ms": 280,
+      "error": null
+    },
+    {
+      "name": "mode \"remember last\": opens in the account used last, and follows later choices",
+      "status": "pass",
+      "ms": 2001,
+      "error": null
+    },
+    {
+      "name": "mode \"ask\": picker appears before the page loads; choice opens the account",
+      "status": "pass",
+      "ms": 6686,
+      "error": null
+    },
+    {
+      "name": "mode \"ask\": choosing \"Default session\" opens the page in the default session",
+      "status": "pass",
+      "ms": 401,
+      "error": null
+    },
+    {
+      "name": "per-service override beats the global mode",
+      "status": "pass",
+      "ms": 429,
+      "error": null
+    },
+    {
+      "name": "ask mode with no accounts does not interrupt",
+      "status": "pass",
+      "ms": 222,
+      "error": null
+    },
+    {
+      "name": "automatic fallback: unlisted sites are services keyed by registrable domain",
+      "status": "pass",
+      "ms": 69,
+      "error": null
+    },
+    {
+      "name": "built-in catalog groups many domains into one service",
+      "status": "pass",
+      "ms": 82,
+      "error": null
+    },
+    {
+      "name": "user edit: merging a domain into a service overrides the automatic layer",
+      "status": "pass",
+      "ms": 951,
+      "error": null
+    },
+    {
+      "name": "user edit: splitting a domain out of a catalog service overrides the catalog",
+      "status": "pass",
+      "ms": 945,
+      "error": null
+    },
+    {
+      "name": "user edit: create, rename and delete a service; user edits beat the catalog on rename",
+      "status": "pass",
+      "ms": 169,
+      "error": null
+    },
+    {
+      "name": "merging two services moves accounts along",
+      "status": "pass",
+      "ms": 121,
+      "error": null
+    },
+    {
+      "name": "page border: colored, labeled, non-blocking overlay on account pages only",
+      "status": "pass",
+      "ms": 2356,
+      "error": null
+    },
+    {
+      "name": "favicon badge: the site icon gets a dot in the account color",
+      "status": "pass",
+      "ms": 1433,
+      "error": null
+    },
+    {
+      "name": "tab color: account tabs are marked with the account color (container / tab group)",
+      "status": "pass",
+      "ms": 877,
+      "error": null
+    },
+    {
+      "name": "deleting an account wipes its data and returns its tabs to the default session",
+      "status": "pass",
+      "ms": 2225,
+      "error": null
+    },
+    {
+      "name": "popup: shows the service, switches accounts, creates / edits / deletes an account",
+      "status": "pass",
+      "ms": 3803,
+      "error": null
+    },
+    {
+      "name": "popup: per-service entry mode override",
+      "status": "pass",
+      "ms": 537,
+      "error": null
+    },
+    {
+      "name": "popup on a non-web page explains itself",
+      "status": "pass",
+      "ms": 709,
+      "error": null
+    },
+    {
+      "name": "settings: general modes, theme, services editor (merge / split / create) and accounts",
+      "status": "pass",
+      "ms": 2571,
+      "error": null
+    },
+    {
+      "name": "picker UI screenshot (light + dark)",
+      "status": "pass",
+      "ms": 1731,
+      "error": null
+    },
+    {
+      "name": "Web Storage under isolation behaves like real Web Storage and stays private to the account",
+      "status": "pass",
+      "ms": 1288,
+      "error": null
+    },
+    {
+      "name": "IndexedDB / Cache Storage listings only show the account's own names",
+      "status": "pass",
+      "ms": 1084,
+      "error": null
+    },
+    {
+      "name": "BroadcastChannel is per account",
+      "status": "pass",
+      "ms": 2177,
+      "error": null
+    },
+    {
+      "name": "dedicated Worker sees the account's IndexedDB, Cache Storage and cookies — not the default session's",
+      "status": "pass",
+      "ms": 1389,
+      "error": null
+    },
+    {
+      "name": "a strict CSP (script nonce, connect-src self) does not break an account tab",
+      "status": "pass",
+      "ms": 1023,
+      "error": null
+    },
+    {
+      "name": "cookies written by page script are scoped, readable and sent to the server only within the account",
+      "status": "pass",
+      "ms": 1447,
+      "error": null
+    },
+    {
+      "name": "account data persists when its tabs close and reopen, and never reaches the default session",
+      "status": "pass",
+      "ms": 1631,
+      "error": null
+    },
+    {
+      "name": "deleting an account leaves no namespaced data in the origin storage",
+      "status": "pass",
+      "ms": 1267,
+      "error": null
+    },
+    {
+      "name": "a default-session service worker does not take over an account tab",
+      "status": "pass",
+      "ms": 1399,
+      "error": null
+    },
+    {
+      "name": "restored tab (browser restart) re-enters its account from its sessionStorage marker",
+      "status": "pass",
+      "ms": 1688,
+      "error": null
+    },
+    {
+      "name": "MV3: closing the debugging bar fails closed; \"Restore isolation\" brings the tab back",
+      "status": "pass",
+      "ms": 2035,
+      "error": null
+    },
+    {
+      "name": "MV3: WebSockets from account tabs are flagged (Chrome gives extensions no handshake hook)",
+      "status": "pass",
+      "ms": 1033,
+      "error": null
+    },
+    {
+      "name": "MV3: isolation state is rebuilt from storage after a service-worker restart",
+      "status": "pass",
+      "ms": 1779,
+      "error": null
+    },
+    {
+      "name": "proxy: each account exits through its own proxy (HTTP, SOCKS5, authenticated HTTP); default stays direct",
+      "status": "pass",
+      "ms": 3401,
+      "error": null
+    },
+    {
+      "name": "proxy: WebRTC cannot reveal the real address around a proxied account",
+      "status": "pass",
+      "ms": 1224,
+      "error": null
+    },
+    {
+      "name": "proxy (Chrome): two proxied accounts on the same service conflict — flagged, not silent",
+      "status": "pass",
+      "ms": 1345,
+      "error": null
+    },
+    {
+      "name": "proxy: a dead proxy fails closed (the request is not sent directly)",
+      "status": "pass",
+      "ms": 2865,
+      "error": null
+    },
+    {
+      "name": "proxy (Chrome): shared hosts and late-discovered third-party hosts raise a warning, never silence",
+      "status": "pass",
+      "ms": 1486,
+      "error": null
+    }
+  ],
+  "helium": [
+    {
+      "name": "three tabs / three accounts / default: every storage type isolated",
+      "status": "pass",
+      "ms": 3161,
+      "error": null
+    },
+    {
+      "name": "default session is unaffected by accounts (and vice versa)",
+      "status": "pass",
+      "ms": 2212,
+      "error": null
+    },
+    {
+      "name": "navigating between domains of one service keeps the account",
+      "status": "pass",
+      "ms": 1901,
+      "error": null
+    },
+    {
+      "name": "user navigation to another service leaves the account",
+      "status": "pass",
+      "ms": 1047,
+      "error": null
+    },
+    {
+      "name": "page-initiated navigation (no user gesture) stays in the account",
+      "status": "pass",
+      "ms": 1129,
+      "error": null
+    },
+    {
+      "name": "OAuth: redirect flow to another service and back stays in the account",
+      "status": "pass",
+      "ms": 913,
+      "error": null
+    },
+    {
+      "name": "popup (window.open) login stays inside the account",
+      "status": "pass",
+      "ms": 1820,
+      "error": null
+    },
+    {
+      "name": "embedded content (iframes) uses the tab's account",
+      "status": "pass",
+      "ms": 1356,
+      "error": null
+    },
+    {
+      "name": "link opened in a new tab: same service inherits the account, other service does not",
+      "status": "pass",
+      "ms": 1195,
+      "error": null
+    },
+    {
+      "name": "switching one tab's account never affects other tabs",
+      "status": "pass",
+      "ms": 2263,
+      "error": null
+    },
+    {
+      "name": "mode \"default session\": entering a service never switches account",
+      "status": "pass",
+      "ms": 252,
+      "error": null
+    },
+    {
+      "name": "mode \"remember last\": opens in the account used last, and follows later choices",
+      "status": "pass",
+      "ms": 1737,
+      "error": null
+    },
+    {
+      "name": "mode \"ask\": picker appears before the page loads; choice opens the account",
+      "status": "pass",
+      "ms": 913,
+      "error": null
+    },
+    {
+      "name": "mode \"ask\": choosing \"Default session\" opens the page in the default session",
+      "status": "pass",
+      "ms": 460,
+      "error": null
+    },
+    {
+      "name": "per-service override beats the global mode",
+      "status": "pass",
+      "ms": 566,
+      "error": null
+    },
+    {
+      "name": "ask mode with no accounts does not interrupt",
+      "status": "pass",
+      "ms": 299,
+      "error": null
+    },
+    {
+      "name": "automatic fallback: unlisted sites are services keyed by registrable domain",
+      "status": "pass",
+      "ms": 84,
+      "error": null
+    },
+    {
+      "name": "built-in catalog groups many domains into one service",
+      "status": "pass",
+      "ms": 99,
+      "error": null
+    },
+    {
+      "name": "user edit: merging a domain into a service overrides the automatic layer",
+      "status": "pass",
+      "ms": 1047,
+      "error": null
+    },
+    {
+      "name": "user edit: splitting a domain out of a catalog service overrides the catalog",
+      "status": "pass",
+      "ms": 855,
+      "error": null
+    },
+    {
+      "name": "user edit: create, rename and delete a service; user edits beat the catalog on rename",
+      "status": "pass",
+      "ms": 94,
+      "error": null
+    },
+    {
+      "name": "merging two services moves accounts along",
+      "status": "pass",
+      "ms": 91,
+      "error": null
+    },
+    {
+      "name": "page border: colored, labeled, non-blocking overlay on account pages only",
+      "status": "pass",
+      "ms": 2033,
+      "error": null
+    },
+    {
+      "name": "favicon badge: the site icon gets a dot in the account color",
+      "status": "pass",
+      "ms": 1266,
+      "error": null
+    },
+    {
+      "name": "tab color: account tabs are marked with the account color (container / tab group)",
+      "status": "pass",
+      "ms": 673,
+      "error": null
+    },
+    {
+      "name": "deleting an account wipes its data and returns its tabs to the default session",
+      "status": "pass",
+      "ms": 2203,
+      "error": null
+    },
+    {
+      "name": "popup: shows the service, switches accounts, creates / edits / deletes an account",
+      "status": "pass",
+      "ms": 4855,
+      "error": null
+    },
+    {
+      "name": "popup: per-service entry mode override",
+      "status": "pass",
+      "ms": 583,
+      "error": null
+    },
+    {
+      "name": "popup on a non-web page explains itself",
+      "status": "pass",
+      "ms": 707,
+      "error": null
+    },
+    {
+      "name": "settings: general modes, theme, services editor (merge / split / create) and accounts",
+      "status": "pass",
+      "ms": 2551,
+      "error": null
+    },
+    {
+      "name": "picker UI screenshot (light + dark)",
+      "status": "pass",
+      "ms": 1637,
+      "error": null
+    },
+    {
+      "name": "Web Storage under isolation behaves like real Web Storage and stays private to the account",
+      "status": "pass",
+      "ms": 936,
+      "error": null
+    },
+    {
+      "name": "IndexedDB / Cache Storage listings only show the account's own names",
+      "status": "pass",
+      "ms": 995,
+      "error": null
+    },
+    {
+      "name": "BroadcastChannel is per account",
+      "status": "pass",
+      "ms": 2017,
+      "error": null
+    },
+    {
+      "name": "dedicated Worker sees the account's IndexedDB, Cache Storage and cookies — not the default session's",
+      "status": "pass",
+      "ms": 1551,
+      "error": null
+    },
+    {
+      "name": "a strict CSP (script nonce, connect-src self) does not break an account tab",
+      "status": "pass",
+      "ms": 1154,
+      "error": null
+    },
+    {
+      "name": "cookies written by page script are scoped, readable and sent to the server only within the account",
+      "status": "pass",
+      "ms": 1179,
+      "error": null
+    },
+    {
+      "name": "account data persists when its tabs close and reopen, and never reaches the default session",
+      "status": "pass",
+      "ms": 1553,
+      "error": null
+    },
+    {
+      "name": "deleting an account leaves no namespaced data in the origin storage",
+      "status": "pass",
+      "ms": 1737,
+      "error": null
+    },
+    {
+      "name": "a default-session service worker does not take over an account tab",
+      "status": "pass",
+      "ms": 1495,
+      "error": null
+    },
+    {
+      "name": "restored tab (browser restart) re-enters its account from its sessionStorage marker",
+      "status": "pass",
+      "ms": 1471,
+      "error": null
+    },
+    {
+      "name": "MV3: closing the debugging bar fails closed; \"Restore isolation\" brings the tab back",
+      "status": "skip",
+      "ms": 0,
+      "error": "MV3-only"
+    },
+    {
+      "name": "MV3: WebSockets from account tabs are flagged (Chrome gives extensions no handshake hook)",
+      "status": "skip",
+      "ms": 0,
+      "error": "MV3-only"
+    },
+    {
+      "name": "MV3: isolation state is rebuilt from storage after a service-worker restart",
+      "status": "skip",
+      "ms": 0,
+      "error": "MV3-only"
+    },
+    {
+      "name": "proxy: each account exits through its own proxy (HTTP, SOCKS5, authenticated HTTP); default stays direct",
+      "status": "pass",
+      "ms": 3311,
+      "error": null
+    },
+    {
+      "name": "proxy: WebRTC cannot reveal the real address around a proxied account",
+      "status": "pass",
+      "ms": 973,
+      "error": null
+    },
+    {
+      "name": "proxy (Chrome): two proxied accounts on the same service conflict — flagged, not silent",
+      "status": "pass",
+      "ms": 1139,
+      "error": null
+    },
+    {
+      "name": "proxy: a dead proxy fails closed (the request is not sent directly)",
+      "status": "pass",
+      "ms": 2823,
+      "error": null
+    },
+    {
+      "name": "proxy (Chrome): shared hosts and late-discovered third-party hosts raise a warning, never silence",
+      "status": "pass",
+      "ms": 1264,
+      "error": null
+    }
+  ]
+}

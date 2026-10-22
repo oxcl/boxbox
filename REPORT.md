@@ -23,7 +23,67 @@ Browsers under test (all from the flake): **Firefox 158.0.1**, **Google Chrome 1
 
 ## 2. Test results
 
-<!--MATRIX-->
+| Test | Firefox | Chrome MV3 | Helium MV2 |
+|---|:-:|:-:|:-:|
+| three tabs / three accounts / default: every storage type isolated | ✅ | ✅ | ✅ |
+| default session is unaffected by accounts (and vice versa) | ✅ | ✅ | ✅ |
+| navigating between domains of one service keeps the account | ✅ | ✅ | ✅ |
+| user navigation to another service leaves the account | ✅ | ✅ | ✅ |
+| page-initiated navigation (no user gesture) stays in the account | ✅ | ✅ | ✅ |
+| OAuth: redirect flow to another service and back stays in the account | ✅ | ✅ | ✅ |
+| popup (window.open) login stays inside the account | ✅ | ✅ | ✅ |
+| embedded content (iframes) uses the tab's account | ✅ | ✅ | ✅ |
+| link opened in a new tab: same service inherits the account, other service does not | ✅ | ✅ | ✅ |
+| switching one tab's account never affects other tabs | ✅ | ✅ | ✅ |
+| mode "default session": entering a service never switches account | ✅ | ✅ | ✅ |
+| mode "remember last": opens in the account used last, and follows later choices | ✅ | ✅ | ✅ |
+| mode "ask": picker appears before the page loads; choice opens the account | ✅ | ✅ | ✅ |
+| mode "ask": choosing "Default session" opens the page in the default session | ✅ | ✅ | ✅ |
+| per-service override beats the global mode | ✅ | ✅ | ✅ |
+| ask mode with no accounts does not interrupt | ✅ | ✅ | ✅ |
+| automatic fallback: unlisted sites are services keyed by registrable domain | ✅ | ✅ | ✅ |
+| built-in catalog groups many domains into one service | ✅ | ✅ | ✅ |
+| user edit: merging a domain into a service overrides the automatic layer | ✅ | ✅ | ✅ |
+| user edit: splitting a domain out of a catalog service overrides the catalog | ✅ | ✅ | ✅ |
+| user edit: create, rename and delete a service; user edits beat the catalog on rename | ✅ | ✅ | ✅ |
+| merging two services moves accounts along | ✅ | ✅ | ✅ |
+| page border: colored, labeled, non-blocking overlay on account pages only | ✅ | ✅ | ✅ |
+| favicon badge: the site icon gets a dot in the account color | ✅ | ✅ | ✅ |
+| tab color: account tabs are marked with the account color (container / tab group) | ✅ | ✅ | ✅ |
+| deleting an account wipes its data and returns its tabs to the default session | ✅ | ✅ | ✅ |
+| popup: shows the service, switches accounts, creates / edits / deletes an account | ✅ | ✅ | ✅ |
+| popup: per-service entry mode override | ✅ | ✅ | ✅ |
+| popup on a non-web page explains itself | ✅ | ✅ | ✅ |
+| settings: general modes, theme, services editor (merge / split / create) and accounts | ✅ | ✅ | ✅ |
+| picker UI screenshot (light + dark) | ✅ | ✅ | ✅ |
+| Web Storage under isolation behaves like real Web Storage and stays private to the account | ✅ | ✅ | ✅ |
+| IndexedDB / Cache Storage listings only show the account's own names | ✅ | ✅ | ✅ |
+| BroadcastChannel is per account | ✅ | ✅ | ✅ |
+| dedicated Worker sees the account's IndexedDB, Cache Storage and cookies — not the default session's | ✅ | ✅ | ✅ |
+| a strict CSP (script nonce, connect-src self) does not break an account tab | ✅ | ✅ | ✅ |
+| cookies written by page script are scoped, readable and sent to the server only within the account | ✅ | ✅ | ✅ |
+| account data persists when its tabs close and reopen, and never reaches the default session | ✅ | ✅ | ✅ |
+| deleting an account leaves no namespaced data in the origin storage | ✅ | ✅ | ✅ |
+| a default-session service worker does not take over an account tab | ➖ | ✅ | ✅ |
+| restored tab (browser restart) re-enters its account from its sessionStorage marker | ➖ | ✅ | ✅ |
+| MV3: closing the debugging bar fails closed; "Restore isolation" brings the tab back | ➖ | ✅ | ➖ |
+| MV3: WebSockets from account tabs are flagged (Chrome gives extensions no handshake hook) | ➖ | ✅ | ➖ |
+| MV3: isolation state is rebuilt from storage after a service-worker restart | ➖ | ✅ | ➖ |
+| proxy: each account exits through its own proxy (HTTP, SOCKS5, authenticated HTTP); default stays direct | ✅ | ✅ | ✅ |
+| proxy: WebRTC cannot reveal the real address around a proxied account | ✅ | ✅ | ✅ |
+| proxy (Chrome): two proxied accounts on the same service conflict — flagged, not silent | ➖ | ✅ | ✅ |
+| proxy: a dead proxy fails closed (the request is not sent directly) | ✅ | ✅ | ✅ |
+| proxy (Chrome): shared hosts and late-discovered third-party hosts raise a warning, never silence | ➖ | ✅ | ✅ |
+
+**Totals** — Firefox: 42 passed, 0 failed, 7 skipped · Chrome MV3: 49 passed, 0 failed, 0 skipped · Helium MV2: 46 passed, 0 failed, 3 skipped
+
+| Real-site smoke | Firefox | Chrome MV3 | Helium MV2 |
+|---|:-:|:-:|:-:|
+| saucedemo | ✅ | ✅ | ✅ |
+| theInternet | ✅ | ✅ | ✅ |
+| automationExercise | ✅ | ✅ | ✅ |
+| popularSites | ✅ | ✅ | ✅ |
+
 
 Legend: ✅ pass · ➖ skipped with a stated reason (Chrome-only / MV3-only behaviour) · ❌ fail.
 Suites: `isolation navigation modes services identity deletion ui hardening proxy` (e2e, real browsers, local fixture) and
