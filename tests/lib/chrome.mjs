@@ -27,7 +27,7 @@ export class ChromeDriver {
     if (which === 'helium') {      // Helium's bundled extensions reload the first pages after start-up; get that out of the way
       const w = await browser.newPage();
       await w.goto(fixture.url('ctl.localhost', '/blank')).catch(() => {});
-      await sleep(2500);
+      await sleep(5000);
       await w.close().catch(() => {});
     }
     return drv;
@@ -132,14 +132,16 @@ export class ChromeTab {
     }
   }
   async eval(fn, ...args) { return (await this.retrying(() => this.page.evaluate(fn, ...args))) ?? null; }
-  async click(sel) { await this.page.bringToFront(); await this.page.click(sel); }
-  async screenshot() { return Buffer.from(await this.page.screenshot({ type: 'png' })); }
+  async click(sel) { await this.page.bringToFront(); await this.retrying(() => this.page.click(sel)); }
+  async screenshot() { await this.page.bringToFront(); return Buffer.from(await this.retrying(() => this.page.screenshot({ type: 'png' }))); }
   async close() { await this.page.close(); }
   async boxId() { return (await this.retrying(() => this.drv.rawBridge({ type: 'test:sender' }, this.page))).tabId; }
   async frameEval(urlPart, fn, ...args) {
-    const f = this.page.frames().find((x) => x.url().includes(urlPart));
-    if (!f) throw new Error('no frame matching ' + urlPart);
-    return (await f.evaluate(fn, ...args)) ?? null;
+    return this.retrying(async () => {
+      const f = this.page.frames().find((x) => x.url().includes(urlPart));
+      if (!f) throw new Error('no frame matching ' + urlPart);
+      return (await f.evaluate(fn, ...args)) ?? null;
+    });
   }
   async frameEvalAtIndex(i, fn, ...args) {
     const f = this.page.mainFrame().childFrames()[i];

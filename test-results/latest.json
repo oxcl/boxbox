@@ -1,9 +1,9 @@
 {
-  "firefox": [
+  "chrome": [
     {
-      "name": "settings: general modes, theme, services editor (merge / split / create) and accounts",
+      "name": "popup: shows the service, switches accounts, creates / edits / deletes an account",
       "status": "pass",
-      "ms": 3160,
+      "ms": 3911,
       "error": null
     }
   ]
