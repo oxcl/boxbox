@@ -80,7 +80,7 @@ async function choose(accountId) {
   if (busy || (accountId || null) === (info.accountId || null)) return;
   busy = true;
   try {
-    const r = await api('setTabAccount', { tabId, accountId });
+    const r = await api('setTabAccount', { tabId, accountId, root: true });
     // In Firefox the tab is re-created; this popup closes with the old tab. In Chrome the same tab continues.
     tabId = r.tabId ?? tabId;
     await load();
@@ -89,7 +89,7 @@ async function choose(accountId) {
 
 function edit(acc) {
   openAccountEditor({
-    account: acc, serviceId: info.serviceId, serviceName: info.service.name, target: info.target,
+    account: acc, existing: info.accounts.length, serviceId: info.serviceId, serviceName: info.service.name, target: info.target,
     onDone: async (kind, res) => {
       await load();
       if (kind === 'created' && res) { await choose(res.id); toast(`Created “${res.name}”`); } else if (kind === 'deleted') toast('Account deleted and its data erased');

@@ -45,7 +45,7 @@ function manifest(target) {
   if (ff) {
     m.browser_specific_settings = { gecko: { id: 'box@box.local', strict_min_version: '140.0' } };
     m.background = { scripts: ['background.js'], persistent: true };
-    m.permissions = [...perms, 'webRequestBlocking', 'contextualIdentities', 'browsingData', 'tabGroups', 'privacy'];
+    m.permissions = [...perms, 'webRequestBlocking', 'contextualIdentities', 'cookies', 'browsingData', 'tabGroups', 'privacy'];
     m.permissions = m.permissions.filter((p) => p !== 'windows');
   } else {
     m.key = KEY;
@@ -60,7 +60,7 @@ function manifest(target) {
       m.permissions = [...perms, 'webRequestBlocking', 'debugger', 'privacy', 'unlimitedStorage', 'tabGroups'];
     }
   }
-  if (TEST) m.permissions.push('cookies', ...(ff ? [] : ['browsingData']));
+  if (TEST) m.permissions.push(...(ff ? [] : ['cookies', 'browsingData']));
   if (TEST) {
     m.content_scripts.push({ matches: FIXTURE_MATCHES, js: ['bridge.js'], run_at: 'document_start', all_frames: false });
     const war = UI_PAGES.map((p) => `${p}.html`).concat(['ui.css', 'popup.js', 'picker.js', 'settings.js']);

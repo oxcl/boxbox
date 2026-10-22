@@ -102,7 +102,7 @@ export class Controller {
     const st = this.state.settings;
     return {
       account: acc ? { id: acc.id, name: acc.name, color: acc.color, icon: acc.icon, proxy: !!acc.proxy } : null,
-      settings: { border: st.border, badge: st.badge },
+      settings: { border: st.border, badge: st.badge, tabGroups: st.tabGroups },
       status: this.platform.status ? this.platform.status(tabId, tab) : { level: 'ok', messages: [] },
       target: TARGET, restorable: !!this.platform.restoredTabs?.has(tabId),
     };
@@ -184,9 +184,10 @@ export class Controller {
   }
 
   /** User-driven switch (popup / picker). Never touches other tabs. */
-  async setTabAccount(tabId, accountId, { url, remember = true } = {}) {
+  async setTabAccount(tabId, accountId, { url, remember = true, root = false } = {}) {
     const tab = await ext.tabs.get(tabId);
-    const target = url || tab.url;
+    let target = url || tab.url;
+    if (root && !url) { try { target = new URL(tab.url).origin + '/'; } catch { /* keep the current url */ } }   // switching accounts from the popup goes back to the site's root
     const sid = this.serviceOfUrl(target) || this.getTab(tabId).home;
     if (accountId && (!this.accounts[accountId])) throw new Error('no such account');
     if (accountId && this.accounts[accountId].serviceId !== sid) throw new Error('account belongs to another service');
@@ -264,7 +265,7 @@ export class Controller {
       case 'createAccount': return this.createAccount(msg);
       case 'updateAccount': return this.updateAccount(msg.id, msg.patch);
       case 'deleteAccount': return this.deleteAccount(msg.id);
-      case 'setTabAccount': return this.setTabAccount(msg.tabId, msg.accountId, { url: msg.url, remember: msg.remember !== false });
+      case 'setTabAccount': return this.setTabAccount(msg.tabId, msg.accountId, { url: msg.url, remember: msg.remember !== false, root: !!msg.root });
       case 'setSettings': return this.setSettings(msg.patch);
       case 'setServiceMode': return this.setServiceMode(msg.serviceId, msg.mode);
       case 'serviceEdit': return this.serviceEdit(msg.op, { ...msg.args });

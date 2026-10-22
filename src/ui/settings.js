@@ -138,7 +138,7 @@ function accounts() {
       h('div', { class: 'panel', style: { textAlign: 'center', padding: '40px' } }, h('div', { class: 'muted' }, 'No accounts yet. Open a website and create one from the Box popup, or use the menu above.')));
 }
 function edit(acc, sid, withProxy = false) {
-  openAccountEditor({ withProxy, account: acc, serviceId: sid, serviceName: serviceName(sid), target: st.target, onDone: async () => { await refresh(); } });
+  openAccountEditor({ withProxy, existing: (st.accounts || []).filter((a) => a.serviceId === sid).length, account: acc, serviceId: sid, serviceName: serviceName(sid), target: st.target, onDone: async () => { await refresh(); } });
 }
 
 // ------------------------------------------------------------------ Proxy

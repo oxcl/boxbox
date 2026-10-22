@@ -1,10 +1,10 @@
 import { h, icon, avatar, api, sheet, toast, COLORS, iconNames } from './lib.js';
 
 /** Create/edit sheet. opts: {account?, serviceId, serviceName, target, onDone(kind, account?)} */
-export function openAccountEditor({ account, serviceId, serviceName, target, onDone, host, withProxy = false }) {
+export function openAccountEditor({ account, serviceId, serviceName, target, onDone, host, withProxy = false, existing = 0 }) {
   const editing = !!account;
   const st = {
-    name: account?.name || '', color: account?.color || COLORS[Math.floor(Math.random() * COLORS.length)], icon: account?.icon || iconNames[Math.floor(Math.random() * iconNames.length)],
+    name: account?.name || `${serviceName} ${existing + 1}`, color: account?.color || COLORS[Math.floor(Math.random() * COLORS.length)], icon: account?.icon || iconNames[Math.floor(Math.random() * iconNames.length)],
     proxyOn: !!account?.proxy || withProxy, proxy: { type: 'http', host: '', port: '', username: '', password: '', ...(account?.proxy || {}) },
   };
   return sheet((close) => {
@@ -12,7 +12,7 @@ export function openAccountEditor({ account, serviceId, serviceName, target, onD
     const swatches = h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': 'Color' });
     const icons = h('div', { class: 'icons', role: 'radiogroup', 'aria-label': 'Icon' });
     const proxyBox = h('div', { class: 'grid', style: { display: 'grid', gap: '10px' } });
-    const nameIn = h('input', { class: 'input', id: 'acc-name', placeholder: `e.g. ${serviceName} work`, value: st.name, maxlength: 40, oninput: (e) => { st.name = e.target.value; paintPreview(); } });
+    const nameIn = h('input', { class: 'input', id: 'acc-name', placeholder: `${serviceName} ${existing + 1}`, value: st.name, maxlength: 40, oninput: (e) => { st.name = e.target.value; paintPreview(); } });
 
     function paintPreview() {
       preview.replaceChildren(avatar({ color: st.color, icon: st.icon }), h('div', { class: 'grow' }, h('div', { style: { fontWeight: 700 } }, st.name || 'New account'), h('div', { class: 'muted' }, serviceName)));

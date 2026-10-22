@@ -19,6 +19,7 @@ export const FF_COLORS = { blue: '#37adff', turquoise: '#00c79a', green: '#51cd0
 export const CHROME_GROUP_COLORS = { grey: '#5f6368', blue: '#1a73e8', red: '#d93025', yellow: '#f9ab00', green: '#188038', pink: '#d01884', purple: '#9334e6', cyan: '#007b83', orange: '#e8710a' };
 
 export const ICONS = ['user', 'briefcase', 'home', 'heart', 'star', 'bolt', 'cart', 'game', 'code', 'book', 'cloud', 'shield', 'gift', 'camera', 'music', 'flask'];
+export const ICON_EMOJI = { user: '👤', briefcase: '💼', home: '🏠', heart: '❤️', star: '⭐', bolt: '⚡', cart: '🛒', game: '🎮', code: '💻', book: '📖', cloud: '☁️', shield: '🛡️', gift: '🎁', camera: '📷', music: '🎵', flask: '🧪' };
 export const FF_ICONS = { user: 'fingerprint', briefcase: 'briefcase', home: 'chill', heart: 'circle', star: 'circle', bolt: 'circle', cart: 'cart', game: 'gift', code: 'fence', book: 'briefcase', cloud: 'vacation', shield: 'fence', gift: 'gift', camera: 'circle', music: 'circle', flask: 'tree' };
 
 export const DEFAULT_STATE = () => ({

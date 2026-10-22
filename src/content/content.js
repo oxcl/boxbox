@@ -4,6 +4,7 @@
 //  * (Chrome) perform storage wipes for deleted accounts
 import { ext, IS_CHROME } from '../core/ext.js';
 import { shim } from '../chrome/shim.js';
+import { ICON_EMOJI as EMOJI } from '../core/model.js';
 
 const isTop = window.top === window;
 let lastGesture = 0, lastPing = -Infinity;
@@ -73,6 +74,26 @@ function applyIdentity(id, initial = false) {
   const acct = id && id.account;
   if (acct && id.settings.border) showBorder(acct, id.status); else removeBorder();
   if (acct && id.settings.badge) startBadge(acct); else stopBadge();
+  if (__TARGET__ === 'chrome-mv2') setTitleTag(acct && id.settings.tabGroups !== false ? `[${EMOJI[acct.icon] ? EMOJI[acct.icon] + ' ' : ''}${acct.name}] ` : null);
+}
+
+// ---- title tag (Manifest V2 has no tab groups, so the account is named in the tab title instead)
+let titleTag = null, titleObs = null, appliedTag = null;
+function paintTitle() {
+  const t = document.title;
+  if (titleTag && t.startsWith(titleTag)) { appliedTag = titleTag; return; }
+  const bare = appliedTag && t.startsWith(appliedTag) ? t.slice(appliedTag.length) : t;
+  if (!titleTag && bare === t) { appliedTag = null; return; }
+  appliedTag = titleTag; document.title = (titleTag || '') + bare;
+}
+function setTitleTag(tag) {
+  titleTag = tag;
+  if (tag && !titleObs && document.documentElement) {
+    titleObs = new MutationObserver(paintTitle);
+    titleObs.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+  }
+  if (!tag && titleObs) { titleObs.disconnect(); titleObs = null; }
+  paintTitle();
 }
 
 // ---- border
@@ -98,13 +119,14 @@ function showBorder(acct, status) {
         .pill.away{opacity:0;transform:translate(-50%,-110%)}
         .dot{width:8px;height:8px;border-radius:50%;background:#fff;opacity:.9;flex:none}
         .warn{background:#fff;color:#b45309;border-radius:8px;padding:1px 6px;font-size:11px}
+        .ico{font-size:13px;line-height:1}
         .name{overflow:hidden;text-overflow:ellipsis}
         @keyframes in{to{opacity:1}}
         @keyframes drop{to{transform:translate(-50%,0)}}
         @media (prefers-reduced-motion:reduce){.frame,.pill{animation-duration:.01s}}
       </style>
       <div class="frame" part="frame"></div>
-      <div class="pill" part="label"><span class="dot"></span><span class="name"></span><span class="warn" hidden></span></div>`;
+      <div class="pill" part="label"><span class="dot"></span><span class="ico"></span><span class="name"></span><span class="warn" hidden></span></div>`;
     (document.documentElement || document).appendChild(hostEl);
     moveHandler = (e) => { const p = hostEl?.shadowRoot?.querySelector('.pill'); if (p) p.classList.toggle('away', e.clientY < 46 && Math.abs(e.clientX - innerWidth / 2) < 180); };
     window.addEventListener('mousemove', moveHandler, { passive: true });
@@ -120,6 +142,7 @@ function showBorder(acct, status) {
   root.host.style.setProperty('--c', acct.color);
   root.querySelector('.frame').style.setProperty('--c', acct.color);
   const pill = root.querySelector('.pill'); pill.style.setProperty('--c', acct.color);
+  root.querySelector('.ico').textContent = EMOJI[acct.icon] || '';
   root.querySelector('.name').textContent = acct.name;
   const warn = root.querySelector('.warn');
   const lvl = status && status.level;

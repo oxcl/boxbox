@@ -55,11 +55,16 @@ export default function (R, h, drv) {
     if (ctx.name === 'helium') {
       // documented limitation: chrome.tabGroups is Manifest-V3-only, so Helium (MV2) cannot title/colour tab groups
       a.eq(groups, null, 'chrome.tabGroups is unavailable to Manifest V2 extensions');
+      await waitFor(async () => (await t.title()).startsWith('[') && (await t.title()).includes('Colored] '), { message: 'tab title is prefixed with the account tag', timeout: 8000 });
+      await t.eval(() => { document.title = 'Page changed'; });
+      await waitFor(async () => (await t.title()).endsWith('Colored] Page changed'), { message: 'tag survives a page title change', timeout: 8000 });
+      const bare = await h.openIn(null, h.url('alpha.localhost', '/blank'));
+      a.ok(!(await bare.title()).startsWith('['), 'default-session tabs get no tag: ' + await bare.title());
     } else if (ctx.name === 'chrome') {
-      a.ok(groups.some((g) => g.title === 'Colored' && g.color === 'red'), 'tab group titled with the account name, coloured red: ' + JSON.stringify(groups));
+      a.ok(groups.some((g) => g.title.endsWith('Colored') && g.color === 'red'), 'tab group titled with the account name, coloured red: ' + JSON.stringify(groups));
       a.eq(mine.groupId >= 0, true, 'the tab is inside that group');
     } else if (groups) {
-      a.ok(mine.groupId >= 0 ? groups.some((g) => g.title === 'Colored') : true, 'Firefox tab group (if the build supports them): ' + JSON.stringify(groups));
+      a.ok(mine.groupId >= 0 ? groups.some((g) => g.title.endsWith('Colored')) : true, 'Firefox tab group (if the build supports them): ' + JSON.stringify(groups));
     }
   });
 }

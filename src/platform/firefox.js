@@ -1,6 +1,6 @@
 // Firefox: native isolation via contextual identities (containers).
 import { ext, sleep } from '../core/ext.js';
-import { nearest, FF_COLORS, FF_ICONS } from '../core/model.js';
+import { nearest, FF_COLORS, FF_ICONS, ICON_EMOJI } from '../core/model.js';
 import { isWebUrl } from '../core/services.js';
 
 const DEFAULT_CS = 'firefox-default';
@@ -231,7 +231,7 @@ export class FirefoxPlatform {
         if (!ungrouped.length) continue;
         const existing = list.find((t) => t.groupId >= 0);
         const gid = await ext.tabs.group(existing ? { tabIds: ungrouped.map((t) => t.id), groupId: existing.groupId } : { tabIds: ungrouped.map((t) => t.id) });
-        await ext.tabGroups.update(gid, { title: acc.name, color: nearest(acc.color, { grey: '#9aa0a6', blue: '#1a73e8', red: '#d93025', yellow: '#f9ab00', green: '#188038', pink: '#d01884', purple: '#9334e6', cyan: '#007b83', orange: '#e8710a' }) });
+        await ext.tabGroups.update(gid, { title: `${ICON_EMOJI[acc.icon] || ''} ${acc.name}`.trim(), color: nearest(acc.color, { grey: '#9aa0a6', blue: '#1a73e8', red: '#d93025', yellow: '#f9ab00', green: '#188038', pink: '#d01884', purple: '#9334e6', cyan: '#007b83', orange: '#e8710a' }) });
       }
     } catch (e) { /* tab groups unavailable */ }
   }

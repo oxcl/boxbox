@@ -64,7 +64,7 @@ export default function (R, h) {
     const t = await h.openIn(acc, h.url('alpha.localhost', '/popup-opener?user=popuser'));
     const before = await ctx.drv.handles();
     await t.click('#open-popup');
-    await waitFor(async () => (await t.title()) === 'popup-done:popuser', { timeout: 10000, message: 'popup login completes' });
+    await waitFor(async () => (await t.title()).endsWith('popup-done:popuser'), { timeout: 10000, message: 'popup login completes' });
     a.eq((await h.readState(t)).server.user, 'popuser', 'opener sees the popup login');
     const def = await h.openIn(null, h.url('alpha.localhost', '/blank'));
     a.eq((await h.readState(def)).server.user, null, 'default session has no popup login');
