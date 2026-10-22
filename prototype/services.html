@@ -38,9 +38,9 @@
  .swatches, .icons { display: flex; flex-wrap: wrap; gap: 10px; } .swatches button { width: 30px; height: 30px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px var(--card-solid), 0 0 0 5px transparent; transition: .3s var(--ease); } .swatches button:hover { transform: scale(1.18); } .swatches button.on { box-shadow: 0 0 0 3px var(--card-solid), 0 0 0 5px var(--c); transform: scale(1.1); } .icons button { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(120, 100, 80, .08); transition: .3s var(--ease); } .icons button svg { width: 20px; } .icons button.on { background: var(--c); color: #fff; transform: scale(1.1); }
  .modal .row { display: flex; gap: 10px; } .modal .row .btn { flex: 1; justify-content: center; }
  .empty { text-align: center; padding: 50px 0; color: var(--muted); font-weight: 600; } .empty .bx { --s: 80px; margin-bottom: 14px; }
- .shelfrow { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding-top: 6px; } .shelfrow .plank { position: absolute; left: -6px; right: -6px; top: 152px; z-index: 0; }
- .mopt { position: relative; z-index: 1; text-align: center; padding: 18px 12px 20px; border-radius: 26px; transition: transform .4s var(--ease); } .mopt:hover { translate: 0 -2px; } .mopt .bx { margin: 14px 0 46px; --s: 92px; } .mopt h3 { margin: 0 0 6px; font-size: 18px; } .mopt p { margin: 0; color: var(--muted); font-size: 14px; }
- .mopt .tick { top: 10px; right: 10px; }
+ .modes3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+ .mopt { position: relative; text-align: center; padding: 24px 16px 22px; border-radius: 24px; cursor: pointer; background: linear-gradient(150deg, rgba(255,255,255,.7), rgba(255,255,255,.28)); box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 0 0 1px rgba(255,255,255,.6), 0 6px 18px rgba(80,60,30,.08); transform: perspective(800px) rotateX(var(--brx, 0deg)) rotateY(var(--bry, 0deg)); transition: transform .4s var(--ease), box-shadow .3s; } [data-theme="dark"] .mopt { background: linear-gradient(150deg, rgba(255,255,255,.09), rgba(255,255,255,.03)); box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 0 0 1px rgba(255,255,255,.07), 0 8px 22px rgba(0,0,0,.3); } .mopt:hover { translate: 0 -2px; } .mopt .bx { margin: 8px 0 18px; --s: 76px; } .mopt h3 { margin: 0 0 6px; font-size: 18px; } .mopt p { margin: 0; color: var(--muted); font-size: 14px; }
+ .mopt .tick { top: -9px; right: -9px; }
 </style></head><body>
 <div class="bg-scene"><div class="shadow"></div><div class="leaf l1"></div><div class="leaf l2"></div></div>
 <div class="app">
@@ -152,13 +152,13 @@ function editor(s, wrap, acc) {
 }
 MO.stagger(document.querySelectorAll('.svc'), (e, d) => MO.A(e, [{ opacity: 0, transform: 'translateY(24px)' }, { opacity: 1, transform: 'none' }], { duration: 620, delay: d, easing: 'cubic-bezier(.2,.9,.3,1)' }), 70); document.querySelectorAll('.svc.open').forEach((r) => unpack(r.querySelector('.accts'), r.querySelector('.fav'), 420));
 document.getElementById('addsvc').onclick = () => BB.toast('Add a service: pick domains, name it, done');
-// entry modes panel: three boxes standing on one wooden shelf
-const gm = document.getElementById('gm'); gm.className = 'shelfrow'; gm.append(el('div', 'plank'));
+// entry modes panel
+const gm = document.getElementById('gm'); gm.className = 'modes3';
 [['No box', 'Open in your normal session', null], ['Last used', 'Reopen where you left off', C.blue], ['Ask me', 'A quick choice before the page loads', C.orange]].forEach(([t, d, c], k) => {
-  const m = el('button', 'mopt rf' + (k === 1 ? ' on selected' : '')); m.style.setProperty('--rc', c || '#a9714b');
-  const bx = BB.box(c ? { color: c, icon: 'user', size: 92, lid: true, label: t.slice(0, 7) } : { kraft: true, icon: 'home', size: 92, lid: true, label: 'default' }); bx.querySelector('.check') && bx.querySelector('.check').remove();
+  const m = el('button', 'mopt glass-card rf' + (k === 1 ? ' selected on' : '')); m.style.setProperty('--rc', c || '#a9714b'); m.dataset.tilt = 4;
+  const bx = BB.box(c ? { color: c, icon: 'user', size: 76, lid: true, label: t.slice(0, 7) } : { kraft: true, icon: 'home', size: 76, lid: true, label: 'default' }); bx.querySelector('.check') && bx.querySelector('.check').remove();
   m.append(bx, el('h3', '', t), el('p', '', d), el('span', 'tick', BB.icons.check));
-  m.onclick = () => { gm.querySelectorAll('.mopt').forEach((x) => { x.classList.remove('selected', 'on'); }); void m.offsetWidth; m.classList.add('selected', 'on'); MO.lid(bx, 1); setTimeout(() => MO.lid(bx, 0), 380); MO.squish(bx); BB.burstAt(bx, [c || '#c8a06b']); };
+  m.onclick = () => { gm.querySelectorAll('.mopt').forEach((x) => x.classList.remove('selected', 'on')); void m.offsetWidth; m.classList.add('selected', 'on'); MO.lid(bx, 1); setTimeout(() => MO.lid(bx, 0), 380); MO.squish(bx); BB.burstAt(bx, [c || '#c8a06b']); };
   gm.append(m);
 });
 // proxies

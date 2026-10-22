@@ -41,7 +41,6 @@
  .row { display: flex; gap: 10px; margin-top: auto; } .row .btn { flex: 1; justify-content: center; }
  .shelf-view h1 { font-size: 26px; margin: 0; letter-spacing: -.02em; }
  .shelf { position: relative; padding: 14px 6px 0; margin-top: 6px; } .shelf .boards { position: relative; display: flex; align-items: flex-end; justify-content: space-around; height: 128px; }
- .shelf .boards .plank { position: absolute; left: -6px; right: -6px; bottom: -22px; height: 30px; z-index: 0; }
  .stack { position: relative; width: 150px; height: 120px; z-index: 1; } .stack .bx { position: absolute; }
  .shelf .pill { position: relative; z-index: 2; margin-top: 26px; display: flex; justify-content: space-around; } .shelf .pill span { padding: 8px 16px; border-radius: 99px; font-weight: 700; font-size: 14px; background: color-mix(in srgb, var(--c) 18%, #fff); box-shadow: 0 2px 8px rgba(0, 0, 0, .08); transition: transform .3s var(--ease); } .shelf .pill span:hover { transform: translateY(-3px); }
  .shelf + .shelf { margin-top: 22px; }
@@ -131,7 +130,7 @@ function sheetEl() {
 function openSheet() { document.getElementById('sheet').classList.add('on'); setTimeout(() => document.getElementById('nm').select(), 450); }
 function renderShelf() {
   const v = el('div', 'shelf-view'); const h = el('div', 'head'); h.style.border = '0'; h.append(el('h1', '', 'No site here'), el('button', 'ico-btn', BB.icons.gear)); v.append(h);
-  const mk = (rows) => { const sh = el('div', 'shelf'); const bd = el('div', 'boards'); bd.append(el('div', 'plank')); const pl = el('div', 'pill'); rows.forEach(([col, ic, n, name, tabs]) => { const st = el('div', 'stack'); const pos = { 1: [[45, 4]], 2: [[8, 4], [64, 4]], 3: [[8, 4], [64, 4], [36, 50]] }[Math.min(n, 3)]; for (let i = 0; i < n && i < 3; i++) { const b = BB.box({ color: col, icon: ic, size: 54, label: name.slice(0, 6) }); b.style.left = pos[i][0] + 'px'; b.style.bottom = pos[i][1] + 'px'; b.style.zIndex = i === 2 ? 2 : 1; MO.dropIn(b, i * 90); st.append(b); } bd.append(st); const sp = el('span', '', `${name} · ${tabs}`); sp.style.setProperty('--c', col); pl.append(sp); }); sh.append(bd, pl); return sh; };
+  const mk = (rows) => { const sh = el('div', 'shelf'); const bd = el('div', 'boards');  const pl = el('div', 'pill'); rows.forEach(([col, ic, n, name, tabs]) => { const st = el('div', 'stack'); const pos = { 1: [[45, 4]], 2: [[8, 4], [64, 4]], 3: [[8, 4], [64, 4], [36, 50]] }[Math.min(n, 3)]; for (let i = 0; i < n && i < 3; i++) { const b = BB.box({ color: col, icon: ic, size: 54, label: name.slice(0, 6) }); b.style.left = pos[i][0] + 'px'; b.style.bottom = pos[i][1] + 'px'; b.style.zIndex = i === 2 ? 2 : 1; MO.dropIn(b, i * 90); st.append(b); } bd.append(st); const sp = el('span', '', `${name} · ${tabs}`); sp.style.setProperty('--c', col); pl.append(sp); }); sh.append(bd, pl); return sh; };
   v.append(mk([[C.blue, 'user', 3, 'Google', '3 tabs'], [C.orange, 'users', 1, 'Reddit', '1 tab']]), mk([[C.purple, 'laptop', 2, 'GitHub', '2 tabs'], [C.kraft, 'globe', 1, 'Other', '1 tab']]));
   const m = el('button', 'manage', BB.icons.grid + '<span class="grow">Manage boxes</span>' + BB.icons.chev); m.querySelector('svg:last-child').style.transform = 'rotate(-90deg)'; m.onclick = () => location.href = 'services.html'; v.append(m); pop.append(v);
 }
