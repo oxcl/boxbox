@@ -3,16 +3,16 @@
 <style>
  body { min-height: 100vh; display: flex; flex-direction: column; }
  .browser { width: min(1240px, calc(100% - 40px)); margin: 18px auto 70px; flex: 1; border-radius: 22px; overflow: hidden; background: var(--card-solid); box-shadow: 0 30px 80px rgba(60, 40, 20, .25), 0 0 0 1px var(--line); display: flex; flex-direction: column; min-height: 640px; }
- .chromebar { background: #dfe3ea; padding: 10px 14px 0; } [data-theme="dark"] .chromebar { background: #2a2736; }
- .tabs { display: flex; align-items: flex-end; gap: 14px; } .tab { display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: #f6f7fa; border-radius: 12px 12px 0 0; font-size: 13px; font-weight: 600; min-width: 190px; } [data-theme="dark"] .tab { background: #3a3550; }
- .addr { display: flex; align-items: center; gap: 12px; padding: 10px 6px 12px; background: #f6f7fa; margin: 0 -14px; padding-left: 20px; padding-right: 20px; } [data-theme="dark"] .addr { background: #3a3550; }
- .addr .u { flex: 1; background: #e9ecf2; border-radius: 99px; padding: 9px 18px; color: #555; font-size: 14px; } [data-theme="dark"] .addr .u { background: #2a2736; color: #bbb; }
+ .chromebar { background: #dfe3ea; padding: 10px 14px 0; } [data-theme="dark"] .chromebar { background: #2a221a; }
+ .tabs { display: flex; align-items: flex-end; gap: 14px; } .tab { display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: #f6f7fa; border-radius: 12px 12px 0 0; font-size: 13px; font-weight: 600; min-width: 190px; } [data-theme="dark"] .tab { background: #3a3025; }
+ .addr { display: flex; align-items: center; gap: 12px; padding: 10px 6px 12px; background: #f6f7fa; margin: 0 -14px; padding-left: 20px; padding-right: 20px; } [data-theme="dark"] .addr { background: #3a3025; }
+ .addr .u { flex: 1; background: #e9ecf2; border-radius: 99px; padding: 9px 18px; color: #555; font-size: 14px; } [data-theme="dark"] .addr .u { background: #2a221a; color: #c9bba8; }
  .page { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px 30px 40px; overflow: hidden; }
  .gtile { width: 84px; height: 84px; border-radius: 24px; background: #fff; box-shadow: 0 10px 30px rgba(0, 0, 0, .12); display: grid; place-items: center; font-size: 46px; font-weight: 800; background-clip: padding-box; animation: fadeup .7s var(--ease) both; }
  .gtile span { background: linear-gradient(135deg, #4285f4 25%, #ea4335 25% 50%, #fbbc05 50% 75%, #34a853 75%); -webkit-background-clip: text; color: transparent; }
  h1 { font-size: clamp(34px, 5vw, 54px); letter-spacing: -.035em; margin: 22px 0 28px; animation: fadeup .7s .08s var(--ease-out) both; }
  .shelf { position: relative; display: flex; justify-content: center; gap: clamp(10px, 4vw, 60px); padding: 60px 70px 0; } 
- .shelf::before { content: ''; position: absolute; left: 0; right: 0; bottom: 78px; height: 56px; border-radius: 28px; background: linear-gradient(#fff, #f1e9de); box-shadow: 0 18px 30px rgba(120, 80, 40, .15), inset 0 -4px 0 rgba(0, 0, 0, .04); } [data-theme="dark"] .shelf::before { background: linear-gradient(#3a3550, #2d2940); }
+ .shelf::before { content: ''; position: absolute; left: 0; right: 0; bottom: 78px; height: 56px; border-radius: 28px; background: linear-gradient(#fff, #f1e9de); box-shadow: 0 18px 30px rgba(120, 80, 40, .15), inset 0 -4px 0 rgba(0, 0, 0, .04); } [data-theme="dark"] .shelf::before { background: linear-gradient(#41352a, #2e251c); }
  .opt { position: relative; width: 200px; display: flex; flex-direction: column; align-items: center; z-index: 1; padding-bottom: 6px; cursor: pointer; border-radius: 24px; }
  .opt .stage { height: 190px; display: grid; place-items: end center; padding-bottom: 30px; }
  .opt .bx { --s: 112px; }
@@ -50,7 +50,7 @@
 const opts = [{ n: 'No box', d: 'Use your normal browser session', k: true, i: 'home', c: '#a9714b' }, { n: 'Work', d: 'For your job, teams, and work stuff', c: BB.COLORS.blue, i: 'briefcase' }, { n: 'Personal', d: 'Your personal accounts and everyday browsing', c: BB.COLORS.coral, i: 'user' }, { n: 'Research', d: 'For learning, reading and exploring', c: BB.COLORS.green, i: 'flask' }];
 const shelf = document.getElementById('shelf'); let sel = 1, shipping = false;
 opts.forEach((o, k) => { const d = document.createElement('div'); d.className = 'opt' + (k === sel ? ' sel' : ''); d.style.setProperty('--c', o.c); d.tabIndex = 0;
-  const st = document.createElement('div'); st.className = 'stage'; const b = BB.box(o.k ? { kraft: true, icon: o.i, label: 'default', size: 118, hover: false } : { color: o.c, icon: o.i, label: o.n, size: 118, hover: false, glow: false }); MO.dropIn(b, 150 + k * 110); st.append(b);
+  const st = document.createElement('div'); st.className = 'stage'; const b = BB.box(o.k ? { kraft: true, icon: o.i, label: 'default', size: 112, hover: true, lid: true } : { color: o.c, icon: o.i, label: o.n, size: 112, hover: true, glow: false, lid: true }); MO.dropIn(b, 120 + k * 80); st.append(b);
   d.append(st); d.insertAdjacentHTML('beforeend', `<h3>${o.n}</h3><p>${o.d}</p>`); b.classList.toggle('bx-selected', k === sel);
   d.onclick = () => { if (sel === k) { ship(o, d); return; } sel = k; document.querySelectorAll('.opt').forEach((x, i) => { x.classList.toggle('sel', i === k); x.querySelector('.bx').classList.toggle('bx-selected', i === k); }); BB.burstAt(b, [o.c, '#fff']); };
   d.ondblclick = () => ship(o, d);

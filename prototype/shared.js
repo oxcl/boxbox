@@ -27,34 +27,61 @@ const BB = (() => {
   };
   const COLORS = { blue: '#3b82f6', orange: '#f59e0b', green: '#22c55e', purple: '#8b5cf6', pink: '#ec4899', coral: '#fb7185', teal: '#14b8a6', kraft: '#c8a06b' };
 
-  /** A detailed 3D cardboard box. opts: {color, icon, label, size, kraft, float, glow, hover, drop, face} */
-  function box({ color = COLORS.blue, icon = 'user', label = '', size = 96, kraft = false, float = false, glow = false, hover = true, drop = 0, face = false, sticker = true } = {}) {
+  /** 3D cardboard box. Cheap by default; detail depends on size: <56 faces+icon, <110 + label/sticker, ≥110 + grain/marks.
+   *  opts: {color, icon, label, size, kraft, float, glow, hover, lid (build the hinged lid), face (smile), inner (lives inside another 3D box)} */
+  function box({ color = COLORS.blue, icon = 'user', label = '', size = 96, kraft = false, float = false, glow = false, hover = true, drop = 0, face = false, lid = false, inner = false, wordmark = '' } = {}) {
     const el = document.createElement('div');
-    el.className = ['bx', kraft && 'kraft', float && 'float', glow && 'glow', hover && 'bx-hover'].filter(Boolean).join(' ');
+    const lod = size >= 110 ? 'lg' : size >= 56 ? 'md' : 'sm';
+    el.className = ['bx', lod, kraft && 'kraft', float && 'float', glow && 'glow', hover && !inner && 'bx-hover', inner && 'inner'].filter(Boolean).join(' ');
     el.style.setProperty('--s', size + 'px'); if (!kraft) el.style.setProperty('--c', color);
-    const half = (c) => `<div class="fl ${c}"><i class="o"><b class="tape"></b></i><i class="n"></i></div>`;
+    const detail = lod !== 'sm';
     el.innerHTML = `<div class="bob"><div class="cube">
-      <div class="f front"><div class="tape"></div><div class="ico">${icons[icon] || ''}</div>${sticker && size >= 70 ? '<div class="sticker"></div>' : ''}</div>
-      <div class="f right"><div class="label"><b>${label || (kraft ? 'BoxBox' : 'Box')}</b>${size >= 90 ? '<small>THIS SIDE UP</small>' : ''}<i></i></div>${size >= 70 ? '<div class="marks"><i></i><i></i></div>' : ''}${face ? '<div class="smile"></div>' : ''}</div>
-      <div class="top"><div class="inside"></div>${half('a')}${half('b')}</div>
-      </div></div><div class="shadow-blob"></div><div class="check">${icons.check}</div>`;
+      <div class="f front">${detail ? '<div class="tape"></div>' : ''}${wordmark ? `<div class="wm">${wordmark}</div>` : `<div class="ico">${icons[icon] || ''}</div>`}${detail ? '<div class="sticker"></div>' : ''}<i class="sw"></i></div>
+      <div class="f right">${detail ? `<div class="label"><b>${label || (kraft ? 'BoxBox' : 'Box')}</b>${lod === 'lg' ? '<small>THIS SIDE UP</small>' : ''}<i></i></div>` : ''}${lod === 'lg' ? '<div class="marks"><i></i><i></i></div>' : ''}${face ? '<div class="smile"></div>' : ''}</div>
+      <div class="top">${lid ? '<div class="inside"></div>' : ''}<div class="lid"><i class="o">${detail ? '<b class="tape"></b>' : ''}</i>${lid ? '<i class="n"></i>' : ''}</div></div>
+      </div></div>${inner ? '' : `<div class="shadow-blob"></div><div class="check">${icons.check}</div>`}`;
     if (drop) requestAnimationFrame(() => MO.dropIn(el, drop));
     return el;
   }
-  /** The site's tile jumps into a box: lid opens, tab drops in, lid closes with a squash, ring + confetti. */
+  /** Flat isometric mini cube (no 3D, no children): for counts and rows. */
+  function mini(color, size = 20) {
+    const m = document.createElement('span'); m.className = 'mini'; m.style.setProperty('--s', size + 'px'); m.style.setProperty('--c', color);
+    m.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="12,2 21.5,7 12,12 2.5,7" style="fill:var(--hi)"/><polygon points="2.5,7 12,12 12,22.5 2.5,17.5" style="fill:var(--c)"/><polygon points="21.5,7 12,12 12,22.5 21.5,17.5" style="fill:var(--lo)"/><polygon points="10,3.1 14,5.1 14,5.1 10,3.1" style="fill:rgba(255,255,255,.4)"/></svg>';
+    return m;
+  }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  function chipFor(tile, label) {
+    const c = document.createElement('div'); c.className = 'chip-fly'; c.innerHTML = `<span class="tile2">${tile.dataset.letter || tile.textContent.trim().slice(0, 1)}</span><b>${label}</b>`; document.body.append(c); return c;
+  }
+  /** Parabolic flight of a fixed-position chip between two points (centre to centre) with a scale change. */
+  function fly(chip, from, to, { s0 = 1, s1 = 1, lift = 90, duration = 420 } = {}) {
+    const kf = []; for (let k = 0; k <= 12; k++) { const q = k / 12; kf.push({ transform: `translate(${(from[0] + (to[0] - from[0]) * q).toFixed(1)}px, ${(from[1] + (to[1] - from[1]) * q - Math.sin(Math.PI * q) * lift).toFixed(1)}px) translate(-50%, -50%) scale(${(s0 + (s1 - s0) * q).toFixed(3)})`, offset: q }); }
+    return chip.animate(kf, { duration, easing: 'cubic-bezier(.4,.05,.3,1)', fill: 'forwards' }).finished;
+  }
+  const centre = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+  /** The site tile hops INTO a box: lid opens, tile drops in, lid closes (squash). */
   async function tabInto(box, tile, label, col) {
     if (!tile || MO.reduce) return;
-    const a = tile.getBoundingClientRect(), t = box.getBoundingClientRect();
-    const chip = document.createElement('div'); chip.className = 'chip-fly'; chip.innerHTML = `<span class="tile2">${tile.dataset.letter || tile.textContent.trim().slice(0, 1)}</span><b>${label}</b>`; chip.style.cssText = `left:${a.left}px;top:${a.top}px;`; document.body.append(chip);
-    const dx = t.left + t.width / 2 - (a.left + 22), dy = t.top + t.height * .18 - (a.top + 20);
-    MO.lid(box, 1); await new Promise((r) => setTimeout(r, 200));
-    const kf = []; for (let k = 0; k <= 16; k++) { const q = k / 16; kf.push({ transform: `translate(${dx * q}px, ${dy * q - Math.sin(Math.PI * q) * 110}px) scale(${1 - .62 * q}) rotate(${q * 14}deg)`, opacity: q > .86 ? (1 - q) * 7 : 1, offset: q }); }
-    await chip.animate(kf, { duration: 640, easing: 'cubic-bezier(.45,.05,.4,1)', fill: 'forwards' }).finished; chip.remove();
-    MO.squish(box); await new Promise((r) => setTimeout(r, 90)); MO.lid(box, 0); await new Promise((r) => setTimeout(r, 260));
-    MO.shine(box); const r2 = box.getBoundingClientRect(); MO.ring(r2.left + r2.width / 2, r2.top + r2.height / 2, col); confetti(r2.left + r2.width / 2, r2.top + r2.height * .35, [col, '#fff', '#f5c26b'], 10);
+    const chip = chipFor(tile, label), from = centre(tile), r = box.getBoundingClientRect(), to = [r.left + r.width / 2, r.top + r.height * .3];
+    chip.style.cssText += `left:0;top:0;transform:translate(${from[0]}px,${from[1]}px) translate(-50%,-50%)`; tile.style.visibility = 'hidden';
+    try { MO.lid(box, 1); await sleep(150); await fly(chip, from, to, { s1: .35, duration: 380 }); chip.remove(); MO.squish(box); await sleep(60); MO.lid(box, 0); await sleep(200); }
+    finally { chip.remove(); }
   }
-  const mini = (color, size = 22) => box({ color, icon: '', size, hover: false });
-
+  /** The tile climbs OUT of a box and flies to its resting place (tile's own slot). */
+  async function tabOutOf(box, tile, label, col) {
+    if (MO.reduce) { tile.style.visibility = ''; return; }
+    const chip = chipFor(tile, label), r = box.getBoundingClientRect(), from = [r.left + r.width / 2, r.top + r.height * .3], to = centre(tile);
+    chip.style.cssText += `left:0;top:0;opacity:0;transform:translate(${from[0]}px,${from[1]}px) translate(-50%,-50%) scale(.35)`;
+    try { MO.lid(box, 1); await sleep(130); chip.style.opacity = 1; await fly(chip, from, to, { s0: .35, s1: 1, duration: 420 }); MO.lid(box, 0); }
+    finally { chip.remove(); tile.style.visibility = ''; }
+    MO.shine(box); const c = centre(box); MO.ring(c[0], c[1], col);
+  }
+  /** Switch a tab between boxes: it goes back into the previous box, then the new box lets it out again. */
+  async function swapTab(prevBox, newBox, tile, label, col) {
+    if (!tile || MO.reduce) return;
+    if (prevBox && prevBox !== newBox) await tabInto(prevBox, tile, label, col);
+    await tabOutOf(newBox, tile, label, col);
+  }
   function confetti(x, y, colors = Object.values(COLORS), n = 12) {
     for (let i = 0; i < Math.min(n, 14); i++) {
       const c = document.createElement('i'); c.className = 'confetti';
@@ -85,8 +112,7 @@ const BB = (() => {
   const scene = () => { const s = document.createElement('div'); s.className = 'bg-scene'; s.innerHTML = '<div class="shadow"></div><div class="leaf l1"></div><div class="leaf l2"></div>'; document.body.prepend(s); };
   const logo = (size = 26) => { const l = document.createElement('span'); l.className = 'logo'; const b = box({ kraft: true, icon: '', size, hover: false }); l.append(b, 'BoxBox'); return l; };
   initTheme();
-  addEventListener('DOMContentLoaded', () => MO.motes(document.querySelector('.bg-scene')));
   let idle; const wake = () => { document.body && document.body.classList.remove('calm'); clearTimeout(idle); idle = setTimeout(() => document.body.classList.add('calm'), 30000); };
   ['pointermove', 'keydown', 'pointerdown'].forEach((e) => addEventListener(e, wake, { passive: true })); addEventListener('DOMContentLoaded', wake);
-  return { icons, COLORS, tabInto, box, mini, confetti, burstAt, toast, seg, chrome, scene, logo };
+  return { icons, COLORS, tabInto, tabOutOf, swapTab, box, mini, confetti, burstAt, toast, seg, chrome, scene, logo };
 })();

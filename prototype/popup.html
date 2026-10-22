@@ -35,7 +35,7 @@
  .sheet { position: absolute; inset: 0; border-radius: 28px; background: var(--card-solid); padding: 22px; display: flex; flex-direction: column; gap: 14px; transform: translateY(105%); visibility: hidden; transition: transform .55s var(--ease-out), visibility 0s .55s; z-index: 3; }
  .sheet.on { transform: none; visibility: visible; transition-delay: 0s; } .sheet h3 { margin: 0; font-size: 20px; }
  .sheet .prev { position: relative; overflow: hidden; display: grid; place-items: center; height: 160px; border-radius: 22px; background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%), rgba(120, 100, 80, .05); }
- .sheet .prev .layer { position: absolute; inset: 0; display: grid; place-items: center; } .sheet .prev .bx { --s: 100px; } .input { width: 100%; padding: 14px 16px; border-radius: 14px; border: 2px solid transparent; background: rgba(120, 100, 80, .08); font: inherit; font-weight: 600; color: var(--ink); outline: 0; transition: .25s; } .input:focus { border-color: var(--c); background: transparent; box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 18%, transparent); }
+ .sheet .prev .bx { --s: 100px; } .input { width: 100%; padding: 14px 16px; border-radius: 14px; border: 2px solid transparent; background: rgba(120, 100, 80, .08); font: inherit; font-weight: 600; color: var(--ink); outline: 0; transition: .25s; } .input:focus { border-color: var(--c); background: transparent; box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 18%, transparent); }
  .swatches, .icons { display: flex; flex-wrap: wrap; gap: 10px; } .swatches button { width: 30px; height: 30px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px var(--card-solid), 0 0 0 5px transparent; transition: .3s var(--ease); } .swatches button:hover { transform: scale(1.18); } .swatches button.on { box-shadow: 0 0 0 3px var(--card-solid), 0 0 0 5px var(--c); transform: scale(1.1); }
  .icons button { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(120, 100, 80, .08); transition: .3s var(--ease); } .icons button svg { width: 20px; } .icons button:hover { transform: translateY(-3px); } .icons button.on { background: var(--c); color: #fff; transform: scale(1.1); }
  .row { display: flex; gap: 10px; margin-top: auto; } .row .btn { flex: 1; justify-content: center; }
@@ -49,7 +49,7 @@
  .chip-fly { position: fixed; z-index: 9000; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 14px; background: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.25); pointer-events: none; font-weight: 700; font-size: 13px; transform-origin: 20px 20px; } .chip-fly .tile2 { width: 32px; height: 32px; border-radius: 10px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.08); display: grid; place-items: center; font-weight: 800; font-size: 18px; }
 </style></head><body>
 <div class="stage"></div>
-<div class="bar"><div class="tbtn" style="margin-left:6px"><svg width="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.4" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></div><div class="url" id="url">amazon.com</div><div class="tbtn" id="tb"><span id="tbicon" style="position:relative;display:block;width:30px;height:30px"></span></div></div>
+<div class="bar"><div class="tbtn" style="margin-left:6px"><svg width="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.4" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></div><div class="url" id="url">amazon.com</div><div class="tbtn" id="tb"><span id="tbicon" style="position:relative;display:block;width:24px;height:24px"></span></div></div>
 <div class="demo-switch" id="demo"><button data-v="site" class="on">On amazon.com</button><button data-v="nosite">New tab (no site)</button></div>
 <div class="pop" id="pop"></div>
 <script src="motion.js"></script><script src="shared.js"></script>
@@ -62,8 +62,8 @@ const pop = document.getElementById('pop');
 const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h !== undefined) e.innerHTML = h; return e; };
 function setBadge(swap) {
   const a = state.accounts.find((x) => x.id === state.selected); const i = document.getElementById('tbicon');
-  const nb = BB.box(a ? { color: a.color, icon: a.icon, size: 30, hover: false, sticker: false } : { kraft: true, icon: '', size: 30, hover: false });
-  if (swap && i.firstChild) { const old = i.firstChild; nb.style.position = 'absolute'; nb.style.left = '0'; nb.style.top = '0'; i.append(nb); MO.reveal(nb.parentNode === i ? nb : nb, 0, 0); MO.spinIn(nb); MO.A(old, [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(.5) rotate(40deg)' }], { duration: 320 }).finished.then(() => { old.remove(); nb.style.position = ''; }); }
+  const nb = BB.box(a ? { color: a.color, icon: a.icon, size: 24, hover: false } : { kraft: true, icon: '', size: 24, hover: false });
+  if (swap && i.firstChild) { i.replaceChildren(nb); MO.spinIn(nb); }
   else i.replaceChildren(nb);
   document.getElementById('url').textContent = state.view === 'site' ? 'amazon.com' : 'Search Google or type a URL';
 }
@@ -75,11 +75,12 @@ function fillStatus(status) {
   status.replaceChildren(mb); status.insertAdjacentHTML('beforeend', cur ? `<span>This tab is in <b>${cur.name}</b></span>` : `<span>This tab is in your <b style="color:#a9714b">normal session</b></span>`);
   MO.popIn(mb); const t = status.querySelector('span'); MO.A(t, [{ transform: 'translateX(14px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.3,.8,.3,1)' });
 }
-async function select(b, col) {
-  const cell = b.closest('.cell');
-  pop.querySelectorAll('.cell').forEach((c) => { c.classList.remove('selected'); const bx = c.querySelector('.bx'); bx.classList.remove('bx-selected', 'glow'); });
-  await BB.tabInto(b, pop.querySelector('.site .tile'), 'amazon.com', col);
-  pop.querySelectorAll('.cell').forEach((c) => { const on = (c.dataset.id || '') === (state.selected || ''); c.classList.toggle('selected', on); c.classList.toggle('rf', on); c.classList.remove('on'); const bx = c.querySelector('.bx'); bx.classList.toggle('bx-selected', on); bx.classList.toggle('glow', on); if (on) { void c.offsetWidth; c.style.setProperty('--rc', col || '#a9714b'); c.classList.add('on'); } });
+async function select(b, col, prevId) {
+  const prevCell = pop.querySelector(`.cell[data-id="${prevId || ''}"]`), prevBox = prevCell && prevCell.querySelector('.bx'), tile = pop.querySelector('.site .tile');
+  pop.querySelectorAll('.cell').forEach((c) => { c.classList.remove('selected', 'rf', 'on'); const bx = c.querySelector('.bx'); bx.classList.remove('bx-selected', 'glow'); });
+  try { await Promise.race([BB.swapTab(prevBox, b, tile, 'amazon.com', col), new Promise((r) => setTimeout(r, 3500))]); } catch (e) { /* element replaced mid-flight: carry on */ }
+  tile && (tile.style.visibility = '');
+  pop.querySelectorAll('.cell').forEach((c) => { const on = (c.dataset.id || '') === (state.selected || ''); c.classList.toggle('selected', on); c.classList.toggle('rf', on); const bx = c.querySelector('.bx'); bx.classList.toggle('bx-selected', on); bx.classList.toggle('glow', on); if (on) { c.style.setProperty('--rc', col || '#a9714b'); void c.offsetWidth; c.classList.add('on'); } });
   setBadge(true); fillStatus(document.getElementById('status'));
 }
 function render(animate) {
@@ -93,10 +94,10 @@ function render(animate) {
   const cells = [{ id: null, name: 'No box', kraft: true, icon: 'home' }, ...state.accounts];
   cells.forEach((a, i) => {
     const c = el('button', 'cell' + ((a.id || null) === (state.selected || null) ? ' selected' : '')); c.style.setProperty('--c', a.color || '#a9714b'); c.dataset.id = a.id || ''; if ((a.id || null) === (state.selected || null)) { c.classList.add('rf', 'on'); c.style.setProperty('--rc', a.color || '#a9714b'); }
-    const b = BB.box(a.kraft ? { kraft: true, icon: a.icon, label: 'default', size: 84 } : { color: a.color, icon: a.icon, label: a.name.slice(0, 8), size: 84, glow: a.id === state.selected }); MO.dropIn(b, i * 70);
+    const b = BB.box(a.kraft ? { kraft: true, icon: a.icon, label: 'default', size: 84, lid: true } : { color: a.color, icon: a.icon, label: a.name.slice(0, 8), size: 84, glow: a.id === state.selected, lid: true }); if (animate) MO.dropIn(b, i * 55);
     if (a.id === state.selected) b.classList.add('bx-selected');
     c.append(b, el('span', 'name', a.name)); if (a.id) c.append(el('span', 'menu', BB.icons.dots));
-    c.onclick = () => { if ((a.id || null) === state.selected) { MO.squish(b); MO.shine(b); return; } if (selecting) return; selecting = true; state.selected = a.id; select(b, a.color || '#a9714b').finally(() => (selecting = false)); };
+    c.onclick = () => { if ((a.id || null) === state.selected) { MO.squish(b); MO.shine(b); return; } if (selecting) return; selecting = true; const prev = state.selected; state.selected = a.id; select(b, a.color || '#a9714b', prev).finally(() => (selecting = false)); setTimeout(() => (selecting = false), 4000); };
     grid.append(c);
   });
   const nb = el('button', 'newcell', BB.icons.plus + '<span>New</span>'); nb.onclick = openSheet; grid.append(nb);
@@ -109,25 +110,22 @@ function sheetEl() {
   const s = el('div', 'sheet'); s.id = 'sheet'; const n = state.accounts.length + 1; const draft = { name: `Amazon ${n}`, color: Object.values(C)[(n + 1) % 6], icon: 'user' };
   s.style.setProperty('--c', draft.color);
   s.innerHTML = '<h3>New box for Amazon</h3><div class="prev" id="prev"></div><input class="input" id="nm" maxlength="24"><div class="swatches" id="sw"></div><div class="icons" id="ic"></div><div class="row"><button class="btn ghost" id="cancel">Cancel</button><button class="btn blue" id="create">Create box</button></div>';
-  // colour / icon changes wash over the old box from the control that was clicked (an overlay, never a flash)
-  let shown = null;
-  const mkBox = () => BB.box({ color: draft.color, icon: draft.icon, label: draft.name.slice(0, 8), size: 104, float: true, glow: true });
-  const paint = (origin) => {
+  // one box: colour morphs in place (CSS-registered --c), icon swaps with a quick flip
+  let pb = null;
+  const paint = (what) => {
     s.style.setProperty('--c', draft.color);
-    const prev = s.querySelector('#prev'); const layer = el('div', 'layer'); const nb = mkBox(); layer.append(nb); prev.append(layer);
-    if (!shown) { MO.spinIn(nb); } else {
-      const pr = prev.getBoundingClientRect(), o = origin ? origin.getBoundingClientRect() : pr;
-      MO.reveal(layer, o.left + o.width / 2, o.top + o.height / 2, { duration: 620 }); const old = shown; setTimeout(() => old.remove(), 640); MO.squish(nb);
-    }
-    shown = layer;
+    const prev = s.querySelector('#prev');
+    if (!pb) { pb = BB.box({ color: draft.color, icon: draft.icon, label: draft.name.slice(0, 8), size: 104, lid: true, hover: true }); prev.append(pb); MO.spinIn(pb); }
+    else if (what === 'color') { pb.style.setProperty('--c', draft.color); MO.squish(pb); MO.shine(pb); }
+    else if (what === 'icon') { const ico = pb.querySelector('.ico'); MO.A(ico, [{ transform: 'rotateY(0)', opacity: 1 }, { transform: 'rotateY(90deg)', opacity: 0 }], { duration: 140, fill: 'forwards' }).finished.then(() => { ico.innerHTML = BB.icons[draft.icon]; MO.A(ico, [{ transform: 'rotateY(-90deg)', opacity: 0 }, { transform: 'rotateY(0)', opacity: 1 }], { duration: 200, fill: 'none' }); ico.getAnimations().forEach((a) => a.playState === 'finished' && a.cancel()); }); }
     s.querySelectorAll('#sw button').forEach((b) => b.classList.toggle('on', b.dataset.c === draft.color)); s.querySelectorAll('#ic button').forEach((b) => b.classList.toggle('on', b.dataset.i === draft.icon));
   };
   s.querySelector('#nm').value = draft.name; s.querySelector('#nm').oninput = (e) => { draft.name = e.target.value; const l = s.querySelector('.label b'); if (l) l.textContent = draft.name.slice(0, 8); };
-  Object.values(C).slice(0, 7).forEach((c) => { const b = el('button'); b.dataset.c = c; b.style.setProperty('--c', c); b.onclick = () => { if (draft.color === c) return; draft.color = c; paint(b); }; s.querySelector('#sw').append(b); });
-  ICONS.forEach((i) => { const b = el('button', '', BB.icons[i]); b.dataset.i = i; b.onclick = () => { if (draft.icon === i) return; draft.icon = i; paint(b); }; s.querySelector('#ic').append(b); });
+  Object.values(C).slice(0, 7).forEach((c) => { const b = el('button'); b.dataset.c = c; b.style.setProperty('--c', c); b.onclick = () => { if (draft.color === c) return; draft.color = c; paint('color'); }; s.querySelector('#sw').append(b); });
+  ICONS.forEach((i) => { const b = el('button', '', BB.icons[i]); b.dataset.i = i; b.onclick = () => { if (draft.icon === i) return; draft.icon = i; paint('icon'); }; s.querySelector('#ic').append(b); });
   s.querySelector('#cancel').onclick = () => s.classList.remove('on');
   s.querySelector('#create').onclick = () => { const id = 'a' + Date.now(); state.accounts.push({ id, name: draft.name.trim() || `Amazon ${n}`, color: draft.color, icon: draft.icon }); state.selected = id; render(); const sel = pop.querySelector('.cell.selected .bx'); BB.burstAt(sel || pop); BB.toast(`Created “${draft.name}”`); };
-  setTimeout(paint); return s;
+  setTimeout(() => paint()); return s;
 }
 function openSheet() { document.getElementById('sheet').classList.add('on'); setTimeout(() => document.getElementById('nm').select(), 450); }
 function renderShelf() {
@@ -136,8 +134,8 @@ function renderShelf() {
   v.append(mk([[C.blue, 'user', 3, 'Google', '3 tabs'], [C.orange, 'users', 1, 'Reddit', '1 tab']]), mk([[C.purple, 'laptop', 2, 'GitHub', '2 tabs'], [C.kraft, 'globe', 1, 'Other', '1 tab']]));
   const m = el('button', 'manage', BB.icons.grid + '<span class="grow">Manage boxes</span>' + BB.icons.chev); m.querySelector('svg:last-child').style.transform = 'rotate(-90deg)'; m.onclick = () => location.href = 'services.html'; v.append(m); pop.append(v);
 }
-document.querySelectorAll('#demo button').forEach((b) => b.onclick = () => { document.querySelectorAll('#demo button').forEach((x) => x.classList.toggle('on', x === b)); state.view = b.dataset.v; render(); MO.popIn(pop, { duration: 650 }); });
+document.querySelectorAll('#demo button').forEach((b) => b.onclick = () => { document.querySelectorAll('#demo button').forEach((x) => x.classList.toggle('on', x === b)); state.view = b.dataset.v; render(true); MO.popIn(pop, { duration: 520 }); });
 document.getElementById('tb').onclick = () => { const o = pop.classList.toggle('out'); document.getElementById('tb').classList.toggle('open', !o); if (o) MO.A(pop, [{ transform: 'none', opacity: 1 }, { transform: 'scale(.6) translateY(-24px)', opacity: 0 }], { duration: 220, easing: 'ease-in' }); else MO.popIn(pop, { duration: 650 }); };
 document.getElementById('tb').classList.add('open');
-render(); MO.popIn(pop, { duration: 650 }); BB.chrome('popup.html');
+render(true); MO.popIn(pop, { duration: 520 }); BB.chrome('popup.html');
 </script></body></html>

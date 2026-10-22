@@ -30,7 +30,7 @@ const MO = (() => {
     let s = st.get(b);
     if (!s) {
       s = { cube: b.querySelector('.cube'), rx: spring(0, 70, 17), ry: spring(0, 70, 17), ly: spring(0, 90, 19), sc: spring(1, 90, 19), op: spring(0, 120, 20), dirty: true };
-      st.set(b, s); hooks.add(() => { if (!b.isConnected) { return; } if (s.dirty || active.has(s.rx) || active.has(s.ly) || active.has(s.op)) paint(b, s); });
+      st.set(b, s); const h = () => { if (!b.isConnected) { hooks.delete(h); return; } if (s.dirty || active.has(s.rx) || active.has(s.ly) || active.has(s.op)) paint(b, s); }; hooks.add(h);
     }
     return s;
   }
@@ -40,7 +40,7 @@ const MO = (() => {
     s.dirty = active.has(s.rx) || active.has(s.ry) || active.has(s.ly) || active.has(s.sc) || active.has(s.op);
   }
   const lifted = (b) => b.classList.contains('bx-selected');
-  function rest(b, hover) { const s = state(b); s.ly.to(hover || lifted(b) ? -3 : 0); s.sc.to(hover ? 1.03 : lifted(b) ? 1.02 : 1); s.op.to(hover ? .16 : 0); if (!hover) { s.rx.to(0); s.ry.to(0); } s.dirty = true; }
+  function rest(b, hover) { const s = state(b); s.ly.to(hover || lifted(b) ? -3 : 0); s.sc.to(hover ? 1.03 : lifted(b) ? 1.02 : 1);  if (!hover) { s.rx.to(0); s.ry.to(0); } s.dirty = true; }
   /** Open / close the lid on a box (0..1) with a spring. */
   function lid(b, v) { const s = state(b); s.op.k = 150; s.op.c = 15; s.op.to(v); s.dirty = true; return new Promise((r) => setTimeout(r, 380)); }
   if (!reduce) {
@@ -55,15 +55,15 @@ const MO = (() => {
       if (!filt) filt = requestAnimationFrame(smooth);
     }, { passive: true });
     document.addEventListener('pointerleave', () => { if (cur) { rest(cur, false); cur = null; } });
-    new MutationObserver((ms) => { for (const m of ms) { const b = m.target; if (b.classList && b.classList.contains('bx') && b !== cur) rest(b, false); } }).observe(document, { subtree: true, attributes: true, attributeFilter: ['class'] });
+    new MutationObserver((ms) => { for (const m of ms) { const b = m.target; if (b !== cur && b.classList && b.classList.contains('bx') && (m.oldValue || '').includes('bx-selected') !== b.classList.contains('bx-selected')) rest(b, false); } }).observe(document, { subtree: true, attributes: true, attributeFilter: ['class'], attributeOldValue: true });
   }
 
   /* ---------- little one-shot animations (Web Animations API) ---------- */
   const A = (el, kf, o) => reduce ? null : el.animate(kf, { fill: 'both', ...o });
-  const squish = (el) => A(el, [{ transform: 'none' }, { transform: 'scale(1.18, .78) translateY(6%)', offset: .25 }, { transform: 'scale(.9, 1.16) translateY(-14%)', offset: .55 }, { transform: 'scale(1.04, .97)', offset: .8 }, { transform: 'none' }], { duration: 620, easing: 'ease-out' });
-  const dropIn = (el, delay = 0) => A(el, [{ transform: 'translateY(-70px) scale(.8, 1.2)', opacity: 0 }, { transform: 'translateY(0) scale(1.12, .84)', opacity: 1, offset: .62 }, { transform: 'translateY(-10px) scale(.96, 1.06)', offset: .8 }, { transform: 'none', opacity: 1 }], { duration: 760, delay, easing: 'cubic-bezier(.3,.7,.4,1)' });
-  const spinIn = (el, delay = 0) => A(el, [{ transform: 'scale(0) rotate(-200deg)', opacity: 0 }, { transform: 'scale(1.25) rotate(14deg)', opacity: 1, offset: .65 }, { transform: 'scale(.94) rotate(-4deg)', offset: .85 }, { transform: 'none' }], { duration: 800, delay, easing: 'cubic-bezier(.3,.8,.3,1)' });
-  const popIn = (el, o = {}) => A(el, [{ transform: `scale(.55) translateY(-24px)`, opacity: 0 }, { transform: 'scale(1.04) translateY(2px)', opacity: 1, offset: .6 }, { transform: 'none', opacity: 1 }], { duration: 520, easing: 'cubic-bezier(.3,.8,.3,1)', ...o });
+  const squish = (el) => A(el, [{ transform: 'none' }, { transform: 'scale(1.18, .78) translateY(6%)', offset: .25 }, { transform: 'scale(.9, 1.16) translateY(-14%)', offset: .55 }, { transform: 'scale(1.04, .97)', offset: .8 }, { transform: 'none' }], { duration: 520, easing: 'ease-out', fill: 'none' });
+  const dropIn = (el, delay = 0) => A(el, [{ transform: 'translateY(-40px) scale(.9, 1.1)' }, { transform: 'translateY(0) scale(1.06, .92)', offset: .62 }, { transform: 'translateY(-5px) scale(.98, 1.03)', offset: .8 }, { transform: 'none' }], { duration: 620, delay, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'backwards' });
+  const spinIn = (el, delay = 0) => A(el, [{ transform: 'scale(0) rotate(-200deg)', opacity: 0 }, { transform: 'scale(1.25) rotate(14deg)', opacity: 1, offset: .65 }, { transform: 'scale(.94) rotate(-4deg)', offset: .85 }, { transform: 'none' }], { duration: 650, delay, easing: 'cubic-bezier(.3,.8,.3,1)', fill: 'backwards' });
+  const popIn = (el, o = {}) => A(el, [{ transform: `scale(.55) translateY(-24px)`, opacity: 0 }, { transform: 'scale(1.04) translateY(2px)', opacity: 1, offset: .6 }, { transform: 'none', opacity: 1 }], { duration: 460, easing: 'cubic-bezier(.3,.8,.3,1)', fill: 'backwards', ...o });
   const stagger = (els, fn, gap = 60) => [...els].forEach((e, i) => fn(e, i * gap));
   function ring(x, y, color) { const r = document.createElement('i'); r.className = 'ring'; r.style.cssText = `left:${x}px;top:${y}px;--rc:${color || '#fff'}`; r.addEventListener('animationend', () => r.remove(), { once: true }); document.body.append(r); }
   const shine = (b) => { b.classList.remove('shine'); void b.offsetWidth; b.classList.add('shine'); };
@@ -94,18 +94,18 @@ const MO = (() => {
       id = requestAnimationFrame(draw); };
     id = requestAnimationFrame(draw);
   }
-  /** Glass buttons: cursor spotlight + a few degrees of 3D tilt, smoothed by the CSS transition. */
-  if (!reduce) { let hb = null; addEventListener('pointermove', (e) => { const b = e.target.closest && e.target.closest('.btn'); if (hb && hb !== b) { hb.style.setProperty('--brx', '0deg'); hb.style.setProperty('--bry', '0deg'); hb = null; } if (!b) return; hb = b; const r = b.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; b.style.setProperty('--mx', e.clientX - r.left + 'px'); b.style.setProperty('--my', e.clientY - r.top + 'px'); b.style.setProperty('--bry', x * 9 + 'deg'); b.style.setProperty('--brx', -y * 12 + 'deg'); }, { passive: true }); }
+  /** Glass buttons / tilt cards: cursor spotlight + a few degrees of 3D tilt, smoothed by the CSS transition. */
+  if (!reduce) { let hb = null; const reset = (e) => { e.style.setProperty('--brx', '0deg'); e.style.setProperty('--bry', '0deg'); }; addEventListener('pointermove', (e) => { const b = e.target.closest && e.target.closest('.btn, [data-tilt]'); if (hb && hb !== b) { reset(hb); hb = null; } if (!b) return; hb = b; const amp = +(b.dataset.tilt || 5), r = b.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; b.style.setProperty('--mx', e.clientX - r.left + 'px'); b.style.setProperty('--my', e.clientY - r.top + 'px'); b.style.setProperty('--bry', x * amp + 'deg'); b.style.setProperty('--brx', -y * amp * 1.2 + 'deg'); }, { passive: true }); }
   /** Lid-close transition: two flaps slam shut, tape runs across, then the lid opens on the new content. */
   function lidWipe(host, change) {
     if (reduce) { change(); return Promise.resolve(); }
     const w = document.createElement('div'); w.className = 'lidwipe'; w.innerHTML = '<div class="p l"></div><div class="p r"></div><div class="tape"><b>BOXBOX · BOXBOX · BOXBOX</b></div>'; host.append(w);
     const [l, r, t] = [...w.children], o = { fill: 'forwards' };
-    const close = (el, from) => el.animate([{ transform: `translateX(${from}%) rotateY(${from < 0 ? 40 : -40}deg)` }, { transform: 'translateX(0) rotateY(0)' }], { duration: 420, easing: 'cubic-bezier(.6,0,.9,.5)', ...o });
+    const close = (el, from) => el.animate([{ transform: `translateX(${from}%) rotateY(${from < 0 ? 40 : -40}deg)` }, { transform: 'translateX(0) rotateY(0)' }], { duration: 340, easing: 'cubic-bezier(.6,0,.9,.5)', ...o });
     close(l, -102); const a = close(r, 102);
-    return a.finished.then(() => { t.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], { duration: 260, easing: 'cubic-bezier(.3,.8,.3,1)', ...o }); w.animate([{ transform: 'scale(1)' }, { transform: 'scale(.985)' }, { transform: 'scale(1)' }], { duration: 260, delay: 220 }); change(); return new Promise((res) => setTimeout(res, 380)); }).then(() => {
-      t.animate([{ transform: 'scaleY(1)', transformOrigin: '50% 100%' }, { transform: 'scaleY(0)', transformOrigin: '50% 100%' }], { duration: 220, ...o });
-      l.animate([{ transform: 'translateX(0) rotateY(0)' }, { transform: 'translateX(-102%) rotateY(40deg)' }], { duration: 520, delay: 160, easing: 'cubic-bezier(.3,.7,.2,1)', ...o }); return r.animate([{ transform: 'translateX(0) rotateY(0)' }, { transform: 'translateX(102%) rotateY(-40deg)' }], { duration: 520, delay: 160, easing: 'cubic-bezier(.3,.7,.2,1)', ...o }).finished; }).then(() => w.remove());
+    return a.finished.then(() => { t.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], { duration: 220, easing: 'cubic-bezier(.3,.8,.3,1)', ...o }); w.animate([{ transform: 'scale(1)' }, { transform: 'scale(.99)' }, { transform: 'scale(1)' }], { duration: 220, delay: 180 }); change(); return new Promise((res) => setTimeout(res, 260)); }).then(() => {
+      t.animate([{ transform: 'scaleY(1)', transformOrigin: '50% 100%' }, { transform: 'scaleY(0)', transformOrigin: '50% 100%' }], { duration: 180, ...o });
+      l.animate([{ transform: 'translateX(0) rotateY(0)' }, { transform: 'translateX(-102%) rotateY(40deg)' }], { duration: 430, delay: 120, easing: 'cubic-bezier(.3,.7,.2,1)', ...o }); return r.animate([{ transform: 'translateX(0) rotateY(0)' }, { transform: 'translateX(102%) rotateY(-40deg)' }], { duration: 430, delay: 120, easing: 'cubic-bezier(.3,.7,.2,1)', ...o }).finished; }).then(() => w.remove());
   }
   /** Cursor sheen for cards: sets --mx/--my on the hovered .sheen element. */
   if (!reduce) addEventListener('pointermove', (e) => { const c = e.target.closest && e.target.closest('.sheen'); if (c) { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', e.clientX - r.left + 'px'); c.style.setProperty('--my', e.clientY - r.top + 'px'); } }, { passive: true });
