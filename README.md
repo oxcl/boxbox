@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="store/out/promo-marquee.png" alt="BoxBox — One browser. Many lives." width="100%">
+  <img src="docs/readme/promo-marquee.webp" alt="BoxBox — One browser. Many lives." width="100%">
 </p>
 
 <h1 align="center">BoxBox</h1>
@@ -42,7 +42,7 @@ Open the same site in two boxes and use both at once. Each box has its own name,
 are: the toolbar icon *is* your current box, and a calm coloured border and name tag sit on the page.
 
 <p align="center">
-  <img src="store/out/02-side-by-side.png" alt="Work and Personal inboxes open side by side, each in its own box" width="85%">
+  <img src="docs/readme/side-by-side.webp" alt="Work and Personal inboxes open side by side, each in its own box" width="85%">
 </p>
 
 ### Choose before the page loads
@@ -52,7 +52,7 @@ the wrong account. Or have it open your normal browser, or remember the last box
 or per site.
 
 <p align="center">
-  <img src="store/out/04-picker.png" alt="The box picker: Open GitHub in… No box, Personal, Work or Open source" width="85%">
+  <img src="docs/readme/picker.webp" alt="The box picker: Open GitHub in… No box, Personal, Work or Open source" width="85%">
 </p>
 
 ### Sites, not just domains
@@ -61,13 +61,13 @@ BoxBox thinks in *services*. `youtube.com` and `accounts.google.com` are both Go
 your box. Popular services come grouped out of the box, and you can merge, split or create your own.
 
 <p align="center">
-  <img src="store/out/05-settings.png" alt="The settings page listing services with their logos and domains" width="85%">
+  <img src="docs/readme/settings.webp" alt="The settings page listing services with their logos and domains" width="85%">
 </p>
 
 ### Made to keep things apart
 
 <p align="center">
-  <img src="store/out/06-features.png" alt="Nothing leaves your device · its own proxy per box · delete a box, wipe its data · quiet and unmistakable" width="85%">
+  <img src="docs/readme/features.webp" alt="Nothing leaves your device · its own proxy per box · delete a box, wipe its data · quiet and unmistakable" width="85%">
 </p>
 
 - **Its own proxy per box.** Send one account through a different network or country.
