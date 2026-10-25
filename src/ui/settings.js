@@ -85,7 +85,7 @@ function appearance() {
     h('div', { class: 'panel' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { style: { fontWeight: 700 } }, 'Theme')), themeSeg),
       toggle('border', 'Page border', 'Draw a colored frame and a small name pill around pages that are in a box.'),
       toggle('badge', 'Favicon badge', 'Add a small dot in the box color to the site’s icon.'),
-      toggle('tabGroups', 'Tab groups', 'Group tabs of the same box and color the group (in browsers without tab groups the tab title gets a [Box] tag).')),
+      toggle('tabGroups', 'Tab groups', 'Group tabs of the same box and color the group (in browsers without tab groups the tab title gets a [name] tag).')),
     h('div', { class: 'panel' }, h('h2', {}, 'Privacy'), h('p', { class: 'muted', style: { margin: 0 } }, 'BoxBox has no telemetry and sends nothing anywhere. Logos for common services ship inside the extension; for other services it remembers the icon a page you visit has already loaded (re-read from the browser cache, kept only on this device). Cookies of Chrome-based boxes are stored in this browser profile; deleting a box deletes them.')));
 }
 

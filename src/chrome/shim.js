@@ -136,7 +136,7 @@ export function shim(cfg) {
     try { Object.defineProperty(host, name, { ...d, get }); } catch { /* ignore */ }
   };
   if (typeof Storage !== 'undefined' && !isWorker) {
-    // marker for session restore: Chrome restores sessionStorage with the tab, so a restored tab can tell Box which account it was in
+    // marker for session restore: Chrome restores sessionStorage with the tab, so a restored tab can tell BoxBox which account it was in
     try { if (g.top === g) { const host = Object.getOwnPropertyDescriptor(g, 'sessionStorage') ? g : Object.getPrototypeOf(g); Object.getOwnPropertyDescriptor(host, 'sessionStorage').get.call(g).setItem('__box_acct', cfg.acct); } } catch { /* ignore */ }
     wrapStorageGlobal('localStorage', 'local');
     wrapStorageGlobal('sessionStorage', 'session');

@@ -1,4 +1,4 @@
-// Fake multi-domain "services" for testing Box.
+// Fake multi-domain "services" for testing BoxBox.
 //
 //   Service Alpha : alpha.localhost, mail./video./accounts.alpha.localhost,
 //                   alpha-static.localhost (different *site*; third-party context)

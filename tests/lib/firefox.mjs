@@ -7,7 +7,7 @@ import os from 'node:os';
 import { sleep, waitFor } from './framework.mjs';
 
 export const UUID = '7b6c3a3e-0d57-4b5b-9d61-6a1f2f7e1a01';
-export const EXT_ID = 'box@box.local';
+export const EXT_ID = 'boxbox@boxbox.local';
 
 export class FirefoxDriver {
   static async launch({ extDir, fixture, headless = true, prefs = {} }) {

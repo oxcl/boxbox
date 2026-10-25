@@ -122,7 +122,7 @@ sites.popularSites = async (h, drv, a) => {
   ];
   for (const [u, ok] of targets) {
     // Default session first: some sites throttle or refuse automated browsers (reddit.com does, per IP). Only a site that renders
-    // there can say anything about Box.
+    // there can say anything about BoxBox.
     const d = await h.open(u);
     let defaultOk = true;
     try { await settle(d, async () => d.eval(ok), `${u} renders in the default session`, 25000); } catch { defaultOk = false; }

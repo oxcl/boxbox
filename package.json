@@ -1,9 +1,11 @@
 {
-  "name": "box-extension",
+  "name": "boxbox",
   "version": "0.1.0",
   "private": true,
+  "license": "GPL-3.0-only",
+  "engines": { "node": ">=18" },
   "type": "module",
-  "description": "Box — per-tab session isolation for Firefox and Chrome",
+  "description": "BoxBox — isolated accounts per tab for Firefox and Chrome",
   "scripts": {
     "build": "node build/build.mjs",
     "test": "node tests/unit.mjs && node tests/run.mjs",

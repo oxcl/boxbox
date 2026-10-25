@@ -196,7 +196,7 @@ export class ChromeMv3Platform extends ChromeBase {
     if (!s) return;
     this.sessions.delete(tabId);
     if (reason === 'target_closed') return;
-    if (this.accountOf(tabId)) {            // the user closed the "Box started debugging" bar, or DevTools stole the session
+    if (this.accountOf(tabId)) {            // the user closed the "BoxBox started debugging" bar, or DevTools stole the session
       this.lost.add(tabId);
       this.setRules(tabId, true, true).catch(() => {});     // fail closed: nothing may leave this tab outside its account
       this.pushIdentity(tabId);
@@ -206,8 +206,8 @@ export class ChromeMv3Platform extends ChromeBase {
   isolationStatus(tabId) {
     if (this.lost.has(tabId)) return { level: 'fail', action: 'restoreIsolation', messages: ['Isolation is paused for this tab because the debugging bar was closed. The tab is blocked so nothing is sent outside its account — use “Restore isolation” below.'] };
     const notes = [];
-    if (this.wsTabs && this.wsTabs.has(tabId)) notes.push('This page opened a WebSocket. Chrome gives extensions no way to intercept WebSocket handshakes, so Box sends them without cookies (nothing from other sessions is exposed, but cookie-authenticated sockets will not log in).');
-    if (this.exposedFirst && this.exposedFirst.has(tabId)) notes.push('This tab was opened by the browser (for example “Open link in new tab” from the context menu) before Box could attach, so its very first request was sent in the default session and then repeated inside the account.');
+    if (this.wsTabs && this.wsTabs.has(tabId)) notes.push('This page opened a WebSocket. Chrome gives extensions no way to intercept WebSocket handshakes, so BoxBox sends them without cookies (nothing from other sessions is exposed, but cookie-authenticated sockets will not log in).');
+    if (this.exposedFirst && this.exposedFirst.has(tabId)) notes.push('This tab was opened by the browser (for example “Open link in new tab” from the context menu) before BoxBox could attach, so its very first request was sent in the default session and then repeated inside the account.');
     return notes.length ? { level: 'warn', messages: notes } : null;
   }
   async restoreIsolation(tabId) {
@@ -231,7 +231,7 @@ export class ChromeMv3Platform extends ChromeBase {
       const req = p.request;
       let u; try { u = new URL(req.url); } catch { await cont(); return; }
       if (this.wipeTabs.has(tabId)) {
-        if (u.pathname === '/__box_wipe') await send('Fetch.fulfillRequest', { requestId: p.requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'text/html' }, { name: 'Cache-Control', value: 'no-store' }], body: b64('<!doctype html><title>Box</title>') });
+        if (u.pathname === '/__box_wipe') await send('Fetch.fulfillRequest', { requestId: p.requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'text/html' }, { name: 'Cache-Control', value: 'no-store' }], body: b64('<!doctype html><title>BoxBox</title>') });
         else await send('Fetch.failRequest', { requestId: p.requestId, errorReason: 'BlockedByClient' });
         return;
       }
@@ -412,7 +412,7 @@ export class ChromeMv3Platform extends ChromeBase {
     return { go: url };
   }
   async testCall(call, args) {
-    if (call === 'detach') {          // what happens when the user clicks "Cancel" on Chrome's "Box started debugging this browser" bar
+    if (call === 'detach') {          // what happens when the user clicks "Cancel" on Chrome's "BoxBox started debugging this browser" bar
       try { await ext.debugger.detach({ tabId: args.tabId }); } catch { /* ignore */ }
       this.onDetach({ tabId: args.tabId }, 'canceled_by_user');
       return true;

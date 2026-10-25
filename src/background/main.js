@@ -10,7 +10,7 @@ const platform = createPlatform();
 const controller = new Controller(platform);
 const bootId = Math.random().toString(36).slice(2, 8);
 let initState = 'starting', initError = null;
-const ready = controller.init().then(() => { initState = 'ready'; }, (e) => { initState = 'failed'; initError = String(e && e.stack || e); console.error('Box init failed', e); throw e; });
+const ready = controller.init().then(() => { initState = 'ready'; }, (e) => { initState = 'failed'; initError = String(e && e.stack || e); console.error('BoxBox init failed', e); throw e; });
 
 ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || typeof msg.type !== 'string') return false;

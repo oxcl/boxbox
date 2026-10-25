@@ -1,4 +1,4 @@
-# Box — Report
+# BoxBox — Report
 
 Status at the end of the work: **the local fixture suite passes on all three real browsers** (the brief's definition of done),
 the unit suite passes, and the three real-site smoke tests pass. Everything below is reproducible with
@@ -19,7 +19,7 @@ Browsers under test (all from the flake): **Firefox 158.0.1**, **Google Chrome 1
 | Leaving / entering / ask | blocking `webRequest` + tab re-creation | held at `Fetch` (account tabs); DNR **gate** redirect for Ask/Remember (no request before the choice) | blocking `webRequest` (cancel → picker) |
 | Tab identity | container colour + tab groups | coloured **tab groups** | *(none — `tabGroups` is MV3-only)*; badge + border |
 | Proxy | exact, per container (`proxy.onRequest`) | best effort: dynamic PAC + warnings | same as MV3 |
-| Cost to the user | none | Chrome's "Box started debugging this browser" bar on account tabs; fail-closed if closed | none (bar only on tabs with a foreign service worker) |
+| Cost to the user | none | Chrome's "BoxBox started debugging this browser" bar on account tabs; fail-closed if closed | none (bar only on tabs with a foreign service worker) |
 
 ## 2. Test results
 
@@ -127,13 +127,13 @@ Nothing here is silent: where the extension can detect a gap it says so in the p
    MV2 wraps `Worker`/`SharedWorker` in a blob; relative-URL APIs are re-resolved, but `self.location`/`import.meta.url` inside the worker are the blob's.
    Service-worker-owned clients and worklets are not wrapped.
 6. **Opaque origins** (sandboxed iframes without `allow-same-origin`, `data:` documents) have no storage to isolate and no cookies; nothing leaks, nothing works.
-7. **Session restore**: Chrome gives tabs new ids after a restart. Box recovers each tab's account from a marker in the tab's restored `sessionStorage`
+7. **Session restore**: Chrome gives tabs new ids after a restart. BoxBox recovers each tab's account from a marker in the tab's restored `sessionStorage`
    (`restored tab… re-enters its account`); tabs whose sessionStorage was not restored come back in the default session.
 
 ### Chrome MV3 only
-8. **The debugging bar.** Account tabs are attached through `chrome.debugger`, so Chrome shows *"Box started debugging this browser"* on them. This is the cost of
+8. **The debugging bar.** Account tabs are attached through `chrome.debugger`, so Chrome shows *"BoxBox started debugging this browser"* on them. This is the cost of
    blocking semantics on MV3 (DESIGN §4.1). It is not visible in the headless e2e runs, so it is **not asserted by a test**. If the user closes it, Chrome detaches
-   the debugger: Box then **blocks the tab** (DNR block rule), keeps stripping `Set-Cookie`, shows a `fail` banner with *Restore isolation* (`closing the debugging bar fails closed…`).
+   the debugger: BoxBox then **blocks the tab** (DNR block rule), keeps stripping `Set-Cookie`, shows a `fail` banner with *Restore isolation* (`closing the debugging bar fails closed…`).
 9. **WebSockets** carry no cookies (the debugger's `Fetch` domain does not see WebSocket handshakes): no cross-account leak, but cookie-authenticated sockets
    will not authenticate. Flagged on the tab (`WebSockets from account tabs are flagged`).
 10. **Tabs opened by the browser itself** (context-menu *Open link in new tab*, middle-click on browser UI): the debugger attaches after the first request starts, so that
@@ -142,7 +142,7 @@ Nothing here is silent: where the extension can detect a gap it says so in the p
 11. **Service-worker restarts.** All MV3 listeners are registered synchronously (required to be woken by events) and state is rebuilt from `storage` on start (tested by
     forcing the rebuild path: `isolation state is rebuilt from storage…`). A real worker termination **could not be provoked under puppeteer** (it keeps the worker alive; a
     DevTools-stopped extension worker never restarts in that harness — evidence: `ServiceWorker.stopWorker` leaves it in `starting` forever), so true idle-termination is untested.
-12. `gate.html`/`gate.js` are web-accessible (DNR redirect target) so a web page can detect that Box is installed.
+12. `gate.html`/`gate.js` are web-accessible (DNR redirect target) so a web page can detect that BoxBox is installed.
 
 ### Helium MV2 only
 13. No `chrome.tabGroups` (MV3-only): **no coloured tab indicator**; identity is the badge + border. Asserted in `tab color…` (`tabGroups` is `null`).
@@ -165,7 +165,7 @@ Nothing here is silent: where the extension can detect a gap it says so in the p
 
 ### Firefox
 15. Changing a tab's account re-creates the tab (containers cannot change in place): same position / window / pinned state / activation, **but a fresh back-history**.
-16. Containers are visible in Firefox's own UI as `Box · <name>`; WebRTC policy is browser-wide while a proxied container is open.
+16. Containers are visible in Firefox's own UI as `BoxBox · <name>`; WebRTC policy is browser-wide while a proxied container is open.
 
 ### Out of scope (per brief)
 Cross-device sync, import/export, fingerprint isolation, remote catalog updates.

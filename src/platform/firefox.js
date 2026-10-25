@@ -168,12 +168,12 @@ export class FirefoxPlatform {
   ffIcon(acc) { return FF_ICONS[acc.icon] || 'circle'; }
 
   async accountCreated(acc) {
-    const ci = await ext.contextualIdentities.create({ name: `Box · ${acc.name}`, color: this.ffColor(acc), icon: this.ffIcon(acc) });
+    const ci = await ext.contextualIdentities.create({ name: `BoxBox · ${acc.name}`, color: this.ffColor(acc), icon: this.ffIcon(acc) });
     this.csToAccount.set(ci.cookieStoreId, acc.id);
     return { cookieStoreId: ci.cookieStoreId };
   }
   async accountUpdated(acc) {
-    if (acc.cookieStoreId) await ext.contextualIdentities.update(acc.cookieStoreId, { name: `Box · ${acc.name}`, color: this.ffColor(acc), icon: this.ffIcon(acc) });
+    if (acc.cookieStoreId) await ext.contextualIdentities.update(acc.cookieStoreId, { name: `BoxBox · ${acc.name}`, color: this.ffColor(acc), icon: this.ffIcon(acc) });
     for (const [id, t] of this.c.tabs) if (t.accountId === acc.id) this.pushIdentity(id);
     return {};
   }

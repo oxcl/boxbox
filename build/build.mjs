@@ -43,7 +43,7 @@ function manifest(target) {
   if (mv3) m.action = action; else m.browser_action = action;
   const perms = ['tabs', 'webRequest', 'webNavigation', 'storage', 'proxy', '<all_urls>'];
   if (ff) {
-    m.browser_specific_settings = { gecko: { id: 'box@box.local', strict_min_version: '140.0' } };
+    m.browser_specific_settings = { gecko: { id: 'boxbox@boxbox.local', strict_min_version: '140.0' } };
     m.background = { scripts: ['background.js'], persistent: true };
     m.permissions = [...perms, 'webRequestBlocking', 'contextualIdentities', 'cookies', 'browsingData', 'tabGroups', 'privacy'];
     m.permissions = m.permissions.filter((p) => p !== 'windows');

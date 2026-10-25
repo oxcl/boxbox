@@ -1,6 +1,6 @@
 // Chrome per-account proxy: best effort, never silent. See DESIGN.md §5.
 //
-// Chrome has ONE browser-wide proxy setting and a PAC script only sees URLs, not tabs. So Box generates a PAC
+// Chrome has ONE browser-wide proxy setting and a PAC script only sees URLs, not tabs. So BoxBox generates a PAC
 // that routes the hosts used by tabs of proxied accounts through that account's proxy. Everything that cannot
 // be guaranteed is computed and surfaced as `warn` / `fail` on the popup, the page label and the toolbar badge.
 import { ext, IS_MV3 } from '../core/ext.js';
@@ -143,7 +143,7 @@ export class ChromeProxy {
     const bump = (l, m) => { msgs.push(m); if (l === 'fail' || (l === 'warn' && level === 'ok')) level = l; };
     const label = `${acc.proxy.type.toUpperCase()} ${acc.proxy.host}:${acc.proxy.port}`;
     if (this.errors.get(acc.id)) bump('fail', this.errors.get(acc.id));
-    if (this.control && this.control !== 'controlled_by_this_extension' && this.control !== 'unknown') bump('fail', `Chrome's proxy setting is controlled by ${this.control.replace(/_/g, ' ')}; Box cannot route this account through ${label}.`);
+    if (this.control && this.control !== 'controlled_by_this_extension' && this.control !== 'unknown') bump('fail', `Chrome's proxy setting is controlled by ${this.control.replace(/_/g, ' ')}; BoxBox cannot route this account through ${label}.`);
     const covered = this.coveredHosts(acc.id);
     const sharing = [];
     for (const [id, st] of this.b.c.tabs) {
@@ -156,7 +156,7 @@ export class ChromeProxy {
     if (this.claims) for (const d of covered) { const owner = this.claims.get(d); if (owner && owner !== acc.id && this.activeAccounts().some((x) => x.id === owner)) conflicts.push(d); }
     if (conflicts.length) bump('warn', `Another proxied account claims the same site(s) (${[...new Set(conflicts)].slice(0, 3).join(', ')}); only one proxy can apply.`);
     const leaks = this.leaks.get(tabId);
-    if (leaks && leaks.size) bump('warn', `${leaks.size} host(s) were first contacted before Box could add them to the proxy rule and may have connected directly: ${[...leaks].slice(0, 3).join(', ')}${leaks.size > 3 ? '…' : ''}.`);
+    if (leaks && leaks.size) bump('warn', `${leaks.size} host(s) were first contacted before BoxBox could add them to the proxy rule and may have connected directly: ${[...leaks].slice(0, 3).join(', ')}${leaks.size > 3 ? '…' : ''}.`);
     if (level === 'ok') msgs.push(`Routed through ${label}. Applies to this account’s known hosts; unseen third-party hosts are added when first contacted.`);
     return { level, messages: msgs };
   }

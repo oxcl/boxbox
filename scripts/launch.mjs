@@ -1,6 +1,6 @@
 // Manual-testing launcher:  direnv exec . npm run launch:firefox | launch:chrome | launch:helium
 //
-// Builds the production extension, then starts the browser with a brand-new temporary profile that contains only Box.
+// Builds the production extension, then starts the browser with a brand-new temporary profile that contains only BoxBox.
 // The profile is deleted when the browser exits (or on Ctrl-C).
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -13,6 +13,9 @@ const which = process.argv[2];
 const TARGET = { firefox: 'firefox', chrome: 'chrome-mv3', helium: 'chrome-mv2' }[which];
 if (!TARGET) { console.error('usage: launch.mjs <firefox|chrome|helium>'); process.exit(2); }
 const startUrl = process.argv[3] || 'about:blank';
+const ENV = { firefox: 'BOX_FIREFOX', chrome: 'BOX_CHROME', helium: 'BOX_HELIUM' }[which];
+if (!process.env[ENV]) { console.error(`Set ${ENV} to the path of your ${which} executable (it is set automatically inside the Nix dev shell).`); process.exit(2); }
+
 const headless = process.env.BOX_HEADLESS === '1';                       // CI / verification only
 const exitAfter = Number(process.env.BOX_LAUNCH_EXIT_AFTER || 0);        // verification only: close after N ms
 
@@ -32,7 +35,7 @@ if (which === 'firefox') {
   for (const [k, v] of Object.entries({
     'privacy.userContext.enabled': true, 'browser.shell.checkDefaultBrowser': false, 'browser.startup.homepage': 'about:blank', 'startup.homepage_welcome_url': 'about:blank',
     'datareporting.policy.dataSubmissionEnabled': false, 'app.update.auto': false, 'browser.aboutwelcome.enabled': false, 'browser.newtabpage.enabled': false,
-    'network.proxy.allow_hijacking_localhost': false, 'extensions.webextensions.uuids': JSON.stringify({ 'box@box.local': '7b6c3a3e-0d57-4b5b-9d61-6a1f2f7e1a01' }),
+    'network.proxy.allow_hijacking_localhost': false, 'extensions.webextensions.uuids': JSON.stringify({ 'boxbox@boxbox.local': '7b6c3a3e-0d57-4b5b-9d61-6a1f2f7e1a01' }),
   })) o.setPreference(k, v);
   const d = await new Builder().forBrowser('firefox').setFirefoxOptions(o).setFirefoxService(new firefox.ServiceBuilder(process.env.BOX_GECKODRIVER)).build();
   await d.installAddon(extDir, true);

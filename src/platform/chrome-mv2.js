@@ -144,7 +144,7 @@ export class ChromeMv2Platform extends ChromeBase {
 }
 
 /**
- * Make a page's CSP compatible with Box's shim in an account tab: add a nonce to script-src(-elem) (or default-src) so the
+ * Make a page's CSP compatible with BoxBox's shim in an account tab: add a nonce to script-src(-elem) (or default-src) so the
  * inline shim runs, allow 'self' and data: in connect-src (the synchronous channel is answered with a data: redirect),
  * and drop Trusted Types enforcement (which would reject the inline script).
  */

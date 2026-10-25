@@ -1,6 +1,6 @@
-# Box — Design
+# BoxBox — Design
 
-Box gives each browser tab its own isolated "account" for a *service* (a group of
+BoxBox gives each browser tab its own isolated "account" for a *service* (a group of
 domains sharing one login), inside a single browser profile. This document was
 written before implementation; §10 records what the pre-implementation spikes
 (run on the real browsers in this repo's flake) confirmed and what they changed, and
@@ -120,9 +120,9 @@ Per build:
     **original** `Set-Cookie` (verified in the spike), which updates the jar. Event
     order through the single extension event pipe is preserved, so the jar is updated
     before the redirect target's `Fetch.requestPaused` is handled.
-  - Cost: Chrome shows its "Box started debugging this browser" infobar in account
+  - Cost: Chrome shows its "BoxBox started debugging this browser" infobar in account
     tabs (the only way to get blocking semantics). Closing it detaches the debugger;
-    Box detects `onDetach` and shows an *isolation lost* warning and re-attaches on
+    BoxBox detects `onDetach` and shows an *isolation lost* warning and re-attaches on
     the next navigation. Default-session tabs are never debugged.
   - Auto-attach (`Target.setAutoAttach`, flatten) extends interception to OOPIF
     iframes and dedicated workers; service-worker bypass and cache disabling per tab
@@ -283,7 +283,7 @@ Implementation and testing on the real browsers changed these points. Each is co
 
 1. **MV3 must always send an explicit `Cookie` header — even an empty one.** Spike: when the debugger's `Fetch.continueRequest`
    sets `Cookie`, Chrome sends exactly that and ignores the real jar; but when the account's jar has *nothing* for the URL and no
-   header is set, Chrome attaches the **real** jar's cookies, leaking the default session into the account tab. Box therefore
+   header is set, Chrome attaches the **real** jar's cookies, leaking the default session into the account tab. BoxBox therefore
    always sets `Cookie` (empty string when the jar is empty), which suppresses the real jar. [`default session is unaffected…` on Chrome]
 2. **MV3 new tabs and popups need a handshake.** `chrome.debugger` cannot attach to a tab before its first request starts, and
    CDP auto-attach does *not* report popups (spike). A popup login response would otherwise land in the real jar. The shim opens
@@ -308,10 +308,10 @@ Implementation and testing on the real browsers changed these points. Each is co
    `Object.getPrototypeOf(self.caches)`. MV2 wraps `Worker`/`SharedWorker` in a blob that runs the shim and re-resolves relative URLs
    (`fetch`, `XMLHttpRequest`, `Request`, `Cache`, `WebSocket`, `EventSource`, `importScripts`). [`dedicated Worker sees the account's…`]
 8. **Service workers.** MV3: `Network.setBypassServiceWorker` on every attached target. MV2: a default-session service worker that
-   controls an account tab is *detected* by the shim (before the stub hides `controller`); Box then attaches the debugger to *that tab only*,
+   controls an account tab is *detected* by the shim (before the stub hides `controller`); BoxBox then attaches the debugger to *that tab only*,
    enables the bypass and reloads — so Helium shows the debugging bar only where a foreign service worker actually exists.
    Page-visible `navigator.serviceWorker` is an inert stub (resolving `ready`, a fake *active* worker) so apps that await it do not hang. [`a default-session service worker does not take over an account tab`]
-9. **Fail closed.** If the user closes Chrome's debugging bar (`onDetach: canceled_by_user`), Box adds a DNR `block` rule for that tab, keeps the
+9. **Fail closed.** If the user closes Chrome's debugging bar (`onDetach: canceled_by_user`), BoxBox adds a DNR `block` rule for that tab, keeps the
    `Set-Cookie` strip rule, shows a `fail` status and offers *Restore isolation*. [`MV3: closing the debugging bar fails closed`]
 10. **MV3 survives service-worker restarts.** `tabs` state is mirrored to `storage.session`; jars live in `storage.local`; on start the worker clears stale
     session rules and re-attaches every account tab. [`MV3: isolation survives the extension service worker being terminated`]

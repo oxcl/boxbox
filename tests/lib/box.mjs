@@ -43,7 +43,7 @@ export class BoxHelper {
   async fxLog() { const r = await fetch(this.fx.url('ctl.localhost', '/log')); return r.json(); }
   async fxLogReset() { await fetch(this.fx.url('ctl.localhost', '/reset')); }
 
-  /** Which Box account (id) is the tab in, according to the extension. */
+  /** Which BoxBox account (id) is the tab in, according to the extension. */
   async tabAccount(tab) {
     const id = await tab.boxId();
     let e;

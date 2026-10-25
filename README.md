@@ -1,130 +1,196 @@
-# BoxBox
-
-**Isolated accounts, per tab, in one browser profile. Every account lives in its own little cardboard box.** Log in to the same website with different accounts at the same
-time — in Firefox, Chrome (Manifest V3) and Helium (Manifest V2) — as if every tab were its own browser profile.
-
-* **Services, not domains.** `youtube.com`, `accounts.google.com` and `gstatic.com` are one service, *Google*; moving
-  between them never switches anything. A built-in catalog groups the common ones, every other site is its own service,
-  and you can merge / split / create services yourself.
-* **Accounts per service**, each with a name, colour, icon and an optional proxy. Switching one tab never touches another.
-* **Default session** is your normal browser, untouched.
-* **Entry modes** (global, with per-service override): open in the default session · remember the last account · ask with a picker *before the page loads*.
-* **Visible at a glance:** the toolbar icon *is* the active box, a coloured favicon badge, a coloured tab group / container, and a coloured page border with a small name pill.
-* **A first-run welcome** (three slides, the screen closes like a box lid between them) that also lets you pick your default entry mode.
-* **No telemetry, nothing sent anywhere.** The catalog and the logos of ~37 common services are bundled; for other services BoxBox remembers the icon a page you visit already loaded (re-read from the browser cache, stored locally).
-
-<p>
-  <img src="docs/screens/popup.png" width="230" alt="Popup: the boxes for the current service">
-  <img src="docs/screens/picker.png" width="420" alt="Box picker (Ask mode)">
-</p>
-<p>
-  <img src="docs/screens/settings-dark.png" width="420" alt="Settings, dark mode">
-  <img src="docs/screens/settings-services.png" width="420" alt="Service editor">
+<p align="center">
+  <img src="store/out/promo-marquee.png" alt="BoxBox — One browser. Many lives." width="100%">
 </p>
 
-The UI is plain DOM + CSS (no framework, no images): the boxes are CSS-3D cubes that tilt with the cursor, open their lid and
-take any colour; motion is one small spring engine that only runs while something moves (`src/ui/motion.js`, `src/ui/box.js`).
-`prototype/` holds the standalone design prototype these screens were developed from (open `prototype/index.html`).
+<h1 align="center">BoxBox</h1>
 
-How isolation is achieved on each build is in [DESIGN.md](DESIGN.md); what works, what doesn't, and the evidence is in
-[REPORT.md](REPORT.md).
+<p align="center">
+  <strong>Log in to the same website as different people, at the same time, in one browser.</strong><br>
+  Every account lives in its own little cardboard box.
+</p>
 
-## Requirements
+<p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#how-it-feels">How it feels</a> ·
+  <a href="#build-it-yourself">Build it yourself</a> ·
+  <a href="#faq">FAQ</a> ·
+  <a href="#contributing">Contributing</a>
+</p>
 
-Only **Nix (flakes enabled) and direnv**. Everything else — Node, Firefox, Google Chrome (unfree, allowed explicitly in the
-flake), Helium (fetched and wrapped by the flake), geckodriver, chromedriver, `zip`, `openssl` — comes from `flake.nix`.
+---
 
-```sh
-direnv allow                     # once; .envrc is just `use flake`
-direnv exec . npm ci             # install the JS dependencies (esbuild, puppeteer-core, selenium-webdriver, tldts)
-```
+## Why BoxBox?
 
-Every command below is run as `direnv exec . <command>`; nothing is installed globally.
+You have a work Google account and a personal one. Two GitHub identities. A client's dashboard, and your own. Normally that
+means signing out and in again, juggling browser profiles, or opening a private window and losing it all when you close it.
 
-## Build
+BoxBox gives every **tab** its own box. Put one tab in your *Work* box and another in your *Personal* box, and the same site
+shows you two different logins side by side. Closing one never signs you out of the other.
 
-```sh
-direnv exec . npm run build      # -> dist/firefox  dist/chrome-mv3  dist/chrome-mv2
-BOX_TEST=1 direnv exec . npm run build   # -> dist-test/*  (adds the test bridge + fixture catalog; used by the tests)
-```
+- **Works with any website.** No site-specific setup, nothing for the site to support.
+- **Your normal browsing is untouched.** Tabs that aren't in a box behave exactly as before.
+- **Private by design.** No accounts, no telemetry, nothing is sent anywhere. Your boxes live in your browser profile.
+- **Free and open source.**
 
-Load by hand (the launchers below do this for you):
+Supported browsers: **Chrome**, **Firefox** and **Helium**.
 
-| Browser | How |
+## How it feels
+
+### Two accounts. One site.
+
+Open the same site in two boxes and use both at once. Each box has its own name, colour and icon, so you always know where you
+are: the toolbar icon *is* your current box, and a calm coloured border and name tag sit on the page.
+
+<p align="center">
+  <img src="store/out/02-side-by-side.png" alt="Work and Personal inboxes open side by side, each in its own box" width="85%">
+</p>
+
+### Choose before the page loads
+
+Prefer to decide each time? Set a site to **Ask** and BoxBox shows a picker before anything loads, so the site never sees
+the wrong account. Or have it open your normal browser, or remember the last box you used. You can set this for everything,
+or per site.
+
+<p align="center">
+  <img src="store/out/04-picker.png" alt="The box picker: Open GitHub in… No box, Personal, Work or Open source" width="85%">
+</p>
+
+### Sites, not just domains
+
+BoxBox thinks in *services*. `youtube.com` and `accounts.google.com` are both Google, so moving between them never switches
+your box. Popular services come grouped out of the box, and you can merge, split or create your own.
+
+<p align="center">
+  <img src="store/out/05-settings.png" alt="The settings page listing services with their logos and domains" width="85%">
+</p>
+
+### Made to keep things apart
+
+<p align="center">
+  <img src="store/out/06-features.png" alt="Nothing leaves your device · its own proxy per box · delete a box, wipe its data · quiet and unmistakable" width="85%">
+</p>
+
+- **Its own proxy per box.** Send one account through a different network or country.
+- **Delete a box, wipe its data.** Cookies, storage and caches go with it.
+- **Nothing leaves your device.** No sign-up, no analytics, no servers.
+
+## Install
+
+BoxBox is not on the browser stores yet. Until it is, build it (below) and load it in your browser:
+
+| Browser | How to load it |
 |---|---|
-| Firefox | `about:debugging` → *This Firefox* → *Load Temporary Add-on…* → `dist/firefox/manifest.json` |
-| Chrome | `chrome://extensions` → *Developer mode* → *Load unpacked* → `dist/chrome-mv3` |
-| Helium | start with `--load-extension=dist/chrome-mv2 --disable-features=ExtensionManifestV2Unsupported,ExtensionManifestV2Disabled` |
+| **Chrome** | Open `chrome://extensions`, turn on *Developer mode*, click *Load unpacked*, choose the `dist/chrome-mv3` folder. |
+| **Firefox** | Open `about:debugging`, choose *This Firefox* → *Load Temporary Add-on…*, select `dist/firefox/manifest.json`. |
+| **Helium** | Start it with `--load-extension=dist/chrome-mv2 --disable-features=ExtensionManifestV2Unsupported,ExtensionManifestV2Disabled`. |
 
-## Manual testing: one command per browser
+> **Note for Chrome users:** tabs inside a box show Chrome's *"BoxBox started debugging this browser"* bar. That is Chrome's
+> price for isolating accounts. If you close the bar, the tab is blocked instead of silently falling back to your normal
+> session, and the popup offers a *Restore isolation* button.
 
-Each command builds Box, then starts the browser with a **brand-new temporary profile that contains only Box**. Close the
-window to end the session; the profile is deleted.
+## Build it yourself
 
-```sh
-direnv exec . npm run launch:firefox
-direnv exec . npm run launch:chrome
-direnv exec . npm run launch:helium
-# optional start page:  direnv exec . node scripts/launch.mjs chrome https://www.saucedemo.com/
-```
+### What you need
 
-Helium always carries its own bundled content blocker in addition to Box (it is part of the browser, not of the profile). On
-Helium (Manifest V2) `chrome.tabGroups` does not exist, so account identity there is the favicon badge and the page border
-(Firefox uses container colours, Chrome uses coloured tab groups).
+Just **[Node.js](https://nodejs.org) 18 or newer** (or **[Bun](https://bun.sh)**). BoxBox has no other build requirements.
 
-Chrome shows its *"Box started debugging this browser"* bar on tabs that are inside an account — that is the price of
-isolation on Manifest V3 (see DESIGN.md §4.1). Closing it makes that tab **fail closed** (blocked, with a *Restore
-isolation* action in the popup) rather than silently unisolated.
-
-## Performance check
+### Build
 
 ```sh
-direnv exec . node tests/perf/proto-bench.mjs --headless   # scripted hovers/clicks on the prototype pages: frame pacing, CPU per second, DOM size, heap
+git clone git@github.com:oxcl/boxbox.git
+cd boxbox
+
+npm ci            # install dependencies
+npm run build     # build the extension for all browsers
 ```
 
-## Tests
+With Bun, use `bun install` and `bun run build` instead.
+
+The result lands in `dist/`:
+
+| Folder | For |
+|---|---|
+| `dist/chrome-mv3` | Chrome |
+| `dist/firefox` | Firefox |
+| `dist/chrome-mv2` | Helium |
+
+Then load it as described in [Install](#install).
+
+### Optional: the Nix development environment
+
+If you use [Nix](https://nixos.org/download) (with flakes) and [direnv](https://direnv.net), `direnv allow` gives you the whole
+toolchain at once: Node, plus the exact browsers and drivers the tests and launchers below use, with nothing installed
+globally. Then prefix commands with `direnv exec .`, for example `direnv exec . npm run build`.
+
+### Try it in a throwaway browser
+
+One command builds BoxBox and opens a browser with a brand-new temporary profile that contains only BoxBox. Close the window
+and the profile disappears. The browser comes with the Nix environment; without Nix, point `BOX_CHROME`, `BOX_FIREFOX` or `BOX_HELIUM` at your
+browser's executable first, for example `BOX_CHROME=/usr/bin/google-chrome npm run launch:chrome`.
 
 ```sh
-direnv exec . npm test                                  # unit tests, then the whole e2e matrix on all three browsers
-direnv exec . npm run test:unit                         # 65 pure-logic checks (cookie jar, service layers, navigation policy, CSP patch)
-direnv exec . npm run test:firefox | test:chrome | test:helium
-direnv exec . node tests/run.mjs --browser chrome --suite navigation,modes --filter "popup"
-direnv exec . npm run smoke                             # real sites (saucedemo, the-internet, automationexercise); sanity only
-BOX_DEBUG=1 direnv exec . npm run test:helium           # also prints the extension's console
+npm run launch:chrome
+npm run launch:firefox
+npm run launch:helium
+
+# optionally open a page straight away
+node scripts/launch.mjs chrome https://www.saucedemo.com/
 ```
 
-* **Fixture** (`fixture/`): one Node server answering for many `*.localhost` hostnames — service *Alpha*
-  (`alpha.localhost`, `mail.`/`video.`/`accounts.alpha.localhost`, plus the *different-site* `alpha-static.localhost`),
-  service *Beta*, unrelated *Gamma/Delta* — with a cross-domain login redirect, a popup login, an OAuth-style redirect flow,
-  an embedded cross-site iframe, and session state in HttpOnly + plain cookies, localStorage, sessionStorage, IndexedDB, Cache
-  Storage and a service worker. Every page prints `logged in as X`. `echo.fixture.test` plus local HTTP / SOCKS5 proxies
-  (each exiting from its own loopback address) make exit IPs observable.
-* **Runner** (`tests/run.mjs`): Firefox via Selenium + geckodriver (temporary add-on), Chrome via puppeteer (`Extensions.loadUnpacked`),
-  Helium via puppeteer (`--load-extension`). Suites: `isolation navigation modes services identity deletion ui hardening proxy`.
-* Screenshots of every UI surface are written to `test-results/screens/`; machine-readable results to `test-results/latest.json`.
+### Package for the stores
 
-## Project layout
-
-```
-flake.nix  .envrc                      full dev environment (browsers incl. Helium, node, drivers)
-DESIGN.md  REPORT.md  README.md
-build/                                 esbuild pipeline, manifests, procedural icon generator
-src/core/                              platform-independent: services, catalog, store, navigation policy, controller (state + API)
-src/platform/firefox.js                containers, webRequest, proxy.onRequest
-src/platform/chrome-base.js            virtual jar, tab tracking, identity, wipe, tab groups
-src/platform/chrome-mv2.js             blocking webRequest (Helium)
-src/platform/chrome-mv3.js             debugger Fetch + DNR + entry gate (Chrome)
-src/platform/chrome-proxy.js           PAC generation, auth, honest warning levels
-src/chrome/{jar,shim}.js               RFC 6265 jar; main-world shim that namespaces every JS-visible store
-src/content/content.js                 gesture tracking, page border, favicon badge, wipe
-src/ui/                                popup, picker, settings, shared design system
-fixture/  tests/  scripts/launch.mjs
+```sh
+(cd dist/chrome-mv3 && zip -r ../../boxbox-chrome-mv3.zip .)
+(cd dist/firefox    && zip -r ../../boxbox-firefox.zip .)
 ```
 
-## Privacy
+The store listing images in `store/out/` are generated with `node scripts/store-assets.mjs`
+(run the build first). See [`store/README.md`](store/README.md).
 
-BoxBox ships no telemetry and sends nothing anywhere. The one thing it reads beyond your pages is the icon a page you visit has already
-loaded (from the HTTP cache, ≤30 KB, never for incognito tabs or tabs of a proxied account), kept in `storage.local` to show that service in
-Settings. The favicon badge fetches the *page's own* icon from the page's origin without credentials, to draw a dot on it. Cookies of
-accounts (Chrome builds) are stored in `storage.local` inside the browser profile; deleting an account deletes them.
-Logos are bundled from simple-icons (CC0) plus a few hand-made marks, only to identify the service; the brands belong to their owners.
+### Run the tests
+
+```sh
+npm test                # unit tests, then the full suite on Firefox, Chrome and Helium
+npm run test:unit       # just the quick unit tests
+npm run test:chrome     # one browser (also: test:firefox, test:helium)
+```
+
+The end-to-end tests drive real browsers against a local fixture server, so they need no internet connection. The unit tests
+run anywhere; the browser tests are easiest inside the Nix environment, which supplies the browsers and drivers.
+`npm run smoke` additionally checks a few real websites as a sanity test.
+
+## FAQ
+
+**Is this the same as browser profiles or containers?**
+It's the same idea with less friction: one profile, one window, any mix of boxes tab by tab. On Firefox each box shows up
+as a coloured container; on Chrome as a coloured tab group.
+
+**Does it work in private/incognito windows?**
+BoxBox leaves private windows alone.
+
+**Will it slow my browser down?**
+Tabs outside a box are not touched. The interface is lightweight and only animates while something is moving.
+
+**What does BoxBox know about me?**
+Nothing leaves your machine. To show a service's logo in Settings, it remembers the icon a page you visit has already
+loaded, stored locally. Logos for popular services are bundled with the extension.
+
+## Learn more
+
+- [DESIGN.md](DESIGN.md) — how BoxBox works under the hood.
+- [REPORT.md](REPORT.md) — what works, what doesn't, and the test evidence.
+- [`prototype/`](prototype/index.html) — the standalone design prototype the interface grew from.
+
+## Contributing
+
+Bug reports, ideas and pull requests are welcome. Please open an issue first for anything large, and run
+`npm test` before sending a change.
+
+## License
+
+BoxBox is free software, licensed under the [GNU General Public License v3.0](LICENSE) (GPL-3.0-only).
+
+## Credits
+
+Service logos come from [simple-icons](https://simpleicons.org) (CC0), plus a few hand-made marks. They are used only to
+identify a service; the brands belong to their owners.

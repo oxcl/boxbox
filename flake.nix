@@ -1,5 +1,5 @@
 {
-  description = "Box — per-tab session isolation extension: dev environment";
+  description = "BoxBox — per-tab session isolation extension: dev environment";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
