@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — BoxBox</title>
+<meta name="description" content="BoxBox collects nothing and sends nothing anywhere. Here is exactly what it stores, and where.">
+<meta name="theme-color" content="#fbf6ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1511" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="{{SITE_URL}}PRIVACY_POLICY.html">
+<link rel="icon" href="images/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="preload" href="fonts/jakarta.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="nav scrolled">
+  <div class="wrap nav-in">
+    <a class="brand" href="./"><img src="images/icon-128.png" alt="" width="30" height="30">BoxBox</a>
+    <div class="nav-cta" style="display:flex"><a class="btn btn-sm" href="./">← Back to site</a></div>
+  </div>
+</header>
+
+<main class="doc wrap narrow">
+  <p class="eyebrow">Privacy Policy</p>
+  <h1>BoxBox collects nothing.</h1>
+  <p class="meta">Last updated: October 2026</p>
+
+  <h2>The short version</h2>
+  <p>BoxBox is free, open-source software (<a href="{{REPO_URL}}/blob/main/LICENSE">GNU GPL v3</a>). It has no servers, no accounts, no analytics and no telemetry. It does not collect, transmit or share your personal information, browsing history or usage data. Anyone can read <a href="{{REPO_URL}}">the source code</a> to confirm that.</p>
+
+  <h2>What BoxBox stores, and where</h2>
+  <p>Everything BoxBox stores stays inside your browser profile, in the extension's own local storage, and never leaves your device. That includes:</p>
+  <ul>
+    <li>your boxes: their names, colours and icons;</li>
+    <li>which sites belong to which service, and your entry-mode settings;</li>
+    <li>the data of each box, such as its cookies, so that every account stays logged in and separate (on browsers where BoxBox keeps these itself);</li>
+    <li>proxy settings you enter for a box, including a username and password if you provide one;</li>
+    <li>small site icons, so Settings can show a logo for a service. These are the icons a page you visit has already loaded, re-read from your browser's cache (at most 30 KB each). BoxBox does this neither in private windows nor for boxes that use a proxy.</li>
+  </ul>
+  <p>Deleting a box erases its data. Removing the extension removes everything else.</p>
+
+  <h2>Network activity</h2>
+  <p>BoxBox does not contact any server of its own and loads no remote code. The only traffic it influences is your normal browsing:</p>
+  <ul>
+    <li>if you set a proxy on a box, that box's traffic goes through the proxy you chose, and only that box's;</li>
+    <li>to draw the coloured dot on a page's tab icon, BoxBox reads that page's own icon from the page's own origin, without credentials.</li>
+  </ul>
+
+  <h2>Permissions</h2>
+  <p>To keep accounts apart, BoxBox asks for broad browser permissions, such as access to the sites you visit, tabs, cookies and storage, and (on Chrome) the debugging interface. These are used only to isolate sessions and to show you which box a tab is in. They are not used to read, copy or send your browsing activity anywhere.</p>
+
+  <h2>Third parties</h2>
+  <p>None. BoxBox includes no third-party analytics, advertising, tracking or remote services. This website also uses no cookies and no trackers.</p>
+
+  <h2>Disclaimer</h2>
+  <p>BoxBox is provided “as is”, without warranty of any kind, as described in the GNU General Public License v3.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, the new version will appear on this page and in the project repository.</p>
+
+  <h2>Contact</h2>
+  <p>Questions? Open an issue on <a href="{{REPO_URL}}/issues">GitHub</a> or write to <a href="mailto:oxcl@proton.me">oxcl@proton.me</a>.</p>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <a class="brand" href="./"><img src="images/icon-128.png" alt="" width="26" height="26">BoxBox</a>
+    <nav aria-label="Footer"><a href="./">Home</a><a href="{{REPO_URL}}">GitHub</a><a href="{{REPO_URL}}/blob/main/LICENSE">GPL-3.0</a></nav>
+    <p><a href="mailto:oxcl@proton.me">oxcl@proton.me</a></p>
+  </div>
+</footer>
+</body>
+</html>

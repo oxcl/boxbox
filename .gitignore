@@ -6,3 +6,4 @@ result
 .tmp/
 test-results/
 store/gen/
+website-dist/

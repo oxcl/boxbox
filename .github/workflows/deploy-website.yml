@@ -1,0 +1,31 @@
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+    paths: ['website/**', 'src/ui/ui.css', 'src/ui/box.js', 'src/ui/motion.js', 'src/ui/logos.js', 'src/core/catalog.js', 'package-lock.json', '.github/workflows/deploy-website.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: website
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:website
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          publish_branch: website
+          publish_dir: ./website-dist
+          github_token: ${{ secrets.GITHUB_TOKEN }}

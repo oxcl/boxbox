@@ -147,6 +147,19 @@ node scripts/launch.mjs chrome https://www.saucedemo.com/
 The store listing images in `store/out/` are generated with `node scripts/store-assets.mjs`
 (run the build first). See [`store/README.md`](store/README.md).
 
+### The website
+
+The project site lives in `website/` (plain HTML, CSS and a little JavaScript; no framework). It reuses the extension's own box
+component, logos and service catalog, so it always matches the product.
+
+```sh
+npm run build:website    # -> website-dist/
+npm run test:website     # loads it in a real browser: errors, links, interactions, phone layout, load speed
+```
+
+Pushing a change under `website/` to `main` publishes it to GitHub Pages (the `website` branch) through
+`.github/workflows/deploy-website.yml`. The store links on the site are set in `website/site.config.json`.
+
 ### Run the tests
 
 ```sh

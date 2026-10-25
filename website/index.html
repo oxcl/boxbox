@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BoxBox — One browser. Many lives.</title>
+<meta name="description" content="BoxBox lets you log in to the same website with different accounts at the same time, side by side in one browser. Free, open source, no telemetry. For Chrome and Firefox.">
+<meta name="theme-color" content="#fbf6ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1511" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="{{SITE_URL}}">
+<link rel="icon" href="images/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BoxBox">
+<meta property="og:title" content="BoxBox — One browser. Many lives.">
+<meta property="og:description" content="The same site, logged in as different people, at the same time. Each in its own box.">
+<meta property="og:url" content="{{SITE_URL}}">
+<meta property="og:image" content="{{SITE_URL}}images/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="fonts/jakarta.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+<script>document.documentElement.className = 'js'</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"BoxBox","applicationCategory":"BrowserApplication","operatingSystem":"Chrome, Firefox","description":"Log in to the same website with different accounts at the same time, side by side in one browser.","url":"{{SITE_URL}}","license":"https://www.gnu.org/licenses/gpl-3.0.html","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"oxcl","url":"https://github.com/oxcl"}}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top" aria-label="BoxBox home"><span data-mini="#c9a06c" data-size="30" aria-hidden="true"></span>BoxBox</a>
+    <nav id="menu" aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#faq">FAQ</a>
+      <a href="{{REPO_URL}}" rel="noopener">GitHub</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-sm" href="{{CHROME_URL}}">{{ICON_chrome}}<span>Chrome</span></a>
+      <a class="btn btn-sm" href="{{FIREFOX_URL}}">{{ICON_firefox}}<span>Firefox</span></a>
+    </div>
+    <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i><i></i></button>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ───────────── hero ───────────── -->
+<section class="hero" id="top">
+  <div class="wrap hero-in">
+    <div class="hero-copy">
+      <p class="eyebrow">Account boxes for your browser</p>
+      <h1>One browser.<br>Many lives.</h1>
+      <p class="lede">Log in to the same site as different people, <em>at the same time</em>. Every account lives in its own little cardboard box.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="{{CHROME_URL}}">{{ICON_chrome}}Add to Chrome</a>
+        <a class="btn btn-ghost" href="{{FIREFOX_URL}}">{{ICON_firefox}}Add to Firefox</a>
+      </div>
+      <ul class="facts">
+        <li>Free &amp; open source</li>
+        <li>No accounts, no telemetry</li>
+        <li>Chrome · Firefox · Helium</li>
+      </ul>
+    </div>
+
+    <div class="stage" aria-hidden="true">
+      <div class="glow"></div>
+      <div class="ground"></div>
+      <div class="hero-box-mount" id="heroBox"></div>
+      <div class="drift f1"><div class="win sm" style="--c:#3b82f6"><div class="bar"><i></i><i></i><i></i></div><span class="pill"><b></b>Work</span><div class="ln w60"></div><div class="ln"></div><div class="ln w80"></div></div></div>
+      <div class="drift f2"><div class="win sm" style="--c:#f43f5e"><div class="bar"><i></i><i></i><i></i></div><span class="pill"><b></b>Personal</span><div class="ln w60"></div><div class="ln"></div><div class="ln w80"></div></div></div>
+      <div class="drift f3"><div class="win sm" style="--c:#22c55e"><div class="bar"><i></i><i></i><i></i></div><span class="pill"><b></b>Gaming</span><div class="ln w60"></div><div class="ln"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── side by side ───────────── -->
+<section class="sec" id="side">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <p class="eyebrow">Side by side</p>
+      <h2>Same site. Different accounts.</h2>
+      <p>Keep as many accounts open as you like, each in its own box. Closing one never signs you out of another.</p>
+    </header>
+    <div class="trio reveal" role="img" aria-label="Three browser windows showing the same mail site, each logged in to a different account: Work, Personal and Shopping.">
+      <div class="win" style="--c:#3b82f6" aria-hidden="true">
+        <div class="bar"><i></i><i></i><i></i><span class="url">mail.postbox.example</span></div>
+        <span class="pill"><b></b>Work</span>
+        <div class="app"><div class="side"><u class="on"></u><u></u><u></u><u></u></div>
+          <div class="list"><h4>Inbox <small>12</small></h4>
+            <p><b>Sarah Chen</b><span>Q2 roadmap — notes from…</span><time>10:14</time></p>
+            <p><b>Finance</b><span>Invoice 4F29 is ready</span><time>9:02</time></p>
+            <p><b>Design team</b><span>Mocks for review, v3</span><time>8:47</time></p>
+            <p><b>Calendar</b><span>Planning sync, Thursday</span><time>Mon</time></p></div></div>
+      </div>
+      <div class="win" style="--c:#f43f5e" aria-hidden="true">
+        <div class="bar"><i></i><i></i><i></i><span class="url">mail.postbox.example</span></div>
+        <span class="pill"><b></b>Personal</span>
+        <div class="app"><div class="side"><u class="on"></u><u></u><u></u><u></u></div>
+          <div class="list"><h4>Inbox <small>3</small></h4>
+            <p><b>Mum</b><span>Sunday lunch — are you coming?</span><time>11:20</time></p>
+            <p><b>Photos</b><span>Your trip album is ready</span><time>9:41</time></p>
+            <p><b>Bank</b><span>Your statement is available</span><time>Tue</time></p>
+            <p><b>Mia</b><span>Can you send the recipe?</span><time>Mon</time></p></div></div>
+      </div>
+      <div class="win" style="--c:#22c55e" aria-hidden="true">
+        <div class="bar"><i></i><i></i><i></i><span class="url">mail.postbox.example</span></div>
+        <span class="pill"><b></b>Shopping</span>
+        <div class="app"><div class="side"><u class="on"></u><u></u><u></u><u></u></div>
+          <div class="list"><h4>Inbox <small>37</small></h4>
+            <p><b>Orders</b><span>Your order has shipped</span><time>10:24</time></p>
+            <p><b>Deals</b><span>48 hours only: 30% off</span><time>9:46</time></p>
+            <p><b>Receipts</b><span>Payment received</span><time>8:03</time></p>
+            <p><b>Returns</b><span>Return label attached</span><time>Mon</time></p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── how it works ───────────── -->
+<section class="sec alt" id="how">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <p class="eyebrow">How it works</p>
+      <h2>Set up in seconds.</h2>
+      <p>Three small steps, and your accounts stay apart for good.</p>
+    </header>
+    <ol class="steps">
+      <li class="step reveal">
+        <div class="art" data-art="make" aria-hidden="true"></div>
+        <h3><span>1</span>Make a box</h3>
+        <p>Create a box for each account you use: give it a name, a colour and an icon. “Work”, “Personal”, “Client A”.</p>
+      </li>
+      <li class="step reveal">
+        <div class="art" data-art="pick" aria-hidden="true"></div>
+        <h3><span>2</span>Pick a box for a tab</h3>
+        <p>Choose a box in the popup, or let BoxBox ask you before the page loads. The tab opens in its own isolated session.</p>
+      </li>
+      <li class="step reveal">
+        <div class="art" data-art="stay" aria-hidden="true"></div>
+        <h3><span>3</span>Stay logged in, separately</h3>
+        <p>Every box keeps its own logins. Come back tomorrow and each account is exactly where you left it.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ───────────── features ───────────── -->
+<section class="sec" id="features">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <p class="eyebrow">Features</p>
+      <h2>Powerful, but quiet.</h2>
+      <p>Thoughtful details that make a big difference every day.</p>
+    </header>
+    <div class="cards">
+      <article class="card reveal">
+        <div class="viz v-service" aria-hidden="true">
+          <span class="chipd">youtube.com</span><span class="chipd">google.com</span><span class="chipd">gstatic.com</span>
+          <svg viewBox="0 0 120 40" class="join"><path d="M10 2c0 22 40 14 50 34M60 2v34M110 2c0 22-40 14-50 34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 4" stroke-linecap="round"/></svg>
+          <span class="tile">{{LOGO_google}}<b>Google</b></span>
+        </div>
+        <h3>Services, not domains</h3>
+        <p>YouTube and Google sign-in are one service, so moving between them never switches your box. Popular sites come grouped; you can merge, split or create your own.</p>
+      </article>
+
+      <article class="card reveal">
+        <div class="viz v-border" aria-hidden="true">
+          <div class="win" style="--c:#3b82f6"><div class="bar"><i></i><i></i><i></i><span class="url">mail.postbox.example</span></div><span class="pill"><b></b>Work</span><div class="ln w60"></div><div class="ln"></div></div>
+        </div>
+        <h3>Always know where you are</h3>
+        <p>The toolbar icon <em>is</em> your current box. A calm coloured border and a little name tag on the page, plus a coloured tab group or container.</p>
+      </article>
+
+      <article class="card reveal">
+        <div class="viz v-modes" aria-hidden="false">
+          <div class="seg" role="radiogroup" aria-label="Entry mode">
+            <button role="radio" aria-checked="true" data-mode="ask">Ask</button>
+            <button role="radio" aria-checked="false" data-mode="remember">Remember</button>
+            <button role="radio" aria-checked="false" data-mode="default">Default</button>
+          </div>
+          <p class="modehint" id="modehint">A picker appears <em>before</em> the page loads, so the site never sees the wrong account.</p>
+        </div>
+        <h3>Ask, remember, or default</h3>
+        <p>Choose how each site opens: pick every time, remember your last box, or use your normal browser. Set it globally, then override per site.</p>
+      </article>
+
+      <article class="card reveal">
+        <div class="viz v-proxy" aria-hidden="true">
+          <span class="mount" data-box="cloud" data-color="#8b5cf6"></span>
+          <span class="route r1">EU</span><span class="route r2">US</span><span class="route r3">JP</span>
+        </div>
+        <h3>Its own proxy per box</h3>
+        <p>Route one account through another network or country, without touching the rest of your browsing. HTTP, HTTPS and SOCKS5.</p>
+      </article>
+
+      <article class="card reveal">
+        <div class="viz v-wipe" aria-hidden="true">
+          <span class="mount" data-box="bolt" data-color="#ef4444" data-open="1"></span>
+          <span class="stamp">Wiped</span>
+        </div>
+        <h3>Delete means gone</h3>
+        <p>Delete a box and its cookies, storage and caches go with it. Nothing lingers behind.</p>
+      </article>
+
+      <article class="card reveal">
+        <div class="viz v-default" aria-hidden="true">
+          <span class="mount" data-box="home" data-color="#c9a06c" data-kraft="1"></span>
+        </div>
+        <h3>Your browser, untouched</h3>
+        <p>Tabs outside a box are untouched. BoxBox only steps in where you ask it to, and it leaves private windows alone.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── services ───────────── -->
+<section class="sec alt" id="services">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <p class="eyebrow">Built-in catalog</p>
+      <h2>Knows which domains belong together.</h2>
+      <p>Popular services are pre-configured, with their logos bundled. Every other site is its own service, and you can edit the list any time.</p>
+    </header>
+    <ul class="logos reveal" aria-label="A few of the services BoxBox already knows">
+{{LOGO_TILES}}
+    </ul>
+  </div>
+</section>
+
+<!-- ───────────── privacy ───────────── -->
+<section class="sec" id="privacy">
+  <div class="wrap">
+    <div class="band reveal">
+      <div class="band-art" aria-hidden="true"><span class="mount" data-box="shield" data-color="#16a34a" data-size="190" data-lid="1"></span></div>
+      <div class="band-copy">
+        <p class="eyebrow">Privacy</p>
+        <h2>Nothing leaves your browser.</h2>
+        <p>Your boxes live in your browser profile and nowhere else. There is no server to send anything to.</p>
+        <ul class="checks">
+          <li>No accounts, no servers</li>
+          <li>No tracking, no telemetry</li>
+          <li>Open source, so you can check</li>
+        </ul>
+        <a class="textlink" href="PRIVACY_POLICY.html">Read the privacy policy →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── install ───────────── -->
+<section class="sec alt" id="install">
+  <div class="wrap">
+    <header class="sec-head reveal">
+      <p class="eyebrow">Get BoxBox</p>
+      <h2>Pick your browser.</h2>
+      <p>Free, with nothing to sign up for.</p>
+    </header>
+    <div class="get">
+      <article class="get-card reveal">
+        <span class="bi">{{ICON_chrome}}</span>
+        <h3>Chrome</h3>
+        <p>Full support on desktop.</p>
+        <a class="btn btn-primary" href="{{CHROME_URL}}">Add to Chrome</a>
+      </article>
+      <article class="get-card reveal">
+        <span class="bi">{{ICON_firefox}}</span>
+        <h3>Firefox</h3>
+        <p>Full support on desktop. Boxes show up as coloured containers.</p>
+        <a class="btn btn-primary" href="{{FIREFOX_URL}}">Add to Firefox</a>
+      </article>
+      <article class="get-card reveal">
+        <span class="bi">{{ICON_github}}</span>
+        <h3>Helium &amp; from source</h3>
+        <p>Build it yourself in a minute with Node or Bun, then load it unpacked.</p>
+        <a class="btn btn-ghost" href="{{REPO_URL}}#build-it-yourself">Build instructions</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── faq ───────────── -->
+<section class="sec" id="faq">
+  <div class="wrap narrow">
+    <header class="sec-head reveal">
+      <p class="eyebrow">FAQ</p>
+      <h2>Good questions.</h2>
+    </header>
+    <div class="faq reveal">
+      <details open><summary>How does BoxBox keep accounts separate?</summary><p>Every box has its own cookies, local storage, caches and other site data. A tab in your Work box and a tab in your Personal box can be open on the same site at the same moment, and neither can see the other.</p></details>
+      <details><summary>Is my data safe?</summary><p>BoxBox has no servers and no telemetry, so there is nowhere for your data to go. Everything stays in your browser profile, and deleting a box deletes its data. The code is open source if you want to check.</p></details>
+      <details><summary>Which browsers are supported?</summary><p>Chrome and Firefox on desktop, plus Helium. On Firefox a box appears as a coloured container; on Chrome it appears as a coloured tab group.</p></details>
+      <details><summary>Why does Chrome show “BoxBox started debugging this browser”?</summary><p>That bar is the price of isolating accounts in Chrome, and it only appears on tabs that are inside a box. If you close it, BoxBox blocks that tab instead of quietly falling back to your normal session, and the popup offers a button to restore isolation.</p></details>
+      <details><summary>Can I use a proxy with a box?</summary><p>Yes. Each box can have its own HTTP, HTTPS or SOCKS5 proxy, handy for testing from another region or keeping one identity on its own network.</p></details>
+      <details><summary>What happens when I delete a box?</summary><p>Its cookies, storage and caches are erased with it. Your other boxes and your normal browsing are not touched.</p></details>
+      <details><summary>Does it work in private windows?</summary><p>BoxBox leaves private windows alone.</p></details>
+      <details><summary>Is it really free?</summary><p>Yes. BoxBox is free software under the GNU GPL v3, with no paid tier. If you like it, you can <a href="#support">support its development</a>.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── support ───────────── -->
+<section class="sec alt" id="support">
+  <div class="wrap narrow">
+    <header class="sec-head reveal">
+      <p class="eyebrow">Support</p>
+      <h2>Keep BoxBox free.</h2>
+      <p>BoxBox is built in spare time and costs nothing to use. If it saves you time, a small donation helps.</p>
+    </header>
+    <div class="donate reveal" id="donate" data-coins="{{DONATE_JSON}}">
+      <noscript><p>Enable JavaScript to see donation addresses, or find them in the <a href="{{REPO_URL}}">repository</a>.</p></noscript>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── final call ───────────── -->
+<section class="final">
+  <div class="wrap final-in reveal">
+    <div class="final-art" aria-hidden="true"><span class="mount" data-box="gift" data-color="#c9a06c" data-kraft="1" data-size="150" data-lid="1" data-open=".9"></span></div>
+    <div>
+      <h2>Start boxing your tabs.</h2>
+      <p>Same browser. More possibilities.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="{{CHROME_URL}}">{{ICON_chrome}}Add to Chrome</a>
+        <a class="btn btn-ghost" href="{{FIREFOX_URL}}">{{ICON_firefox}}Add to Firefox</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <a class="brand" href="#top"><span data-mini="#c9a06c" data-size="26" aria-hidden="true"></span>BoxBox</a>
+    <nav aria-label="Footer">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="PRIVACY_POLICY.html">Privacy</a>
+      <a href="{{REPO_URL}}">GitHub</a>
+      <a href="{{REPO_URL}}/blob/main/LICENSE">GPL-3.0</a>
+    </nav>
+    <p>Made with care · <a href="mailto:oxcl@proton.me">oxcl@proton.me</a></p>
+  </div>
+</footer>
+
+<script src="site.js" defer></script>
+</body>
+</html>

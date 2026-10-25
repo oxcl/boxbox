@@ -1,0 +1,50 @@
+[
+ {
+  "id": "btc",
+  "name": "Bitcoin",
+  "sub": "BTC",
+  "address": "bc1qhngkx9670q2vc4w494yfys3cpx2ykne90tanl7",
+  "qr": "images/qr/btc.png",
+  "icon": "images/crypto/btc.svg"
+ },
+ {
+  "id": "evm",
+  "name": "Ethereum & EVM",
+  "sub": "ETH · USDT · USDC · BNB · Base · Polygon",
+  "address": "0x808cC6a9A9b51fD0f422A1C3c07582bDDeAD0e71",
+  "qr": "images/qr/eth.png",
+  "icon": "images/crypto/eth.svg"
+ },
+ {
+  "id": "tron",
+  "name": "Tron",
+  "sub": "TRX · USDT",
+  "address": "TGT3bS4cns49wqMSCatCDHbwqYyCZReW53",
+  "qr": "images/qr/tron.png",
+  "icon": "images/crypto/trx.svg"
+ },
+ {
+  "id": "sol",
+  "name": "Solana",
+  "sub": "SOL · USDC · USDT",
+  "address": "9vrqETM8ByBbRB9foWyFfzrcmRmYQXjmsdKjz87jVoqg",
+  "qr": "images/qr/sol.png",
+  "icon": null
+ },
+ {
+  "id": "xmr",
+  "name": "Monero",
+  "sub": "XMR",
+  "address": "89tM6QHrNfXZEaZugfhuhYiiPdssTR8wv5CasP9ZRj9TWRKhooW32xA4zFr9tVQTo7AqbTe4BTCKW546cb4pj8YnAS39G4Q",
+  "qr": "images/qr/xmr.png",
+  "icon": "images/crypto/xmr.svg"
+ },
+ {
+  "id": "ton",
+  "name": "TON",
+  "sub": "TON",
+  "address": "UQDiyvAj3toOs1ezT7Yp3TpwtJIWeUi0tD7Mz_yKeoiuwmZD",
+  "qr": "images/qr/ton.png",
+  "icon": "images/crypto/ton.svg"
+ }
+]
